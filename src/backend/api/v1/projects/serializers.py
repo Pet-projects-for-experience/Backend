@@ -1,17 +1,19 @@
 from datetime import date
+from queue import Queue
 from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from rest_framework import serializers
 
 from api.v1.general.serializers import SkillSerializer, SpecialistSerializer
+from apps.general.models import Skill
 from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
 from apps.projects.mixins import RecruitmentStatusMixin
 from apps.projects.models import Direction, Project, ProjectSpecialist
 
 
 class DirectionSerializer(serializers.ModelSerializer):
-    """Сериализатор специалиста."""
+    """Сериализатор направления разработки."""
 
     class Meta:
         model = Direction
@@ -104,9 +106,7 @@ class WriteProjectSerializer(
 
     creator = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
-    project_specialists = WriteProjectSpecialistSerializer(
-        many=True,
-    )
+    project_specialists = WriteProjectSpecialistSerializer(many=True)
     busyness = serializers.ChoiceField(
         choices=BUSYNESS_CHOICES, write_only=True
     )
@@ -186,7 +186,7 @@ class WriteProjectSerializer(
         return self._validate_date(value, "завершения проекта")
 
     def validate_status(self, value) -> int:
-        """Метод валидации даты завершения проекта."""
+        """Метод валидации статуса проекта."""
 
         if value == Project.DRAFT:
             raise serializers.ValidationError(
@@ -202,38 +202,65 @@ class WriteProjectSerializer(
         queryset = Project.objects.filter(
             name=attrs.get("name"),
             creator=self.context.get("request").user,
-            owner=self.context.get("request").user,
         )
 
         if queryset.exists():
             errors.setdefault("unique", []).append(
-                "У вас уже есть проект с таким названием."
+                "У вас уже есть проект или его черновик с таким названием."
             )
         if attrs.get("started") > attrs.get("ended"):
             errors.setdefault("invalid_dates", []).append(
                 "Дата завершения проекта не может быть раньше даты начала."
             )
+        project_specialists_data = attrs.get("project_specialists")
+        project_specialists_fields = [
+            (data["specialist"], data["level"])
+            for data in project_specialists_data
+        ]
+        if len(project_specialists_data) != len(
+            set(project_specialists_fields)
+        ):
+            errors.setdefault("unique_project_specialists", []).append(
+                "Дублирование специалистов c их грейдом для проекта не "
+                "`допустимо."
+            )
 
         if errors:
             raise serializers.ValidationError(errors)
-        return attrs
+        return super().validate(attrs)
 
     def create(self, validated_data) -> Project:
         """Метод создания проекта."""
 
         directions = validated_data.pop("directions")
         project_specialists = validated_data.pop("project_specialists")
+
+        project_specialists_to_create = []
+        skills_data_to_create: Queue[List[Skill]] = Queue()
+
         with transaction.atomic():
-            project_instance, _ = Project.objects.get_or_create(
-                **validated_data
-            )
+            project_instance = super().create(validated_data)
             project_instance.directions.set(directions)
+
             for project_specialist_data in project_specialists:
-                skills_data = project_specialist_data.pop("skills")
-                project_specialist_instance = ProjectSpecialist.objects.create(
-                    project=project_instance, **project_specialist_data
+                skills_data_to_create.put(
+                    project_specialist_data.pop("skills")
                 )
-                project_specialist_instance.skills.set(skills_data)
+                project_specialist_data["project_id"] = project_instance.id
+                project_specialists_to_create.append(
+                    ProjectSpecialist(**project_specialist_data)
+                )
+
+            created_project_specialists = (
+                ProjectSpecialist.objects.bulk_create(
+                    project_specialists_to_create
+                )
+            )
+
+            for project_specialist in created_project_specialists:
+                skills_data = skills_data_to_create.get()
+                project_specialist.skills.set(skills_data)
+
         return project_instance
 
 

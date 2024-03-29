@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 max_length=100,
                 validators=[
                     django.core.validators.MinLengthValidator(
-                        limit_value=2, message="Длина поля от 2 до 2 символов."
+                        limit_value=2, message="Длина поля от 2 до 100 символов."
                     ),
                     django.core.validators.RegexValidator(
                         message="Специализация может содержать: кириллические и латинские символы,пробелы и символ /",

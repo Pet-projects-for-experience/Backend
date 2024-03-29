@@ -1,5 +1,7 @@
 class RecruitmentStatusMixin:
-    def calculate_recruitment_status(self, obj):
+    """Миксин с методом определения статуса набора специалистов в проект."""
+
+    def calculate_recruitment_status(self, obj) -> str:
         """Метод определения статуса набора в проект."""
 
         if any(

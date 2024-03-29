@@ -199,3 +199,9 @@ class ProjectSpecialist(models.Model):
         verbose_name = "Специалист проекта"
         verbose_name_plural = "Специалисты проекта"
         default_related_name = "project_specialists"
+        constraints = (
+            models.UniqueConstraint(
+                fields=("project", "specialist", "level"),
+                name="%(app_label)s_%(class)s_unique_specialist_per_project",
+            ),
+        )
