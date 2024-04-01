@@ -11,7 +11,7 @@ LENGTH_PROJECT_NAME_ERROR_TEXT = (
     f"Длина поля от {MIN_LENGTH_PROJECT_NAME} до {MAX_LENGTH_PROJECT_NAME} "
     "символов."
 )
-REGEX_PROJECT_NAME = r"(^[+/:,.0-9A-Za-zА-Яа-яЁё\-–—]+)\Z"
+REGEX_PROJECT_NAME = r"(^[+/:,.0-9A-Za-zА-Яа-яЁё\s\-–—]+)\Z"
 REGEX_PROJECT_NAME_ERROR_TEXT = (
     "Название проекта может содержать: кириллические и латинские символы, "
     "цифры и символы .,-—+/:"
