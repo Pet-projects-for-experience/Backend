@@ -13,7 +13,7 @@ from apps.projects.models import Direction, Project, ProjectSpecialist
 
 
 class DirectionSerializer(serializers.ModelSerializer):
-    """Сериализатор специалиста."""
+    """Сериализатор направления разработки."""
 
     class Meta:
         model = Direction
