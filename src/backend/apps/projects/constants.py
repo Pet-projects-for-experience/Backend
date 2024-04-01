@@ -11,7 +11,7 @@ LENGTH_PROJECT_NAME_ERROR_TEXT = (
     f"Длина поля от {MIN_LENGTH_PROJECT_NAME} до {MAX_LENGTH_PROJECT_NAME} "
     "символов."
 )
-REGEX_PROJECT_NAME = r"(^[+/:,.0-9A-Za-zА-Яа-яЁё\-–—]+)\Z"
+REGEX_PROJECT_NAME = r"(^[+/:,.0-9A-Za-zА-Яа-яЁё\s\-–—]+)\Z"
 REGEX_PROJECT_NAME_ERROR_TEXT = (
     "Название проекта может содержать: кириллические и латинские символы, "
     "цифры и символы .,-—+/:"
@@ -20,8 +20,8 @@ REGEX_PROJECT_NAME_ERROR_TEXT = (
 MAX_LENGTH_DIRECTION_NAME = 20
 MIN_LENGTH_DIRECTION_NAME = 2
 LENGTH_DIRECTION_NAME_ERROR_TEXT = (
-    f"Длина поля от {MIN_LENGTH_PROJECT_NAME} до {MAX_LENGTH_PROJECT_NAME} "
-    "символов."
+    f"Длина поля от {MIN_LENGTH_DIRECTION_NAME} до "
+    f"{MAX_LENGTH_DIRECTION_NAME} символов."
 )
 REGEX_DIRECTION_NAME = r"(^[A-Za-zА-Яа-яЁё]+)\Z"
 REGEX_DIRECTION_NAME_ERROR_TEXT = (
@@ -46,6 +46,5 @@ STATUS_CHOICES = (
     (2, "Завершен"),
     (3, "Черновик"),
 )
-
 
 PROJECTS_PER_PAGE = 10
