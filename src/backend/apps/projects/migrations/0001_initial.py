@@ -114,7 +114,7 @@ class Migration(migrations.Migration):
                             ),
                             django.core.validators.RegexValidator(
                                 message="Название проекта может содержать: кириллические и латинские символы, цифры и символы .,-—+/:",
-                                regex="(^[+/:,.0-9A-Za-zА-Яа-яЁё\\-–—]+)\\Z",
+                                regex="(^[+/:,.0-9A-Za-zА-Яа-яЁё\\s\\-–—]+)\\Z",
                             ),
                         ],
                         verbose_name="Название",

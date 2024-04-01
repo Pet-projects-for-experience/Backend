@@ -1,7 +1,7 @@
 from django.contrib import admin
 
+from api.v1.projects.mixins import RecruitmentStatusMixin
 from apps.projects.constants import PROJECTS_PER_PAGE
-from apps.projects.mixins import RecruitmentStatusMixin
 from apps.projects.models import Project, ProjectSpecialist, Skill, Specialist
 
 
