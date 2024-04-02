@@ -40,6 +40,9 @@ class User(CreatedModifiedFields, AbstractUser):
         unique=True,
         blank=False,
     )
+    is_organizer = models.BooleanField(
+        verbose_name="Организатор проекта", default=False
+    )
     username = models.CharField(
         _("username"),
         max_length=MAX_LENGTH_USERNAME,

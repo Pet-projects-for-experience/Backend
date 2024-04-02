@@ -10,5 +10,5 @@ EMAIL_PORT = 587
 CORS_ALLOWED_ORIGINS = [
     "https://89.23.117.168",
     "https://testcodepet.tw1.ru",
-    "https://localhost:3000",
+    "http://localhost:3000",
 ]

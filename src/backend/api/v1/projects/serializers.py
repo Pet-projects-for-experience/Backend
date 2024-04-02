@@ -1,29 +1,27 @@
-from datetime import date
 from typing import Any, Dict, List, Optional
 
-from django.db import transaction
 from rest_framework import serializers
 
 from api.v1.general.serializers import SkillSerializer, SpecialistSerializer
+from api.v1.projects.mixins import (
+    ProjectOrDraftCreateMixin,
+    ProjectOrDraftValidateMixin,
+    RecruitmentStatusMixin,
+)
 from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
-from apps.projects.mixins import RecruitmentStatusMixin
 from apps.projects.models import Direction, Project, ProjectSpecialist
 
 
 class DirectionSerializer(serializers.ModelSerializer):
-    """Сериализатор специалиста."""
+    """Сериализатор направления разработки."""
 
     class Meta:
         model = Direction
         fields = "__all__"
 
 
-class ReadProjectSpecialistSerializer(SpecialistSerializer):
-    """Сериализатор для чтения специалиста необходимого проекту."""
-
-    specialist = SpecialistSerializer()
-    skills = SkillSerializer(many=True)
-    level = serializers.SerializerMethodField()
+class BaseProjectSpecialistSerializer(serializers.ModelSerializer):
+    """Общий сериализатор для специалиста необходимого проекту."""
 
     class Meta:
         model = ProjectSpecialist
@@ -35,6 +33,14 @@ class ReadProjectSpecialistSerializer(SpecialistSerializer):
             "level",
             "is_required",
         )
+
+
+class ReadProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
+    """Сериализатор для чтения специалиста необходимого проекту."""
+
+    specialist = SpecialistSerializer()
+    skills = SkillSerializer(many=True)
+    level = serializers.SerializerMethodField()
 
     def get_level(self, obj) -> str:
         """Метод получения представления для грейда."""
@@ -42,36 +48,8 @@ class ReadProjectSpecialistSerializer(SpecialistSerializer):
         return obj.get_level_display()
 
 
-class WriteProjectSpecialistSerializer(SpecialistSerializer):
-    """Сериализатор для записи специалиста необходимого проекту."""
-
-    class Meta:
-        model = ProjectSpecialist
-        fields = (
-            "id",
-            "specialist",
-            "skills",
-            "count",
-            "level",
-            "is_required",
-        )
-
-
-class ReadProjectSerializer(
-    RecruitmentStatusMixin, serializers.ModelSerializer
-):
-    """Сериализатор для чтения проектов."""
-
-    directions = serializers.StringRelatedField(many=True)
-    status = serializers.ChoiceField(
-        choices=STATUS_CHOICES, source="get_status_display"
-    )
-    recruitment_status = serializers.SerializerMethodField()
-    project_specialists = ReadProjectSpecialistSerializer(many=True)
-    creator = serializers.SlugRelatedField(
-        slug_field="username", read_only=True
-    )
-    owner = serializers.SlugRelatedField(slug_field="username", read_only=True)
+class BaseProjectSerializerMixin(RecruitmentStatusMixin):
+    """Общий сериализатор для проектов и черновиков."""
 
     class Meta:
         model = Project
@@ -81,6 +59,7 @@ class ReadProjectSerializer(
             "description",
             "started",
             "ended",
+            "busyness",
             "directions",
             "creator",
             "owner",
@@ -89,7 +68,21 @@ class ReadProjectSerializer(
             "project_specialists",
             "status",
         )
-        read_only_fields = fields
+
+    def _get_base_fields(self):
+        return {
+            "creator": serializers.SlugRelatedField(
+                slug_field="username", read_only=True
+            ),
+            "owner": serializers.SlugRelatedField(
+                slug_field="username", read_only=True
+            ),
+        }
+
+    def get_fields(self):
+        fields = super().get_fields()
+        fields.update(self._get_base_fields())
+        return fields
 
     def get_recruitment_status(self, obj) -> str:
         """Метод определения статуса набора в проект."""
@@ -97,14 +90,29 @@ class ReadProjectSerializer(
         return self.calculate_recruitment_status(obj)
 
 
+class ReadProjectSerializer(
+    BaseProjectSerializerMixin,
+    serializers.ModelSerializer,
+):
+    """Сериализатор для чтения проектов."""
+
+    directions = serializers.StringRelatedField(many=True)
+    status = serializers.ChoiceField(
+        choices=STATUS_CHOICES, source="get_status_display"
+    )
+    recruitment_status = serializers.SerializerMethodField()
+    project_specialists = ReadProjectSpecialistSerializer(many=True)
+
+
 class WriteProjectSerializer(
-    RecruitmentStatusMixin, serializers.ModelSerializer
+    BaseProjectSerializerMixin,
+    ProjectOrDraftValidateMixin,
+    ProjectOrDraftCreateMixin,
+    serializers.ModelSerializer,
 ):
     """Сериализатор для записи проектов."""
 
-    creator = serializers.SerializerMethodField(read_only=True)
-    owner = serializers.SerializerMethodField(read_only=True)
-    project_specialists = WriteProjectSpecialistSerializer(
+    project_specialists = BaseProjectSpecialistSerializer(
         many=True,
     )
     busyness = serializers.ChoiceField(
@@ -123,23 +131,9 @@ class WriteProjectSerializer(
     )
     recruitment_status = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Project
-        fields = (
-            "id",
-            "name",
-            "description",
-            "started",
-            "ended",
-            "busyness",
+    class Meta(BaseProjectSerializerMixin.Meta):
+        fields = BaseProjectSerializerMixin.Meta.fields + (  # type: ignore
             "project_busyness",
-            "directions",
-            "creator",
-            "owner",
-            "link",
-            "recruitment_status",
-            "project_specialists",
-            "status",
             "project_status",
         )
         extra_kwargs = {
@@ -151,90 +145,14 @@ class WriteProjectSerializer(
             "link": {"required": True},
         }
 
-    def get_creator(self, obj) -> str:
-        """Метод получения username у создателя проекта."""
-
-        return obj.creator.username
-
-    def get_owner(self, obj) -> str:
-        """Метод получения username у владельца проекта."""
-
-        return obj.owner.username
-
-    def get_recruitment_status(self, obj) -> str:
-        """Метод определения статуса набора в проект."""
-
-        return self.calculate_recruitment_status(obj)
-
-    def _validate_date(self, value, field_name) -> date:
-        """Метод валидации даты."""
-
-        if value < date.today():
-            raise serializers.ValidationError(
-                f"Дата {field_name} не может быть в прошлом."
-            )
-        return value
-
-    def validate_started(self, value) -> date:
-        """Метод валидации даты начала проекта."""
-
-        return self._validate_date(value, "начала проекта")
-
-    def validate_ended(self, value) -> date:
-        """Метод валидации даты завершения проекта."""
-
-        return self._validate_date(value, "завершения проекта")
-
     def validate_status(self, value) -> int:
-        """Метод валидации даты завершения проекта."""
+        """Метод валидации статуса проекта."""
 
         if value == Project.DRAFT:
             raise serializers.ValidationError(
                 "У проекта не может быть статуса 'Черновик'."
             )
         return value
-
-    def validate(self, attrs) -> Dict[str, Any]:
-        """Метод валидации данных о проекте."""
-
-        errors: Dict = {}
-
-        queryset = Project.objects.filter(
-            name=attrs.get("name"),
-            creator=self.context.get("request").user,
-            owner=self.context.get("request").user,
-        )
-
-        if queryset.exists():
-            errors.setdefault("unique", []).append(
-                "У вас уже есть проект с таким названием."
-            )
-        if attrs.get("started") > attrs.get("ended"):
-            errors.setdefault("invalid_dates", []).append(
-                "Дата завершения проекта не может быть раньше даты начала."
-            )
-
-        if errors:
-            raise serializers.ValidationError(errors)
-        return attrs
-
-    def create(self, validated_data) -> Project:
-        """Метод создания проекта."""
-
-        directions = validated_data.pop("directions")
-        project_specialists = validated_data.pop("project_specialists")
-        with transaction.atomic():
-            project_instance, _ = Project.objects.get_or_create(
-                **validated_data
-            )
-            project_instance.directions.set(directions)
-            for project_specialist_data in project_specialists:
-                skills_data = project_specialist_data.pop("skills")
-                project_specialist_instance = ProjectSpecialist.objects.create(
-                    project=project_instance, **project_specialist_data
-                )
-                project_specialist_instance.skills.set(skills_data)
-        return project_instance
 
 
 class ProjectPreviewMainSerializer(serializers.ModelSerializer):
@@ -261,3 +179,22 @@ class ProjectPreviewMainSerializer(serializers.ModelSerializer):
             "directions",
             "specialists",
         )
+
+
+class DraftSerializer(
+    BaseProjectSerializerMixin,
+    ProjectOrDraftValidateMixin,
+    ProjectOrDraftCreateMixin,
+    serializers.ModelSerializer,
+):
+    """Сериализатор черновиков проекта."""
+
+    status = serializers.ChoiceField(choices=STATUS_CHOICES, read_only=True)
+    link = serializers.URLField(read_only=True)
+    project_specialists = BaseProjectSpecialistSerializer(
+        many=True, required=False
+    )
+    recruitment_status = serializers.SerializerMethodField()
+
+    class Meta(BaseProjectSerializerMixin.Meta):
+        pass

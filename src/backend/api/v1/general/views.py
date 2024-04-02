@@ -30,7 +30,10 @@ class CounterApiView(generics.RetrieveAPIView):
     def get(self, request):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT count(*) from projects_project union all SELECT count(*) from users_user "
+                """
+                SELECT count(*) from projects_project union all SELECT count(*)
+                from users_user
+                """
             )
             row = cursor.fetchall()
         return Response({"projects": row[0][0], "users": row[1][0]})

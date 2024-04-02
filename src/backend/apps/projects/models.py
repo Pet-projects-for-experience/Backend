@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
+from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import (
     ContactsFields,
     CreatedModifiedFields,
@@ -14,7 +15,6 @@ from apps.projects.constants import (
     LENGTH_DIRECTION_NAME_ERROR_TEXT,
     LENGTH_LINK_ERROR_TEXT,
     LENGTH_PROJECT_NAME_ERROR_TEXT,
-    LEVEL_CHOICES,
     MAX_LENGTH_DESCRIPTION,
     MAX_LENGTH_DIRECTION_NAME,
     MAX_LENGTH_LINK,
@@ -199,3 +199,9 @@ class ProjectSpecialist(models.Model):
         verbose_name = "Специалист проекта"
         verbose_name_plural = "Специалисты проекта"
         default_related_name = "project_specialists"
+        constraints = (
+            models.UniqueConstraint(
+                fields=("project", "specialist", "level"),
+                name="%(app_label)s_%(class)s_unique_specialist_per_project",
+            ),
+        )

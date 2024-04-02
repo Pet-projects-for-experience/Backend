@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Push to DockerHub
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./
           push: true
@@ -39,7 +39,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Push to DockerHub
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./infra/nginx/
           push: true
@@ -93,7 +93,6 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             PROJECT_NAME=${{ secrets.PROJECT_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
-            DJANGO_SETTINGS_MODULE=${{ secrets.DJANGO_SETTINGS_MODULE }}
             DOCKERHUB_USERNAME_FRONT=${{ secrets.DOCKERHUB_USERNAME_FRONT }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
@@ -129,6 +128,6 @@ jobs:
           sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py migrate
           sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py collectstatic --no-input
           sudo docker compose -f docker-compose-prod.yaml exec backend cp -r static/. /backend_static/static/
-          sudo docker compose -f docker-compose-prod.yaml run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d devcodepet.tw1.ru
+          sudo docker compose -f docker-compose-prod.yaml run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d testcodepet.tw1.ru
           sudo docker compose -f docker-compose-prod.yaml run --rm certbot renew
           sudo docker system prune -f
