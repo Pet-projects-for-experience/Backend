@@ -1,3 +1,4 @@
+import logging.config
 import re
 from os import getenv
 from pathlib import Path
@@ -215,9 +216,6 @@ CELERY_BEAT_SCHEDULE = {
 
 
 # Логирование для любого уровня разработки:
-
-LOGGING_MODULE = getenv("DJANGO_SETTINGS_MODULE", "config.settings.prod")
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -225,27 +223,24 @@ LOGGING = {
         "main_format": {
             "format": "%(asctime)s - %(levelname)s - %(name)s - %(module)s - %(message)s",
         },
-        "simple_format": {
-            "format": "%(asctime)s - %(levelname)s - %(message)s"
-        },
     },
     "handlers": {
         "file": {
             "level": "INFO",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.TimedRotatingFileHandler",
             "filename": "./data/logs/main.log",
             "formatter": "main_format",
         },
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "formatter": "simple_format",
+            "formatter": "main_format",
         },
         "mail_admins": {
             "level": "ERROR",
             "class": "django.utils.log.AdminEmailHandler",
             "formatter": "main_format",
-            "email_backend": "django.core.mail.backends.filebased.EmailBackend",
+            "email_backend": "django.core.mail.backends.smtp.EmailBackend",
         },  # обработчик отправки емайл сообщений администрации сервера
     },
     "loggers": {
@@ -285,10 +280,14 @@ LOGGING = {
             "propagate": True,
         },
         "customlogger": {
-            "level": "DEBUG",
+            "level": "ERROR",
             "handlers": [
                 "mail_admins",
             ],
-        },  # если нужно отправлять какие-то очень важные сообщения
+        },
     },
 }
+
+
+def setup_logging():
+    logging.config.dictConfig(LOGGING)
