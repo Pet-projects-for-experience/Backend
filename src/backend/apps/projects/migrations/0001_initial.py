@@ -159,9 +159,9 @@ class Migration(migrations.Migration):
                     "status",
                     models.PositiveSmallIntegerField(
                         choices=[
-                            (1, "Активен"),
-                            (2, "Завершен"),
-                            (3, "Черновик"),
+                            (1, "Черновик"),
+                            (2, "Активен"),
+                            (3, "Завершен"),
                         ],
                         verbose_name="Статус",
                     ),

@@ -7,6 +7,7 @@ from api.v1.projects.mixins import (
     ProjectOrDraftCreateMixin,
     ProjectOrDraftValidateMixin,
     RecruitmentStatusMixin,
+    ToRepresentationOnlyIdMixin,
 )
 from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
 from apps.projects.models import Direction, Project, ProjectSpecialist
@@ -108,6 +109,7 @@ class WriteProjectSerializer(
     BaseProjectSerializerMixin,
     ProjectOrDraftValidateMixin,
     ProjectOrDraftCreateMixin,
+    ToRepresentationOnlyIdMixin,
     serializers.ModelSerializer,
 ):
     """Сериализатор для записи проектов."""
@@ -181,10 +183,15 @@ class ProjectPreviewMainSerializer(serializers.ModelSerializer):
         )
 
 
-class DraftSerializer(
+class ReadDraftSerializer(ReadProjectSerializer):
+    pass
+
+
+class WriteDraftSerializer(
     BaseProjectSerializerMixin,
     ProjectOrDraftValidateMixin,
     ProjectOrDraftCreateMixin,
+    ToRepresentationOnlyIdMixin,
     serializers.ModelSerializer,
 ):
     """Сериализатор черновиков проекта."""
