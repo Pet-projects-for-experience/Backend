@@ -10,7 +10,7 @@ from apps.profile.models import Profile
 
 
 class ProfileUpdateView(generics.RetrieveUpdateAPIView):
-    """Представление на редактирование одного профиля"""
+    """Представление на редактирование профиля"""
 
     queryset = Profile.objects.prefetch_related("userskills").prefetch_related(
         "userspecialization"
@@ -22,7 +22,7 @@ class ProfileUpdateView(generics.RetrieveUpdateAPIView):
 
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вывод профиля в зависимости от настроек видимости"""
+    """Представление на просмотр профиля в зависимости от настроек видимости"""
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
@@ -41,8 +41,8 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class ProfileVisibulityView(generics.RetrieveUpdateAPIView):
-    """Представление на редактирование одного профиля"""
+class ProfileVisibilityView(generics.RetrieveUpdateAPIView):
+    """Представление на редактирование видимости профиля"""
 
     queryset = Profile.objects.all()
     serializer_class = ProfileVisibilitySerializer
