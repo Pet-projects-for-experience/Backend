@@ -63,7 +63,7 @@ LOGGING["loggers"].pop("django.request", None)
 LOGGING["loggers"].pop("django.security", None)
 LOGGING["loggers"].pop("django.security.csrf", None)
 LOGGING["loggers"].pop("customlogger", None)
-LOGGING["loggers"]["django"]["level"] = ["INFO"]
+LOGGING["loggers"]["django"]["level"] = "INFO"
 
 setup_logging()
 

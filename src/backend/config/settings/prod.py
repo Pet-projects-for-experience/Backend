@@ -14,6 +14,6 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 LOGGING["loggers"].pop("django.db.backends", None)
-LOGGING["loggers"]["django"]["level"] = ["WARNING"]
+LOGGING["loggers"]["django"]["level"] = "WARNING"
 
 setup_logging()
