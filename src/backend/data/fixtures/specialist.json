@@ -44,7 +44,7 @@
         "pk": 6,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по автоматизации тестирования / Test Automation Engineer"
+            "specialization": "Инженер по автоматизации тестирования / Automation QA Engineer"
         }
     },
     {
@@ -52,7 +52,7 @@
         "pk": 7,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по ручному тестированию / Manual Test Engineer"
+            "specialization": "Инженер по ручному тестированию / Manual QA Engineer"
         }
     },
     {
@@ -60,7 +60,7 @@
         "pk": 8,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по нагрузочному тестированию / Performance Engineer"
+            "specialization": "Инженер по нагрузочному тестированию / Performance QA Engineer"
         }
     },
     {

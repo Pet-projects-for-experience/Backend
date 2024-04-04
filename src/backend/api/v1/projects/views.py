@@ -1,11 +1,7 @@
+from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
 from rest_framework import mixins
-from rest_framework.permissions import (
-    SAFE_METHODS,
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
@@ -16,12 +12,16 @@ from api.v1.projects.paginations import (
     ProjectPagination,
     ProjectPreviewMainPagination,
 )
-from api.v1.projects.permissions import IsCreatorOrOwnerOrReadOnly
+from api.v1.projects.permissions import (
+    IsCreatorOrOwner,
+    IsCreatorOrOwnerOrReadOnly,
+)
 from api.v1.projects.serializers import (
     DirectionSerializer,
-    DraftSerializer,
     ProjectPreviewMainSerializer,
+    ReadDraftSerializer,
     ReadProjectSerializer,
+    WriteDraftSerializer,
     WriteProjectSerializer,
 )
 from apps.projects.models import Direction, Project, ProjectSpecialist
@@ -49,16 +49,14 @@ class BaseProjectViewSet:
             ),
             "directions",
         )
-        .order_by("-status", "-created")
+        .order_by("status", "-created")
     )
 
     def get_queryset(self):
         """Общий метод получения queryset-а для проектов и черновиков."""
 
         queryset = super().get_queryset()
-        if self.request.user.is_anonymous:
-            return self._get_queryset_with_params(queryset, anonymous=True)
-        return self._get_queryset_with_params(queryset, anonymous=False)
+        return self._get_queryset_with_params(queryset, user=self.request.user)
 
     def perform_create(self, serializer):
         """
@@ -71,21 +69,20 @@ class BaseProjectViewSet:
 class ProjectViewSet(BaseProjectViewSet, ModelViewSet):
     """Представление проектов."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsCreatorOrOwnerOrReadOnly,)
     pagination_class = ProjectPagination
 
-    def _get_queryset_with_params(self, queryset, *args, **kwargs):
+    def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а c параметрами для проекта."""
 
-        if kwargs.get("anonymous", False):
-            return queryset.exclude(status=Project.DRAFT)
-        return queryset.exclude(
-            Q(status=Project.DRAFT)
-            & (~(Q(creator=self.request.user) | Q(owner=self.request.user)))
-        )
+        if not isinstance(user, AnonymousUser):
+            return queryset.exclude(
+                Q(status=Project.DRAFT) & (~(Q(creator=user) | Q(owner=user)))
+            )
+        return queryset.exclude(status=Project.DRAFT)
 
     def get_serializer_class(self):
-        """Метод получения сериализатора проектов."""
+        """Метод получения сериализатора для проектов."""
 
         if self.request.method in SAFE_METHODS:
             return ReadProjectSerializer
@@ -106,7 +103,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
     """Представление превью проектов на главной странице."""
 
     queryset = (
-        Project.objects.exclude(status=Project.DRAFT)
+        Project.objects.filter(status=Project.ACTIVE)
         .only(
             "id",
             "name",
@@ -132,17 +129,23 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
 class DraftViewSet(BaseProjectViewSet, ModelViewSet):
     """Представление для черновиков проекта."""
 
-    permission_classes = (IsCreatorOrOwnerOrReadOnly,)
-    serializer_class = DraftSerializer
+    permission_classes = (IsCreatorOrOwner,)
 
-    def _get_queryset_with_params(self, queryset, *args, **kwargs):
+    def get_serializer_class(self):
+        """Метод получения сериализатора для черновиков проекта."""
+
+        if self.request.method in SAFE_METHODS:
+            return ReadDraftSerializer
+        return WriteDraftSerializer
+
+    def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а с параметрами для черновиков проекта."""
 
-        if kwargs.get("anonymous", False):
-            return queryset.filter()
-        return queryset.filter(
-            Q(creator=self.request.user) | Q(owner=self.request.user)
-        )
+        if not isinstance(user, AnonymousUser):
+            return queryset.filter(
+                Q(status=Project.DRAFT) & (Q(creator=user) | Q(owner=user))
+            )
+        return queryset.filter()
 
     def _get_perform_create_data(self):
         """

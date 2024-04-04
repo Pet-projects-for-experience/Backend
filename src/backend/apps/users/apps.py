@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from django.core.signals import request_finished
 
 
 class UsersConfig(AppConfig):
@@ -7,6 +6,4 @@ class UsersConfig(AppConfig):
     name = "apps.users"
 
     def ready(self):
-        from api.v1.profile import signals
-
-        request_finished.connect(signals.create_user_profile)
+        from api.v1.profile import signals  # noqa

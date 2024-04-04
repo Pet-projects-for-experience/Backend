@@ -1,6 +1,8 @@
+import logging.config
 import re
 from os import getenv
 from pathlib import Path
+from typing import Dict
 
 from celery.schedules import crontab
 from dotenv import load_dotenv
@@ -205,10 +207,87 @@ SPECTACULAR_SETTINGS = {
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/0"
-
 CELERY_BEAT_SCHEDULE = {
     "auto_completion_projects_task": {
         "task": "apps.projects.tasks.auto_completion_projects_task",
         "schedule": crontab(hour=1, minute=0),
     },
 }
+
+
+# Логирование для любого уровня разработки:
+LOGGING: Dict = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "main_format": {
+            "format": "%(asctime)s - %(levelname)s - %(name)s - %(module)s - %(message)s",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": "./data/logs/main.log",
+            "formatter": "main_format",
+        },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "main_format",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "class": "django.utils.log.AdminEmailHandler",
+            "formatter": "main_format",
+            "email_backend": "django.core.mail.backends.smtp.EmailBackend",
+        },  # обработчик отправки емайл сообщений администрации сервера
+    },
+    "loggers": {
+        "django": {
+            "level": "DEBUG",
+            "handlers": [
+                "console",
+            ],
+            "propagate": True,
+        },
+        "django.request": {
+            "level": "DEBUG",
+            "handlers": [
+                "file",
+            ],
+            "propagate": True,
+        },
+        "django.db.backends": {
+            "level": "DEBUG",
+            "handlers": [
+                "console",
+            ],
+            "propagate": True,
+        },
+        "django.security": {
+            "level": "DEBUG",
+            "handlers": [
+                "file",
+            ],
+            "propagate": True,
+        },
+        "django.security.csrf": {
+            "level": "DEBUG",
+            "handlers": [
+                "file",
+            ],
+            "propagate": True,
+        },
+        "customlogger": {
+            "level": "ERROR",
+            "handlers": [
+                "mail_admins",
+            ],
+        },
+    },
+}
+
+
+def setup_logging():
+    logging.config.dictConfig(LOGGING)
