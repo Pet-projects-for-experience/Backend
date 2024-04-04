@@ -12,3 +12,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://testcodepet.tw1.ru",
     "http://localhost:3000",
 ]
+
+LOGGING["loggers"].pop("django.db.backends", None)
+LOGGING["loggers"]["django"]["level"] = "WARNING"
+
+setup_logging()
