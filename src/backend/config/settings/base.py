@@ -3,7 +3,7 @@ import re
 from os import getenv
 from pathlib import Path
 
-# from celery.schedules import crontab
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -204,15 +204,14 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_REQUEST": True,
 }
 
-# CELERY_BROKER_URL = "redis://redis:6379/0"
-# CELERY_RESULT_BACKEND = "redis://redis:6379/0"
-#
-# CELERY_BEAT_SCHEDULE = {
-#     "auto_completion_projects_task": {
-#         "task": "apps.projects.tasks.auto_completion_projects_task",
-#         "schedule": crontab(hour=1, minute=0),
-#     },
-# }
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_BEAT_SCHEDULE = {
+    "auto_completion_projects_task": {
+        "task": "apps.projects.tasks.auto_completion_projects_task",
+        "schedule": crontab(hour=1, minute=0),
+    },
+}
 
 
 # Логирование для любого уровня разработки:
