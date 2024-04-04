@@ -192,7 +192,6 @@ class ProjectSpecialist(models.Model):
     )
     is_required = models.BooleanField(
         verbose_name="Требуется",
-        default=False,
     )
 
     class Meta:

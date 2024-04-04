@@ -103,7 +103,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
     """Представление превью проектов на главной странице."""
 
     queryset = (
-        Project.objects.exclude(status=Project.DRAFT)
+        Project.objects.filter(status=Project.ACTIVE)
         .only(
             "id",
             "name",

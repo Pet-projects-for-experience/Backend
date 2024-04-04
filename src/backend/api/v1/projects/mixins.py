@@ -10,7 +10,9 @@ from apps.projects.models import Project, ProjectSpecialist
 
 
 class RecruitmentStatusMixin:
-    def calculate_recruitment_status(self, obj):
+    """Миксин определения статуса набора в проект."""
+
+    def get_recruitment_status(self, obj) -> str:
         """Метод определения статуса набора в проект."""
 
         if any(
@@ -46,31 +48,52 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации данных проекта или черновика."""
 
+        request = self.context.get("request")
         errors: Dict = {}
 
         if (
-            self.context.get("request").method == "POST"
+            request.method == "POST"
             and Project.objects.filter(
-                name=attrs.get("name"),
-                creator=self.context.get("request").user,
+                name=attrs.get("name"), creator=request.user
             ).exists()
         ):
             errors.setdefault("unique", []).append(
                 "У вас уже есть проект или его черновик с таким названием."
             )
 
-        project_specialists_data = attrs.get("project_specialists")
-        project_specialists_fields = [
-            (data["specialist"], data["level"])
-            for data in project_specialists_data
-        ]
-        if len(project_specialists_data) != len(
-            set(project_specialists_fields)
+        project_specialists_data = attrs.get("project_specialists", None)
+        if project_specialists_data is not None:
+            project_specialists_fields = [
+                (data["specialist"], data["level"])
+                for data in project_specialists_data
+            ]
+            if len(project_specialists_data) != len(
+                set(project_specialists_fields)
+            ):
+                errors.setdefault("unique_project_specialists", []).append(
+                    "Дублирование специалистов c их грейдом для проекта не "
+                    "допустимо."
+                )
+
+        recruitment_status = request.data.get("recruitment_status", None)
+        if (
+            recruitment_status is not None
+            and project_specialists_data is not None
         ):
-            errors.setdefault("unique_project_specialists", []).append(
-                "Дублирование специалистов c их грейдом для проекта не "
-                "допустимо."
-            )
+            if recruitment_status:
+                if not any(
+                    [
+                        specialist["is_required"]
+                        for specialist in project_specialists_data
+                    ]
+                ):
+                    errors.setdefault("is_required", []).append(
+                        "Отметьте хотя бы одного специалиста для поиска в "
+                        "проект."
+                    )
+            else:
+                for specialist in project_specialists_data:
+                    specialist["is_required"] = False
 
         started = attrs.get("started")
         ended = attrs.get("ended")

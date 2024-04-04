@@ -2,6 +2,7 @@ import logging.config
 import re
 from os import getenv
 from pathlib import Path
+from typing import Dict
 
 from celery.schedules import crontab
 from dotenv import load_dotenv
@@ -215,7 +216,7 @@ CELERY_BEAT_SCHEDULE = {
 
 
 # Логирование для любого уровня разработки:
-LOGGING = {
+LOGGING: Dict = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {

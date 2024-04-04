@@ -256,7 +256,7 @@ class Migration(migrations.Migration):
                 (
                     "is_required",
                     models.BooleanField(
-                        default=False, verbose_name="Требуется"
+                        verbose_name="Требуется"
                     ),
                 ),
                 (
