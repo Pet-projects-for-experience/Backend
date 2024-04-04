@@ -7,6 +7,7 @@ from api.v1.projects.mixins import (
     ProjectOrDraftCreateMixin,
     ProjectOrDraftValidateMixin,
     RecruitmentStatusMixin,
+    ToRepresentationOnlyIdMixin,
 )
 from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
 from apps.projects.models import Direction, Project, ProjectSpecialist
@@ -48,7 +49,7 @@ class ReadProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
         return obj.get_level_display()
 
 
-class BaseProjectSerializerMixin(RecruitmentStatusMixin):
+class BaseProjectSerializer(serializers.ModelSerializer):
     """Общий сериализатор для проектов и черновиков."""
 
     class Meta:
@@ -64,7 +65,6 @@ class BaseProjectSerializerMixin(RecruitmentStatusMixin):
             "creator",
             "owner",
             "link",
-            "recruitment_status",
             "project_specialists",
             "status",
         )
@@ -84,65 +84,46 @@ class BaseProjectSerializerMixin(RecruitmentStatusMixin):
         fields.update(self._get_base_fields())
         return fields
 
-    def get_recruitment_status(self, obj) -> str:
-        """Метод определения статуса набора в проект."""
 
-        return self.calculate_recruitment_status(obj)
-
-
-class ReadProjectSerializer(
-    BaseProjectSerializerMixin,
-    serializers.ModelSerializer,
-):
+class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     """Сериализатор для чтения проектов."""
 
-    directions = serializers.StringRelatedField(many=True)
+    directions = DirectionSerializer(many=True)
     status = serializers.ChoiceField(
         choices=STATUS_CHOICES, source="get_status_display"
     )
-    recruitment_status = serializers.SerializerMethodField()
+    busyness = serializers.ChoiceField(
+        choices=BUSYNESS_CHOICES, source="get_busyness_display"
+    )
     project_specialists = ReadProjectSpecialistSerializer(many=True)
+    recruitment_status = serializers.SerializerMethodField()
+
+    class Meta(BaseProjectSerializer.Meta):
+        fields = BaseProjectSerializer.Meta.fields + (  # type: ignore
+            "recruitment_status",
+        )
 
 
 class WriteProjectSerializer(
-    BaseProjectSerializerMixin,
+    ToRepresentationOnlyIdMixin,
     ProjectOrDraftValidateMixin,
     ProjectOrDraftCreateMixin,
-    serializers.ModelSerializer,
+    BaseProjectSerializer,
 ):
     """Сериализатор для записи проектов."""
 
     project_specialists = BaseProjectSpecialistSerializer(
         many=True,
     )
-    busyness = serializers.ChoiceField(
-        choices=BUSYNESS_CHOICES, write_only=True
-    )
-    project_busyness = serializers.ChoiceField(
-        choices=BUSYNESS_CHOICES,
-        source="get_busyness_display",
-        read_only=True,
-    )
     status = serializers.ChoiceField(choices=STATUS_CHOICES, write_only=True)
-    project_status = serializers.ChoiceField(
-        choices=STATUS_CHOICES,
-        source="get_status_display",
-        read_only=True,
-    )
-    recruitment_status = serializers.SerializerMethodField()
 
-    class Meta(BaseProjectSerializerMixin.Meta):
-        fields = BaseProjectSerializerMixin.Meta.fields + (  # type: ignore
-            "project_busyness",
-            "project_status",
-        )
+    class Meta(BaseProjectSerializer.Meta):
         extra_kwargs = {
             "description": {"required": True},
             "started": {"required": True},
             "ended": {"required": True},
             "busyness": {"required": True},
             "directions": {"required": True},
-            "link": {"required": True},
         }
 
     def validate_status(self, value) -> int:
@@ -181,20 +162,24 @@ class ProjectPreviewMainSerializer(serializers.ModelSerializer):
         )
 
 
-class DraftSerializer(
-    BaseProjectSerializerMixin,
+class ReadDraftSerializer(ReadProjectSerializer):
+    pass
+
+
+class WriteDraftSerializer(
+    ToRepresentationOnlyIdMixin,
     ProjectOrDraftValidateMixin,
     ProjectOrDraftCreateMixin,
-    serializers.ModelSerializer,
+    BaseProjectSerializer,
 ):
     """Сериализатор черновиков проекта."""
 
-    status = serializers.ChoiceField(choices=STATUS_CHOICES, read_only=True)
-    link = serializers.URLField(read_only=True)
     project_specialists = BaseProjectSpecialistSerializer(
         many=True, required=False
     )
-    recruitment_status = serializers.SerializerMethodField()
 
-    class Meta(BaseProjectSerializerMixin.Meta):
-        pass
+    class Meta(BaseProjectSerializer.Meta):
+        extra_kwargs = {
+            "status": {"required": False},
+            "link": {"required": False},
+        }

@@ -1,14 +1,18 @@
 from datetime import date
-from typing import Any, Dict
+from queue import Queue
+from typing import Any, Dict, List
 
 from django.db import transaction
 from rest_framework import serializers
 
+from apps.general.models import Skill
 from apps.projects.models import Project, ProjectSpecialist
 
 
 class RecruitmentStatusMixin:
-    def calculate_recruitment_status(self, obj):
+    """Миксин определения статуса набора в проект."""
+
+    def get_recruitment_status(self, obj) -> str:
         """Метод определения статуса набора в проект."""
 
         if any(
@@ -19,7 +23,7 @@ class RecruitmentStatusMixin:
         return "Набор закрыт"
 
 
-class ProjectOrDraftValidateMixin:
+class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
     """Миксин валидации данных проекта или его черновика."""
 
     def _validate_date(self, value, field_name) -> date:
@@ -44,17 +48,53 @@ class ProjectOrDraftValidateMixin:
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации данных проекта или черновика."""
 
+        request = self.context.get("request")
         errors: Dict = {}
 
-        queryset = Project.objects.filter(
-            name=attrs.get("name"),
-            creator=self.context.get("request").user,  # type: ignore
-        )
-
-        if queryset.exists():
+        if (
+            request.method == "POST"
+            and Project.objects.filter(
+                name=attrs.get("name"), creator=request.user
+            ).exists()
+        ):
             errors.setdefault("unique", []).append(
                 "У вас уже есть проект или его черновик с таким названием."
             )
+
+        project_specialists_data = attrs.get("project_specialists", None)
+        if project_specialists_data is not None:
+            project_specialists_fields = [
+                (data["specialist"], data["level"])
+                for data in project_specialists_data
+            ]
+            if len(project_specialists_data) != len(
+                set(project_specialists_fields)
+            ):
+                errors.setdefault("unique_project_specialists", []).append(
+                    "Дублирование специалистов c их грейдом для проекта не "
+                    "допустимо."
+                )
+
+        recruitment_status = request.data.get("recruitment_status", None)
+        if (
+            recruitment_status is not None
+            and project_specialists_data is not None
+        ):
+            if recruitment_status:
+                if not any(
+                    [
+                        specialist["is_required"]
+                        for specialist in project_specialists_data
+                    ]
+                ):
+                    errors.setdefault("is_required", []).append(
+                        "Отметьте хотя бы одного специалиста для поиска в "
+                        "проект."
+                    )
+            else:
+                for specialist in project_specialists_data:
+                    specialist["is_required"] = False
+
         started = attrs.get("started")
         ended = attrs.get("ended")
         if (started and ended) is not None and started > ended:
@@ -64,10 +104,10 @@ class ProjectOrDraftValidateMixin:
 
         if errors:
             raise serializers.ValidationError(errors)
-        return attrs
+        return super().validate(attrs)
 
 
-class ProjectOrDraftCreateMixin:
+class ProjectOrDraftCreateMixin(serializers.ModelSerializer):
     """Миксин создания проекта или его черновика."""
 
     def create(self, validated_data) -> Project:
@@ -75,19 +115,41 @@ class ProjectOrDraftCreateMixin:
 
         directions = validated_data.pop("directions", None)
         project_specialists = validated_data.pop("project_specialists", None)
+
+        project_specialists_to_create = []
+        skills_data_to_create: Queue[List[Skill]] = Queue()
+
         with transaction.atomic():
-            project_instance, _ = Project.objects.get_or_create(
-                **validated_data
-            )
+            project_instance = super().create(validated_data)
+
             if directions is not None:
                 project_instance.directions.set(directions)
+
             if project_specialists is not None:
                 for project_specialist_data in project_specialists:
-                    skills_data = project_specialist_data.pop("skills")
-                    project_specialist_instance = (
-                        ProjectSpecialist.objects.create(
-                            project=project_instance, **project_specialist_data
-                        )
+                    skills_data_to_create.put(
+                        project_specialist_data.pop("skills")
                     )
-                    project_specialist_instance.skills.set(skills_data)
+                    project_specialist_data["project_id"] = project_instance.id
+                    project_specialists_to_create.append(
+                        ProjectSpecialist(**project_specialist_data)
+                    )
+
+                created_project_specialists = (
+                    ProjectSpecialist.objects.bulk_create(
+                        project_specialists_to_create
+                    )
+                )
+                for project_specialist in created_project_specialists:
+                    skills_data = skills_data_to_create.get()
+                    project_specialist.skills.set(skills_data)
         return project_instance
+
+
+class ToRepresentationOnlyIdMixin:
+    """Миксин с методом to_representation, возвращающим только id объекта."""
+
+    def to_representation(self, instance):
+        """Метод представления объекта в виде словаря с полем 'id'."""
+
+        return {"id": instance.id}

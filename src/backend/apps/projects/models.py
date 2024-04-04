@@ -65,9 +65,9 @@ class Direction(models.Model):
 class Project(CreatedModifiedFields, ContactsFields):
     """Модель проекта."""
 
-    ACTIVE = 1
-    ENDED = 2
-    DRAFT = 3
+    DRAFT = 1
+    ACTIVE = 2
+    ENDED = 3
 
     name = models.CharField(
         verbose_name="Название",
@@ -192,7 +192,6 @@ class ProjectSpecialist(models.Model):
     )
     is_required = models.BooleanField(
         verbose_name="Требуется",
-        default=False,
     )
 
     class Meta:

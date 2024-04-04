@@ -24,17 +24,14 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         return (
             Project.objects.select_related("creator", "owner")
             .only(
-                "id",
                 "creator__email",
                 "owner__email",
                 "name",
                 "description",
                 "started",
                 "ended",
-                "phone_number",
-                "telegram_nick",
-                "email",
                 "busyness",
+                "link",
                 "status",
             )
             .prefetch_related(
@@ -43,7 +40,9 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         )
 
     def recruitment_status(self, obj):
-        return self.calculate_recruitment_status(obj)
+        """Метод получения статуса набора у проекта."""
+
+        return self.get_recruitment_status(obj)
 
     recruitment_status.short_description = "Статус набора"  # type: ignore
 
@@ -54,10 +53,8 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         "owner",
         "started",
         "ended",
-        "phone_number",
-        "telegram_nick",
-        "email",
         "busyness",
+        "link",
         "recruitment_status",
         "status",
     )
