@@ -263,7 +263,7 @@ LOGGING: Dict = {
             "handlers": [
                 "console",
             ],
-            "propagate": True,
+            "propagate": False,
         },
         "django.security": {
             "level": "DEBUG",
