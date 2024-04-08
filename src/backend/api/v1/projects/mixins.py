@@ -23,7 +23,7 @@ class RecruitmentStatusMixin:
         return "Набор закрыт"
 
 
-class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
+class ProjectOrDraftValidateMixin:
     """Миксин валидации данных проекта или его черновика."""
 
     def _validate_date(self, value, field_name) -> date:
@@ -46,10 +46,10 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
                 queryset = Project.objects.filter(
                     name=name, creator=request.user
                 )
-                if self.instance:
-                    queryset = queryset.exclude(id=self.instance.id)
-                if queryset.exists():
-                    return True
+                instance = getattr(self, "instance", None)
+                if instance is not None:
+                    queryset = queryset.exclude(id=instance.id)
+                return queryset.exists()
         return False
 
     def _check_not_unique_project_specialists(
@@ -65,10 +65,9 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
                 (data["specialist"], data["level"])
                 for data in project_specialists_data
             ]
-            if len(project_specialists_data) != len(
+            return len(project_specialists_data) != len(
                 set(project_specialists_fields)
-            ):
-                return True
+            )
         return False
 
     def validate_started(self, value) -> date:
@@ -84,7 +83,7 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации данных проекта или черновика."""
 
-        request = self.context.get("request")
+        request = getattr(self, "context").get("request")
         errors: Dict = {}
 
         if self._check_not_unique_project_name(
@@ -122,8 +121,8 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
                     "проект."
                 )
 
-        started = attrs.get("started")
-        ended = attrs.get("ended")
+        started = attrs.get("started", None)
+        ended = attrs.get("ended", None)
         if (started and ended) is not None and started > ended:
             errors.setdefault("invalid_dates", []).append(
                 "Дата завершения проекта не может быть раньше даты начала."
@@ -131,7 +130,7 @@ class ProjectOrDraftValidateMixin(serializers.ModelSerializer):
 
         if errors:
             raise serializers.ValidationError(errors)
-        return super().validate(attrs)
+        return attrs
 
 
 class ToRepresentationOnlyIdMixin:
