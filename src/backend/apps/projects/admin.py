@@ -31,6 +31,9 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
                 "started",
                 "ended",
                 "busyness",
+                "phone_number",
+                "telegram_nick",
+                "email",
                 "link",
                 "status",
             )
@@ -55,6 +58,9 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         "ended",
         "busyness",
         "link",
+        "phone_number",
+        "telegram_nick",
+        "email",
         "recruitment_status",
         "status",
     )

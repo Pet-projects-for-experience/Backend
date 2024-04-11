@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from api.v1.general.serializers import SkillSerializer, SpecialistSerializer
 from api.v1.projects.mixins import (
-    ProjectOrDraftCreateMixin,
+    ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
     RecruitmentStatusMixin,
     ToRepresentationOnlyIdMixin,
@@ -65,6 +65,9 @@ class BaseProjectSerializer(serializers.ModelSerializer):
             "creator",
             "owner",
             "link",
+            "phone_number",
+            "telegram_nick",
+            "email",
             "project_specialists",
             "status",
         )
@@ -107,14 +110,12 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
 class WriteProjectSerializer(
     ToRepresentationOnlyIdMixin,
     ProjectOrDraftValidateMixin,
-    ProjectOrDraftCreateMixin,
+    ProjectOrDraftCreateUpdateMixin,
     BaseProjectSerializer,
 ):
     """Сериализатор для записи проектов."""
 
-    project_specialists = BaseProjectSpecialistSerializer(
-        many=True,
-    )
+    project_specialists = BaseProjectSpecialistSerializer(many=True)
     status = serializers.ChoiceField(choices=STATUS_CHOICES, write_only=True)
 
     class Meta(BaseProjectSerializer.Meta):
@@ -169,7 +170,7 @@ class ReadDraftSerializer(ReadProjectSerializer):
 class WriteDraftSerializer(
     ToRepresentationOnlyIdMixin,
     ProjectOrDraftValidateMixin,
-    ProjectOrDraftCreateMixin,
+    ProjectOrDraftCreateUpdateMixin,
     BaseProjectSerializer,
 ):
     """Сериализатор черновиков проекта."""
