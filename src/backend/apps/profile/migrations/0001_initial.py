@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                         validators=[
                             django.core.validators.RegexValidator(
                                 message="Телефон может содержать: цифры, спецсимволы, длина не должна превышать 12 символов",
-                                regex="^\\+7\\(\\d{3}\\)\\d{3}-\\d{2}-\\d{2}$",
+                                regex="^\\+7\\d{10}$",
                             )
                         ],
                         verbose_name="Номер телефона",

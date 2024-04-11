@@ -65,6 +65,9 @@ class BaseProjectSerializer(serializers.ModelSerializer):
             "creator",
             "owner",
             "link",
+            "phone_number",
+            "telegram_nick",
+            "email",
             "project_specialists",
             "status",
         )

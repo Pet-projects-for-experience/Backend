@@ -30,7 +30,7 @@ MAX_LENGTH_DESCRIPTION = 250
 MAX_LENGTH_EMAIL = 256
 
 MAX_LENGTH_PHONE_NUMBER = 12
-PHONE_NUMBER_REGEX = r"^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$"
+PHONE_NUMBER_REGEX = r"^\+7\d{10}$"
 PHONE_NUMBER_REGEX_ERROR_TEXT = (
     "Телефон может содержать: цифры, спецсимволы, длина не должна превышать "
     "12 символов"
