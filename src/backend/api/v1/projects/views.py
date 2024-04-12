@@ -1,8 +1,10 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
+from rest_framework import mixins  # decorators, mixins, status
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
+
+# from rest_framework.response import Response
 from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
@@ -90,7 +92,6 @@ class ProjectViewSet(BaseProjectViewSet, ModelViewSet):
 
         queryset = super().get_queryset()
         queryset = self._get_queryset_with_params(queryset, self.request.user)
-        queryset = self.filter_queryset(queryset)
         return queryset
 
     def get_serializer_class(self):
@@ -136,6 +137,35 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = (AllowAny,)
     serializer_class = ProjectPreviewMainSerializer
     pagination_class = ProjectPreviewMainPagination
+
+    # @decorators.action(
+    #     detail=False,
+    #     methods=[
+    #         "GET",
+    #         "UPDATE",
+    #         "DELETE",
+    #     ],
+    #     url_path=r"my_projects",
+    #     permission_classes=[
+    #         IsCreatorOrOwnerOrReadOnly,
+    #     ],
+    # )
+    # def my_projects(self, request, **kwargs):
+    #     """Превью поектов в личном кабинете для участника или владельцы."""
+    #     projects = self.get_object()
+    #     if self.action == "GET":
+    #         return projects
+    #     elif self.action == "UPDATE":
+    #         instance = self.get_object()
+    #         serializer = self.get_serializer(
+    #             instance, data=request.data, partial=True
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     else:
+    #         projects.filter(id=self.kwargs.get("pk")).delete()
+    #         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DraftViewSet(BaseProjectViewSet, ModelViewSet):

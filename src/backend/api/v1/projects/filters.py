@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters.rest_framework import FilterSet, filters
 
 from apps.general.constants import LEVEL_CHOICES
@@ -9,21 +10,22 @@ class ProjectFilter(FilterSet):
     """Класс фильтрации проектов, по запросу на главной странице."""
 
     status = filters.MultipleChoiceFilter(choices=STATUS_CHOICES)
-    started = filters.DateFilter(lookup_expr="gte")
-    ended = filters.DateFromToRangeFilter(lookup_expr="lte")
+    started = filters.DateFromToRangeFilter()
+    ended = filters.DateFromToRangeFilter()
     recruitment_status = filters.MultipleChoiceFilter(
         choices=(
             ("open", "Набор открыт"),
             ("closed", "Набор закрыт"),
-        )
+        ),
+        method="filter_recruitment_status",
     )
-    specialization = filters.CharFilter(
-        field_name="project_specialists__specialist__specialization"
+    specialization = filters.NumberFilter(
+        field_name="project_specialists__specialist"
     )
-    skill = filters.CharFilter(field_name="project_specialists__skills__name")
+    skill = filters.NumberFilter(field_name="project_specialists__skills")
     level = filters.MultipleChoiceFilter(choices=LEVEL_CHOICES)
     busyness = filters.MultipleChoiceFilter(choices=BUSYNESS_CHOICES)
-    direction = filters.CharFilter(field_name="direction__name")
+    direction = filters.NumberFilter(field_name="direction")
 
     class Meta:
         model = Project
@@ -38,3 +40,16 @@ class ProjectFilter(FilterSet):
             "busyness",
             "direction",
         )
+
+    def filter_recruitment_status(self, queryset, name, value):
+        if value == "open":
+            queryset = queryset.filter(
+                Q(project_specialists__is_requred=True)
+                | ~Q(project_specialists__is_required=False)
+            )
+        elif value == "closed":
+            queryset = queryset.filter(
+                ~Q(project_specialists__is_reqiered=True),
+                Q(project_specialists__is_required=False),
+            )
+        return queryset
