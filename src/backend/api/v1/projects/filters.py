@@ -14,8 +14,8 @@ class ProjectFilter(FilterSet):
     ended = filters.DateFromToRangeFilter()
     recruitment_status = filters.MultipleChoiceFilter(
         choices=(
-            ("open", "Набор открыт"),
-            ("closed", "Набор закрыт"),
+            ("1", "Набор открыт"),
+            ("2", "Набор закрыт"),
         ),
         method="filter_recruitment_status",
     )
@@ -42,12 +42,12 @@ class ProjectFilter(FilterSet):
         )
 
     def filter_recruitment_status(self, queryset, name, value):
-        if value == "open":
+        if value == "1":
             queryset = queryset.filter(
                 Q(project_specialists__is_requred=True)
                 | ~Q(project_specialists__is_required=False)
             )
-        elif value == "closed":
+        elif value == "2":
             queryset = queryset.filter(
                 ~Q(project_specialists__is_reqiered=True),
                 Q(project_specialists__is_required=False),
