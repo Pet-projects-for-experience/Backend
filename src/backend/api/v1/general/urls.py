@@ -1,15 +1,15 @@
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from api.v1.general.views import (
     CounterApiView,
+    ProfessionViewSet,
     SectionViewSet,
     SkillViewSet,
-    SpecialistViewSet,
 )
 
-router = DefaultRouter()
-router.register("specialists", SpecialistViewSet, basename="specialists")
+router = SimpleRouter()
+router.register("professions", ProfessionViewSet, basename="professions")
 router.register("skills", SkillViewSet, basename="skills")
 
 urlpatterns = [

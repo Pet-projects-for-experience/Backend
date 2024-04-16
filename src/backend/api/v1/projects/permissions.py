@@ -8,7 +8,7 @@ class IsCreatorOrOwner(IsAuthenticated):
     """
 
     def has_object_permission(self, request, view, obj):
-        return bool(request.user == (obj.owner or obj.creator))
+        return bool(request.user in (obj.owner, obj.creator))
 
 
 class IsCreatorOrOwnerOrReadOnly(IsAuthenticated):
@@ -20,5 +20,5 @@ class IsCreatorOrOwnerOrReadOnly(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         return bool(
             request.method in SAFE_METHODS
-            or request.user == (obj.owner or obj.creator)
+            or request.user in (obj.owner, obj.creator)
         )

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.general.models import Section, Skill, Specialist
+from apps.general.models import Profession, Section, Skill
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -9,11 +9,11 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class SpecialistSerializer(serializers.ModelSerializer):
+class ProfessionSerializer(serializers.ModelSerializer):
     """Сериализатор специализации."""
 
     class Meta:
-        model = Specialist
+        model = Profession
         fields = "__all__"
 
 

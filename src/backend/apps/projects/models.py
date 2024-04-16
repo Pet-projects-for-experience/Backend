@@ -6,8 +6,8 @@ from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import (
     ContactsFields,
     CreatedModifiedFields,
+    Profession,
     Skill,
-    Specialist,
 )
 from apps.projects.constants import (
     BUSYNESS_CHOICES,
@@ -23,11 +23,11 @@ from apps.projects.constants import (
     MIN_LENGTH_DIRECTION_NAME,
     MIN_LENGTH_LINK,
     MIN_LENGTH_PROJECT_NAME,
+    PROJECT_STATUS_CHOICES,
     REGEX_DIRECTION_NAME,
     REGEX_DIRECTION_NAME_ERROR_TEXT,
     REGEX_PROJECT_NAME,
     REGEX_PROJECT_NAME_ERROR_TEXT,
-    STATUS_CHOICES,
 )
 
 User = get_user_model()
@@ -86,7 +86,7 @@ class Project(CreatedModifiedFields, ContactsFields):
     description = models.TextField(
         verbose_name="Описание",
         max_length=MAX_LENGTH_DESCRIPTION,
-        blank=True,
+        null=True,
         validators=(
             MinLengthValidator(
                 limit_value=MIN_LENGTH_DESCRIPTION,
@@ -124,7 +124,7 @@ class Project(CreatedModifiedFields, ContactsFields):
     )
     status = models.PositiveSmallIntegerField(
         verbose_name="Статус",
-        choices=STATUS_CHOICES,
+        choices=PROJECT_STATUS_CHOICES,
     )
     directions = models.ManyToManyField(
         Direction,
@@ -174,10 +174,10 @@ class ProjectSpecialist(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Проект",
     )
-    specialist = models.ForeignKey(
-        Specialist,
+    profession = models.ForeignKey(
+        Profession,
         on_delete=models.CASCADE,
-        verbose_name="Специалист",
+        verbose_name="профессия",
     )
     skills = models.ManyToManyField(
         Skill,
@@ -200,7 +200,7 @@ class ProjectSpecialist(models.Model):
         default_related_name = "project_specialists"
         constraints = (
             models.UniqueConstraint(
-                fields=("project", "specialist", "level"),
+                fields=("project", "profession", "level"),
                 name="%(app_label)s_%(class)s_unique_specialist_per_project",
             ),
         )

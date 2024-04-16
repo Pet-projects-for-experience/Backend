@@ -16,8 +16,8 @@ class RecruitmentStatusMixin:
         """Метод определения статуса набора в проект."""
 
         if any(
-            specialist.is_required
-            for specialist in obj.project_specialists.all()
+            profession.is_required
+            for profession in obj.project_specialists.all()
         ):
             return "Набор открыт"
         return "Набор закрыт"
@@ -57,12 +57,12 @@ class ProjectOrDraftValidateMixin:
     ) -> bool:
         """
         Метод проверки дублирования специалистов необходимых проекту по их
-        специальности и грейду.
+        профессии и грейду.
         """
 
         if project_specialists_data is not None:
             project_specialists_fields = [
-                (data["specialist"], data["level"])
+                (data["profession"], data["level"])
                 for data in project_specialists_data
             ]
             return len(project_specialists_data) != len(
@@ -133,21 +133,12 @@ class ProjectOrDraftValidateMixin:
         return attrs
 
 
-class ToRepresentationOnlyIdMixin:
-    """Миксин с методом to_representation, возвращающим только id объекта."""
-
-    def to_representation(self, instance):
-        """Метод представления объекта в виде словаря с полем 'id'."""
-
-        return {"id": instance.id}
-
-
 class ProjectOrDraftCreateUpdateMixin:
     """Миксин создания и редактирования проекта или его черновика."""
 
     def process_project_specialists(
         self, project_instance, project_specialists
-    ):
+    ) -> None:
         """Метод обработки специалистов необходимых проекту."""
         project_specialists_to_update = []
         skills_data_to_process: Queue[List[Skill]] = Queue()
@@ -175,28 +166,27 @@ class ProjectOrDraftCreateUpdateMixin:
                 if skills_data:
                     project_specialist.skills.set(skills_data)
 
-    def create(self, validated_data):
+    def create(self, validated_data) -> Project:
         """Метод создания проекта или его черновика."""
 
         project_specialists = validated_data.pop("project_specialists", None)
 
         with transaction.atomic():
-            project_instance = super().create(validated_data)
+            project_instance = super().create(validated_data)  # type: ignore
             self.process_project_specialists(
                 project_instance, project_specialists
             )
 
         return project_instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data) -> Project:
         """Метод обновления проекта или его черновика."""
 
-        project_specialists = validated_data.pop("project_specialists", None)
+        _ = validated_data.pop("project_specialists", None)
 
         with transaction.atomic():
-            project_instance = super().update(instance, validated_data)
-            self.process_project_specialists(
-                project_instance, project_specialists
+            project_instance = super().update(  # type: ignore
+                instance, validated_data
             )
 
         return project_instance

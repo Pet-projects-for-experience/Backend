@@ -1,15 +1,13 @@
-from typing import Any, Dict, List, Optional
-
 from rest_framework import serializers
 
-from api.v1.general.serializers import SkillSerializer, SpecialistSerializer
+from api.v1.general.mixins import ToRepresentationOnlyIdMixin
+from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
     RecruitmentStatusMixin,
-    ToRepresentationOnlyIdMixin,
 )
-from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
+from apps.projects.constants import BUSYNESS_CHOICES, PROJECT_STATUS_CHOICES
 from apps.projects.models import Direction, Project, ProjectSpecialist
 
 
@@ -28,7 +26,7 @@ class BaseProjectSpecialistSerializer(serializers.ModelSerializer):
         model = ProjectSpecialist
         fields = (
             "id",
-            "specialist",
+            "profession",
             "skills",
             "count",
             "level",
@@ -39,7 +37,7 @@ class BaseProjectSpecialistSerializer(serializers.ModelSerializer):
 class ReadProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
     """Сериализатор для чтения специалиста необходимого проекту."""
 
-    specialist = SpecialistSerializer()
+    profession = ProfessionSerializer()
     skills = SkillSerializer(many=True)
     level = serializers.SerializerMethodField()
 
@@ -93,7 +91,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
 
     directions = DirectionSerializer(many=True)
     status = serializers.ChoiceField(
-        choices=STATUS_CHOICES, source="get_status_display"
+        choices=PROJECT_STATUS_CHOICES, source="get_status_display"
     )
     busyness = serializers.ChoiceField(
         choices=BUSYNESS_CHOICES, source="get_busyness_display"
@@ -116,7 +114,6 @@ class WriteProjectSerializer(
     """Сериализатор для записи проектов."""
 
     project_specialists = BaseProjectSpecialistSerializer(many=True)
-    status = serializers.ChoiceField(choices=STATUS_CHOICES, write_only=True)
 
     class Meta(BaseProjectSerializer.Meta):
         extra_kwargs = {
@@ -125,6 +122,8 @@ class WriteProjectSerializer(
             "ended": {"required": True},
             "busyness": {"required": True},
             "directions": {"required": True},
+            "link": {"required": False},
+            "status": {"required": False},
         }
 
     def validate_status(self, value) -> int:
@@ -137,19 +136,24 @@ class WriteProjectSerializer(
         return value
 
 
+class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
+    """Сериализатор специалистов проектов краткий."""
+
+    profession = ProfessionSerializer()
+
+    class Meta(BaseProjectSpecialistSerializer.Meta):
+        fields = (  # type: ignore
+            "id",
+            "profession",
+            "is_required",
+        )
+
+
 class ProjectPreviewMainSerializer(serializers.ModelSerializer):
     """Сериализатор превью проектов."""
 
-    specialists = serializers.SerializerMethodField()
-    directions = serializers.StringRelatedField(many=True)
-
-    def get_specialists(self, obj) -> Optional[List[Dict[str, Any]]]:
-        """Метод получения списка специалистов."""
-
-        return [
-            SpecialistSerializer(specialist.specialist).data
-            for specialist in obj.project_specialists.all()
-        ]
+    project_specialists = ShortProjectSpecialistSerializer(many=True)
+    directions = DirectionSerializer(many=True)
 
     class Meta:
         model = Project
@@ -159,7 +163,7 @@ class ProjectPreviewMainSerializer(serializers.ModelSerializer):
             "started",
             "ended",
             "directions",
-            "specialists",
+            "project_specialists",
         )
 
 

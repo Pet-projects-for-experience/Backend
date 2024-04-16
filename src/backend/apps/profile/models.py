@@ -6,7 +6,7 @@ from django.core.validators import (
 from django.db import models
 
 from apps.general.constants import LEVEL_CHOICES
-from apps.general.models import ContactsFields, Skill, Specialist
+from apps.general.models import ContactsFields, Profession, Skill
 from apps.profile.constants import (
     BOOL_CHOICES,
     MAX_LENGTH_ABOUT,
@@ -121,7 +121,7 @@ class UserSpecialization(models.Model):
     """Модель специализации пользователя"""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    specialization = models.ForeignKey(Specialist, on_delete=models.CASCADE)
+    specialization = models.ForeignKey(Profession, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True)
 
     class Meta:
