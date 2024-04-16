@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from rest_framework import serializers
 
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
@@ -188,3 +190,32 @@ class WriteDraftSerializer(
             "status": {"required": False},
             "link": {"required": False},
         }
+
+
+class WriteProjectSpecialistSerializer(
+    ToRepresentationOnlyIdMixin,
+    BaseProjectSpecialistSerializer,
+):
+    """Сериализатор для записи специалиста необходимого проекту."""
+
+    def validate(self, attrs) -> Dict[str, Any]:
+        """Метод валидации специалиста проекта."""
+
+        errors: Dict = {}
+
+        queryset = ProjectSpecialist.objects.filter(
+            project_id=self.instance.project.id,
+            profession=(
+                attrs.get("profession", None) or self.instance.profession
+            ),
+            level=(attrs.get("level", None) or self.instance.level),
+        ).exclude(id=self.instance.id)
+        if queryset.exists():
+            errors.setdefault("unique", []).append(
+                "У данного проекта уже есть специалист с такой профессией и "
+                "грейдом."
+            )
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs

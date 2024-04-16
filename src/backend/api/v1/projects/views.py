@@ -15,6 +15,7 @@ from api.v1.projects.paginations import (
 from api.v1.projects.permissions import (
     IsCreatorOrOwner,
     IsCreatorOrOwnerOrReadOnly,
+    IsProjectCreatorOrOwner,
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
@@ -23,6 +24,7 @@ from api.v1.projects.serializers import (
     ReadProjectSerializer,
     WriteDraftSerializer,
     WriteProjectSerializer,
+    WriteProjectSpecialistSerializer,
 )
 from apps.projects.models import Direction, Project, ProjectSpecialist
 
@@ -156,3 +158,15 @@ class DraftViewSet(BaseProjectViewSet):
             owner=self.request.user,
             status=Project.DRAFT,
         )
+
+
+class ProjectSpecialistsViewSet(
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet,
+):
+    """Представление для специалистов проекта."""
+
+    queryset = ProjectSpecialist.objects.all()
+    serializer_class = WriteProjectSpecialistSerializer
+    permission_classes = (IsProjectCreatorOrOwner,)
