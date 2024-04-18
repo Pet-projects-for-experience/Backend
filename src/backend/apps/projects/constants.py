@@ -41,7 +41,7 @@ BUSYNESS_CHOICES = (
     (3, 30),
     (4, 40),
 )
-STATUS_CHOICES = (
+PROJECT_STATUS_CHOICES = (
     (1, "Черновик"),
     (2, "Активен"),
     (3, "Завершен"),

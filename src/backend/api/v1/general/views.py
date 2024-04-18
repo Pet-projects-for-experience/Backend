@@ -7,11 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.v1.general.serializers import (
+    ProfessionSerializer,
     SectionSerializer,
     SkillSerializer,
-    SpecialistSerializer,
 )
-from apps.general.models import Section, Skill, Specialist
+from apps.general.models import Profession, Section, Skill
 
 
 class SectionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,11 +39,11 @@ class CounterApiView(generics.RetrieveAPIView):
         return Response({"projects": row[0][0], "users": row[1][0]})
 
 
-class SpecialistViewSet(viewsets.ReadOnlyModelViewSet):
+class ProfessionViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление специальностей."""
 
-    queryset = Specialist.objects.all()
-    serializer_class = SpecialistSerializer
+    queryset = Profession.objects.all()
+    serializer_class = ProfessionSerializer
     permission_classes = (IsAuthenticated,)
 
 
