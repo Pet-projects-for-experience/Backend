@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.profile.models import Profile, UserSkill, UserSpecialization
-from apps.projects.models import Skill, Specialist
+from apps.projects.models import Profession, Skill
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -46,7 +46,7 @@ class UserSkillSerializer(serializers.ModelSerializer):
 
 class UserSpecializationSerializer(serializers.ModelSerializer):
     specialization = serializers.PrimaryKeyRelatedField(
-        queryset=Specialist.objects.all(), many=True
+        queryset=Profession.objects.all(), many=True
     )
 
     class Meta:

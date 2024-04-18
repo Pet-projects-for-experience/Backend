@@ -15,6 +15,7 @@ from api.v1.projects.paginations import (
 from api.v1.projects.permissions import (
     IsCreatorOrOwner,
     IsCreatorOrOwnerOrReadOnly,
+    IsProjectCreatorOrOwner,
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
@@ -23,6 +24,7 @@ from api.v1.projects.serializers import (
     ReadProjectSerializer,
     WriteDraftSerializer,
     WriteProjectSerializer,
+    WriteProjectSpecialistSerializer,
 )
 from apps.projects.models import Direction, Project, ProjectSpecialist
 
@@ -35,19 +37,14 @@ class DirectionViewSet(ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
 
 
-class BaseProjectViewSet:
+class BaseProjectViewSet(ModelViewSet):
     """Общий viewset для проектов и черновиков."""
 
     queryset = (
-        Project.objects.select_related("creator", "owner")
-        .prefetch_related(
-            Prefetch(
-                "project_specialists",
-                queryset=ProjectSpecialist.objects.select_related(
-                    "specialist"
-                ).prefetch_related("skills"),
-            ),
-            "directions",
+        Project.objects.all()
+        .select_related(
+            "creator",
+            "owner",
         )
         .order_by("status", "-created")
     )
@@ -56,17 +53,20 @@ class BaseProjectViewSet:
         """Общий метод получения queryset-а для проектов и черновиков."""
 
         queryset = super().get_queryset()
+        if self.request.method in SAFE_METHODS:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "project_specialists",
+                    queryset=ProjectSpecialist.objects.select_related(
+                        "profession"
+                    ).prefetch_related("skills"),
+                ),
+                "directions",
+            )
         return self._get_queryset_with_params(queryset, user=self.request.user)
 
-    def perform_create(self, serializer):
-        """
-        Общий метод предварительного создания объекта проекта или черновика.
-        """
 
-        serializer.save(**self._get_perform_create_data())
-
-
-class ProjectViewSet(BaseProjectViewSet, ModelViewSet):
+class ProjectViewSet(BaseProjectViewSet):
     """Представление проектов."""
 
     permission_classes = (IsCreatorOrOwnerOrReadOnly,)
@@ -88,15 +88,16 @@ class ProjectViewSet(BaseProjectViewSet, ModelViewSet):
             return ReadProjectSerializer
         return WriteProjectSerializer
 
-    def _get_perform_create_data(self):
+    def perform_create(self, serializer):
         """
         Метод подготовки данных для процесса предварительного создания проекта.
         """
 
-        return {
-            "creator": self.request.user,
-            "owner": self.request.user,
-        }
+        return serializer.save(
+            creator=self.request.user,
+            owner=self.request.user,
+            status=Project.ACTIVE,
+        )
 
 
 class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -115,7 +116,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
             Prefetch(
                 "project_specialists",
                 queryset=ProjectSpecialist.objects.select_related(
-                    "specialist"
+                    "profession"
                 ),
             ),
             "directions",
@@ -126,7 +127,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
     pagination_class = ProjectPreviewMainPagination
 
 
-class DraftViewSet(BaseProjectViewSet, ModelViewSet):
+class DraftViewSet(BaseProjectViewSet):
     """Представление для черновиков проекта."""
 
     permission_classes = (IsCreatorOrOwner,)
@@ -147,13 +148,25 @@ class DraftViewSet(BaseProjectViewSet, ModelViewSet):
             )
         return queryset.filter()
 
-    def _get_perform_create_data(self):
+    def perform_create(self, serializer):
         """
         Метод подготовки данных для процесса предварительного создания проекта.
         """
 
-        return {
-            "creator": self.request.user,
-            "owner": self.request.user,
-            "status": Project.DRAFT,
-        }
+        return serializer.save(
+            creator=self.request.user,
+            owner=self.request.user,
+            status=Project.DRAFT,
+        )
+
+
+class ProjectSpecialistsViewSet(
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet,
+):
+    """Представление для специалистов проекта."""
+
+    queryset = ProjectSpecialist.objects.all()
+    serializer_class = WriteProjectSpecialistSerializer
+    permission_classes = (IsProjectCreatorOrOwner,)
