@@ -64,12 +64,12 @@ services:
       - frontend
 
   certbot:
-    image: certbot/certbot
+    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_certbot:latest
     env_file: .env
     volumes:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 30d & wait $${!}; done;'"
+      - ./certbot_cron:etc/cron.d/certbot_cron:ro
     restart: unless-stopped
     depends_on:
       - nginx

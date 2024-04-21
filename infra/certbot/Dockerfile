@@ -1,7 +1,9 @@
 FROM certbot/certbot
 
+RUN apt-get update && apt-get install -y cron
+
 ARG DOMAIN_NAME
 
-COPY fullchain.pem letsencrypt/live/${DOMAIN_NAME}/fullchain.pem
+COPY certbot_cron /etc/cron.d/certbot_cron
 
-COPY privkey.pem letsencrypt/live/${DOMAIN_NAME}/privkey.pem
+CMD ["cron", "-f"]
