@@ -13,6 +13,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
+
 LOGGING["loggers"].pop("django.db.backends", None)
 LOGGING["loggers"]["django"]["level"] = "WARNING"
 

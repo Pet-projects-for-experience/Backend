@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 volumes:
   pg_data:
@@ -57,19 +57,19 @@ services:
       - static_volume:/staticfiles/
       - media_value:/mediafiles/
       - certbot:/certbot/
-      - letsencrypt:/letsencrypt/
+      - letsencrypt:/etc/letsencrypt/
     restart: unless-stopped
     depends_on:
       - backend
       - frontend
 
   certbot:
-    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_certbot:latest
+    image: certbot/certbot
     env_file: .env
     volumes:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 30d & wait $${!}; done;'"
     restart: unless-stopped
     depends_on:
-      - backend
-      - frontend
+      - nginx
