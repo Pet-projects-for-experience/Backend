@@ -72,6 +72,5 @@ services:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
     command: certonly --webroot --agree-tos --no-eff-email --non-interactive -w /var/www/certbot/ -d devcodepet.tw1.ru
-    restart: unless-stopped
     depends_on:
       - nginx
