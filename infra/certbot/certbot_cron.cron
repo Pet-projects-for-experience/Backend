@@ -1,3 +1,0 @@
-SHELL=/bin/bash
-PATH=/bin:/user/bin:/sbin:/user/sbin
-0 0 */60 * * root certbot renew --non-interactive

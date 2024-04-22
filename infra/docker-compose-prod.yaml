@@ -64,12 +64,13 @@ services:
       - frontend
 
   certbot:
-    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_certbot:latest
+    image: certbot/certbot
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
-      - ./certbot_cron:etc/cron.d/certbot_cron:ro
     restart: unless-stopped
     depends_on:
       - nginx

@@ -1,9 +1,9 @@
 FROM certbot/certbot
 
-RUN apt-get update && apt-get install -y cron
-
 ARG DOMAIN_NAME
 
-COPY certbot_cron.cron /etc/cron.d/certbot_cron
+COPY certbot_renew.sh /usr/local/bin/
 
-CMD ["cron", "-f"]
+RUN chmod +x /usr/local/bin/certbot_renew.sh
+
+RUN echo "0 0 1 */2 * /usr/local/bin/certbot_renew.sh" | crontab -
