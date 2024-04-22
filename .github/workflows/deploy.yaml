@@ -140,6 +140,6 @@ jobs:
           sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py migrate
           sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py collectstatic --no-input
           sudo docker compose -f docker-compose-prod.yaml exec backend cp -r static/. /backend_static/static/
-          sudo docker compose -f docker-compose-prod.yaml exec restart nginx
+          sudo docker compose -f docker-compose-prod.yaml restart nginx
           sudo echo "0 */12 * * * /root/codepet/infra/certbot_renew.sh && perl -e 'sleep int(rand(43200))" | crontab -
           sudo docker system prune -f
