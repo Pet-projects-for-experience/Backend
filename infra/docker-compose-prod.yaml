@@ -71,6 +71,5 @@ services:
     volumes:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
-    command: certonly --webroot --agree-tos --no-eff-email --non-interactive -w /var/www/certbot/ -d devcodepet.tw1.ru -d www.devcodepet.tw1.ru -d 89.23.117.80
-    depends_on:
+    command: certonly --webroot --agree-tos --no-eff-email --non-interactive -w /var/www/certbot/ -d devcodepet.tw1.ru -d www.devcodepet.tw1.ru
       - nginx
