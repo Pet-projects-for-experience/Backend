@@ -12,10 +12,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://89.23.117.80",
-#     "https://devcodepet.tw1.ru",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://89.23.117.80",
+    "https://devcodepet.tw1.ru",
+]
 
 
 LOGGING["loggers"].pop("django.db.backends", None)
