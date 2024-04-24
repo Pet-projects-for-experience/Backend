@@ -1,7 +1,7 @@
 name: Codepet deploy
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 
 jobs:
