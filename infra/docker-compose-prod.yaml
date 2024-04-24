@@ -12,6 +12,8 @@ services:
     image: postgres:16.2-alpine
     restart: unless-stopped
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     ports:
       - "5432:5432"
     healthcheck:
@@ -30,6 +32,8 @@ services:
     image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_backend:latest
     restart: unless-stopped
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - static_volume:/backend_static/
       - media_value:/backend_media/
@@ -41,6 +45,8 @@ services:
     image: ${DOCKERHUB_USERNAME_FRONT}/${PROJECT_NAME}_frontend:latest
     command: cp -r out/. /frontend_static/
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - static_volume:/frontend_static
     depends_on:
@@ -53,6 +59,8 @@ services:
       - "80:80"
       - "443:443"
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - static_volume:/staticfiles/
       - media_value:/mediafiles/
