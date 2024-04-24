@@ -62,7 +62,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/certbot_renew.sh"
+        source: "infra/certbot_renew_qa.sh"
         target: "codepet"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master

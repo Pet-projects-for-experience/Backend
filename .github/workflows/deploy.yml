@@ -46,14 +46,14 @@ jobs:
             SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
             SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
           _EOF_
-    - name: Copy docker-compose-prod.yaml via ssh
+    - name: Copy docker-compose-dev.yaml via ssh
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/docker-compose-prod.yaml"
+        source: "infra/docker-compose-dev.yaml"
         target: "codepet"
     - name: Copy certbot_renew script via ssh
       uses: appleboy/scp-action@master
@@ -62,7 +62,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/certbot_renew.sh"
+        source: "infra/certbot_renew_dev.sh"
         target: "codepet"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
@@ -73,12 +73,12 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd codepet/infra
-          sudo docker compose -f docker-compose-prod.yaml pull
-          sudo docker compose -f docker-compose-prod.yaml down
-          sudo docker compose -f docker-compose-prod.yaml up -d
-          sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py collectstatic --no-input
-          sudo docker compose -f docker-compose-prod.yaml exec backend cp -r static/. /backend_static/static/
-          sudo docker compose -f docker-compose-prod.yaml restart nginx
+          sudo docker compose -f docker-compose-dev.yaml pull
+          sudo docker compose -f docker-compose-dev.yaml down
+          sudo docker compose -f docker-compose-dev.yaml up -d
+          sudo docker compose -f docker-compose-dev.yaml exec backend python manage.py migrate
+          sudo docker compose -f docker-compose-dev.yaml exec backend python manage.py collectstatic --no-input
+          sudo docker compose -f docker-compose-dev.yaml exec backend cp -r static/. /backend_static/static/
+          sudo docker compose -f docker-compose-dev.yaml restart nginx
           sudo echo "0 */12 * * * /root/codepet/infra/certbot_renew.sh && perl -e 'sleep int(rand(43200))" | crontab -
           sudo docker system prune -f
