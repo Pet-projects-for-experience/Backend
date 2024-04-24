@@ -2,14 +2,14 @@ name: Codepet build nginx and backend
 
 on:
   push:
-    branches: [ 'main', 'develop' ]
+    branches: [ 'main', 'QA' ]
   pull_request:
-    branches: [ 'main', 'develop' ]
+    branches: [ 'main', 'QA' ]
   workflow_dispatch:
 
 jobs:
   build_and_push_to_docker_hub_backend:
-    name: Push Docker image to DockerHub
+    name: Push backend Docker image to DockerHub
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -47,18 +47,18 @@ jobs:
           context: ./infra/nginx/
           push: true
           build-args: |
-            NGINX_NAME=${{ secrets.NGINX_DEV }}
-            NGINX_SERVER_NAME=${{ secrets.NGINX_SERVER_NAME }}
-            NGINX_SERVER_HOST=${{ secrets.NGINX_SERVER_HOST }}
+            NGINX_NAME_QA=${{ secrets.NGINX_QA }}
+            SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA}}
+            SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
   deploy_uses_other_file:
     if:
       contains('
-        refs/heads/develop
+        refs/heads/QA
         refs/heads/main
       ', github.ref)
-    uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
+    uses: Pet-projects-CodePET/Backend/.github/workflows/qa_deploy.yml@develop
     needs:
       - build_and_push_to_docker_hub_backend
       - build_and_push_to_docker_hub_nginx
