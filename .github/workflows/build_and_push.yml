@@ -46,10 +46,10 @@ jobs:
         with:
           context: ./infra/nginx/
           push: true
-          build-args: (
+          build-args:
             NGINX_NAME=${{ secrets.NGINX_DEV }}
             NGINX_SERVER_NAME=${{ secrets.NGINX_SERVER_NAME }}
-            NGINX_SERVER_HOST=${{ secrets.NGINX_SERVER_HOST }})
+            NGINX_SERVER_HOST=${{ secrets.NGINX_SERVER_HOST }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
   deploy_uses_other_file:
