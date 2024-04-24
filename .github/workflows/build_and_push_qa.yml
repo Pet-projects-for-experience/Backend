@@ -48,10 +48,8 @@ jobs:
           push: true
           build-args: |
             NGINX_NAME=${{ secrets.NGINX_QA}}
-            SERVER_NAME_DEV=${{ secrets.SERVER_NAME_DEV }}
-            SERVER_HOST_DEV=${{ secrets.SERVER_HOST_DEV }}
-            SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
-            SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
+            SERVER_NAME=${{ secrets.SERVER_NAME_QA }}
+            SERVER_HOST=${{ secrets.SERVER_HOST_QA }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
   deploy_uses_other_file:
