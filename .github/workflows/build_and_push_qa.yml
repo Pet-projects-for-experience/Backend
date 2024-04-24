@@ -60,7 +60,7 @@ jobs:
         refs/heads/QA
         refs/heads/main
       ', github.ref)
-    uses: Pet-projects-CodePET/Backend/.github/workflows/qa_deploy.yml@develop
+    uses: Pet-projects-CodePET/Backend/.github/workflows/qa_deploy.yml@QA
     needs:
       - build_and_push_to_docker_hub_backend
       - build_and_push_to_docker_hub_nginx
