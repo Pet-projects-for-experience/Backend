@@ -54,4 +54,4 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
       - name: Deploy from deploy.yml
-        uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml
+        uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
