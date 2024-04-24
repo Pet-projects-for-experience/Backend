@@ -1,16 +1,10 @@
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from api.v1.profile.views import (
-    ProfileUpdateView,
-    ProfileViewSet,
-    ProfileVisibilityView,
-)
+from .views import SettingProfileView
 
-router = DefaultRouter()
-router.register(r"profiles", ProfileViewSet)
+
 urlpatterns = [
-    path("", include(router.urls)),
-    path("profile_update/<pk>/", ProfileUpdateView.as_view()),
-    path("profile_visibility/<pk>/", ProfileVisibilityView.as_view()),
+    path("settings/profile/",
+         SettingProfileView.as_view(),
+         name="profile-settings"),
 ]

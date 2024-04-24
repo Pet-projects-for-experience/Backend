@@ -1,51 +1,75 @@
-from rest_framework import generics, viewsets
+from django.db.models import Prefetch
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.views import APIView
 
-from api.v1.profile.permissions import IsOwnerOrReadOnly
-from api.v1.profile.serializers import (
-    ProfileSerializer,
-    ProfileUpdateSerializer,
-    ProfileVisibilitySerializer,
+from apps.profile.models import Profile, Specialist
+from .serializers import (
+    SettingProfileSerializer,
 )
-from apps.profile.models import Profile
+
+USER_FIELDS_TO_DEFER = [
+    "user__password",
+    "user__is_superuser",
+    "user__is_staff",
+    "user__is_active",
+    "user__last_login",
+    "user__created",
+    "user__modified",
+    "user__is_organizer",
+    "user__email"
+]
 
 
-class ProfileUpdateView(generics.RetrieveUpdateAPIView):
-    """Представление на редактирование профиля"""
+class SettingProfileView(APIView):
+    """Чтение, частичное изменение профиля."""
 
-    queryset = Profile.objects.prefetch_related("userskills").prefetch_related(
-        "userspecialization"
-    )
-    serializer_class = ProfileUpdateSerializer
-    permission_classes = [
-        IsOwnerOrReadOnly,
-    ]
+    permission_classes = [IsAuthenticated]
+    serializer_class = SettingProfileSerializer
 
-
-class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление на просмотр профиля в зависимости от настроек видимости"""
-
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Profile.objects.all()
-        is_organizer = user.is_authenticated and user.is_organizer
-        if is_organizer:
-            queryset = queryset.filter(
-                visible_status__in=[Profile.ALL, Profile.CREATOR_ONLY]
+    def get_profile(self):
+        """
+        Получить объект профиля и связанные с ним
+        объекты специалиста с необходимыми полями.
+        """
+        profiles = Profile.objects.filter(
+            user=self.request.user
+        ).select_related("user").prefetch_related(
+            Prefetch(
+                "professions",
+                queryset=Specialist.objects.select_related(
+                    "profession"
+                ).prefetch_related("skills").defer(
+                    "skills__name"
+                )
             )
-        else:
-            queryset = queryset.filter(visible_status=Profile.ALL)
+        ).defer(*USER_FIELDS_TO_DEFER)
+        if not profiles:
+            return Response(HTTP_404_NOT_FOUND)
+        return profiles[0]
 
-        return queryset
+    @extend_schema(responses={200: serializer_class})
+    def get(self, request):
+        """Просмотр профиля его владельцем."""
+        return Response(
+            data=self.serializer_class(self.get_profile()).data,
+            status=HTTP_200_OK
+        )
 
-
-class ProfileVisibilityView(generics.RetrieveUpdateAPIView):
-    """Представление на редактирование видимости профиля"""
-
-    queryset = Profile.objects.all()
-    serializer_class = ProfileVisibilitySerializer
-    permission_classes = [
-        IsOwnerOrReadOnly,
-    ]
+    @extend_schema(responses={200: serializer_class})
+    def patch(self, request):
+        """
+        Редактирование профиля, в том числе настроек видимости.
+        Доступно только авторизованному пользователю-владельцу.
+        """
+        serializer = self.serializer_class(
+            self.get_profile(),
+            data=request.data,
+            context={"request": request},
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, HTTP_200_OK)
