@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_and_push_to_docker_hub_backend:
-    name: Push Docker image to DockerHub
+    name: Push backend Docker image to DockerHub
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -48,8 +48,11 @@ jobs:
           push: true
           build-args: |
             NGINX_NAME_DEV=${{ secrets.NGINX_DEV }}
-            NGINX_SERVER_NAME=${{ secrets.SERVER_NAME_DEV }}
-            NGINX_SERVER_HOST=${{ secrets.SERVER_HOST_DEV }}
+            NGINX_NAME_QA=${{ secrets.NGINX_QA}}
+            SERVER_NAME_DEV=${{ secrets.SERVER_NAME_DEV }}
+            SERVER_HOST_EDV=${{ secrets.SERVER_HOST_DEV }}
+            SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
+            SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
   deploy_uses_other_file:
