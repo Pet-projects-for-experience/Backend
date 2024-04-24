@@ -51,5 +51,7 @@ jobs:
   deploy_uses_other_file:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy from deploy.yaml
-        uses: ./.github/workflows/deploy.yml
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Deploy from deploy.yml
+        uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
