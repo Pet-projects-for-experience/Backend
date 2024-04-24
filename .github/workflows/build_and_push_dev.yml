@@ -47,8 +47,7 @@ jobs:
           context: ./infra/nginx/
           push: true
           build-args: |
-            NGINX_NAME_DEV=${{ secrets.NGINX_DEV }}
-            NGINX_NAME_QA=${{ secrets.NGINX_QA}}
+            NGINX_NAME=${{ secrets.NGINX_DEV }}
             SERVER_NAME_DEV=${{ secrets.SERVER_NAME_DEV }}
             SERVER_HOST_EDV=${{ secrets.SERVER_HOST_DEV }}
             SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
