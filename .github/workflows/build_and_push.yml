@@ -50,9 +50,12 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
   deploy_uses_other_file:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v3
-      - name: Deploy from deploy.yml
-        uses: ./.github/workflows/deploy.yml@develop
+    if:
+      contains('
+        refs/heads/develop
+        refs/heads/main
+      ', github.ref)
+    uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
+    needs:
+      - build_and_push_to_docker_hub_backend
+      - build_and_push_to_docker_hub_nginx
