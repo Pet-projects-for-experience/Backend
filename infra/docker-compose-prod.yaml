@@ -61,6 +61,7 @@ services:
     env_file: .env
     environment:
       - TZ=Europe/Moscow
+      -
     volumes:
       - static_volume:/staticfiles/
       - media_value:/mediafiles/
