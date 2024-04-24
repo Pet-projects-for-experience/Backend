@@ -80,4 +80,3 @@ services:
       - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
     command: certonly --webroot --agree-tos --no-eff-email --non-interactive --expand -w /var/www/certbot/ -d $SERVER_NAME_QA -d www.$SERVER_NAME_QA
-      - nginx
