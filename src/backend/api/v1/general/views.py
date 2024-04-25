@@ -3,7 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from api.v1.general.serializers import (
@@ -19,6 +19,8 @@ class SectionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
+    permission_classes = (AllowAny,)
+    pagination_class = None
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page_id"]
 
@@ -44,7 +46,8 @@ class ProfessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Profession.objects.all()
     serializer_class = ProfessionSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
@@ -52,4 +55,5 @@ class SkillViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    pagination_class = None

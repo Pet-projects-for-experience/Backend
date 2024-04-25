@@ -4,6 +4,11 @@ LENGTH_DESCRIPTION_ERROR_TEXT = (
     f"Длина поля от {MIN_LENGTH_DESCRIPTION} до {MAX_LENGTH_DESCRIPTION} "
     "символов."
 )
+REGEX_DESCRIPTION = r"(^[\Wa-zа-яё0-9\s]+)\Z"
+REGEX_DESCRIPTION_NAME_ERROR_TEXT = (
+    "Описание может содержать: кириллические и латинские буквы, цифры и "
+    "специальные символы."
+)
 
 MAX_LENGTH_PROJECT_NAME = 100
 MIN_LENGTH_PROJECT_NAME = 5
