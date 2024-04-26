@@ -128,7 +128,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class DraftViewSet(BaseProjectViewSet):
-    """Представление для черновиков проекта."""
+    """Представление черновиков проекта."""
 
     permission_classes = (IsCreatorOrOwner,)
 
@@ -165,7 +165,7 @@ class ProjectSpecialistsViewSet(
     mixins.DestroyModelMixin,
     GenericViewSet,
 ):
-    """Представление для специалистов проекта."""
+    """Представление специалистов проекта."""
 
     queryset = ProjectSpecialist.objects.all()
     serializer_class = WriteProjectSpecialistSerializer

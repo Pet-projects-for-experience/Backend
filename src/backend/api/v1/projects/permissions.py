@@ -13,8 +13,8 @@ class IsCreatorOrOwner(IsAuthenticated):
 
 class IsCreatorOrOwnerOrReadOnly(AllowAny):
     """
-    Класс прав доступа чтение - любому авторизованному пользователю, а
-    редактирование только создателю или владельцу объекта.
+    Класс прав доступа чтение - любому пользователю, а редактирование только
+    создателю или владельцу объекта.
     """
 
     def has_object_permission(self, request, view, obj):

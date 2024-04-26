@@ -4,13 +4,15 @@ from apps.general.models import Profession, Section, Skill
 
 
 class SectionSerializer(serializers.ModelSerializer):
+    """Сериализатор информационной секции для страниц сайта."""
+
     class Meta:
         model = Section
         fields = "__all__"
 
 
 class ProfessionSerializer(serializers.ModelSerializer):
-    """Сериализатор специализации."""
+    """Сериализатор профессии."""
 
     class Meta:
         model = Profession

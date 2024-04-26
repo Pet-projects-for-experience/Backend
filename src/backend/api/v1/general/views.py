@@ -15,7 +15,7 @@ from apps.general.models import Profession, Section, Skill
 
 
 class SectionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Текстовая секция на странице"""
+    """Представление информационных секций для страниц сайта."""
 
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
@@ -26,7 +26,7 @@ class SectionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CounterApiView(generics.RetrieveAPIView):
-    """Счетчик проектов и пользователей"""
+    """Представление счетчика проектов и пользователей."""
 
     @method_decorator(cache_page(600))
     def get(self, request):
@@ -42,7 +42,7 @@ class CounterApiView(generics.RetrieveAPIView):
 
 
 class ProfessionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление специальностей."""
+    """Представление профессий."""
 
     queryset = Profession.objects.all()
     serializer_class = ProfessionSerializer
@@ -51,7 +51,7 @@ class ProfessionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление специальностей."""
+    """Представление навыков."""
 
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
