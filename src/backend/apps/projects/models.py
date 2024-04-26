@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
@@ -24,6 +26,8 @@ from apps.projects.constants import (
     MIN_LENGTH_LINK,
     MIN_LENGTH_PROJECT_NAME,
     PROJECT_STATUS_CHOICES,
+    REGEX_DESCRIPTION,
+    REGEX_DESCRIPTION_NAME_ERROR_TEXT,
     REGEX_DIRECTION_NAME,
     REGEX_DIRECTION_NAME_ERROR_TEXT,
     REGEX_PROJECT_NAME,
@@ -92,6 +96,11 @@ class Project(CreatedModifiedFields, ContactsFields):
                 limit_value=MIN_LENGTH_DESCRIPTION,
                 message=LENGTH_DESCRIPTION_ERROR_TEXT,
             ),
+            RegexValidator(
+                regex=REGEX_DESCRIPTION,
+                message=REGEX_DESCRIPTION_NAME_ERROR_TEXT,
+                flags=re.IGNORECASE,
+            ),
         ),
     )
     creator = models.ForeignKey(
@@ -130,11 +139,12 @@ class Project(CreatedModifiedFields, ContactsFields):
         Direction,
         verbose_name="Направления разработки",
         related_name="projects_direction",
-        blank=True,
     )
     link = models.URLField(
         verbose_name="Ссылка",
         max_length=MAX_LENGTH_LINK,
+        null=True,
+        blank=True,
         validators=(
             MinLengthValidator(
                 limit_value=MIN_LENGTH_LINK,

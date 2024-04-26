@@ -3,7 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from api.v1.general.serializers import (
@@ -15,16 +15,18 @@ from apps.general.models import Profession, Section, Skill
 
 
 class SectionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Текстовая секция на странице"""
+    """Представление информационных секций для страниц сайта."""
 
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
+    permission_classes = (AllowAny,)
+    pagination_class = None
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page_id"]
 
 
 class CounterApiView(generics.RetrieveAPIView):
-    """Счетчик проектов и пользователей"""
+    """Представление счетчика проектов и пользователей."""
 
     @method_decorator(cache_page(600))
     def get(self, request):
@@ -40,16 +42,18 @@ class CounterApiView(generics.RetrieveAPIView):
 
 
 class ProfessionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление специальностей."""
+    """Представление профессий."""
 
     queryset = Profession.objects.all()
     serializer_class = ProfessionSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление специальностей."""
+    """Представление навыков."""
 
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    pagination_class = None
