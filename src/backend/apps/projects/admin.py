@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from api.v1.projects.mixins import RecruitmentStatusMixin
 from apps.projects.constants import PROJECTS_PER_PAGE
-from apps.projects.models import Project, ProjectSpecialist, Skill, Specialist
+from apps.projects.models import Profession, Project, ProjectSpecialist, Skill
 
 
 @admin.register(Skill)
@@ -11,8 +11,8 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
-@admin.register(Specialist)
-class SpecialistAdmin(admin.ModelAdmin):
+@admin.register(Profession)
+class ProfessionAdmin(admin.ModelAdmin):
     list_display = ("specialty", "specialization")
     list_filter = ("specialization",)
     search_fields = ("specialty", "specialization")
@@ -31,6 +31,9 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
                 "started",
                 "ended",
                 "busyness",
+                "phone_number",
+                "telegram_nick",
+                "email",
                 "link",
                 "status",
             )
@@ -55,6 +58,9 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         "ended",
         "busyness",
         "link",
+        "phone_number",
+        "telegram_nick",
+        "email",
         "recruitment_status",
         "status",
     )
@@ -68,7 +74,7 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
 class ProjectSpecialistAdmin(admin.ModelAdmin):
     list_display = (
         "project",
-        "specialist",
+        "profession",
         "level",
         "count",
         "is_required",

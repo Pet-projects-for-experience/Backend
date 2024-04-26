@@ -1,0 +1,130 @@
+[
+    {
+        "model": "general.profession",
+        "pk": 1,
+        "fields": {
+            "specialty": "Разработка",
+            "specialization": "Software"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 2,
+        "fields": {
+            "specialty": "Разработка",
+            "specialization": "Backend"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 3,
+        "fields": {
+            "specialty": "Разработка",
+            "specialization": "Frontend"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 4,
+        "fields": {
+            "specialty": "Разработка",
+            "specialization": "Fullstack"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 5,
+        "fields": {
+            "specialty": "Разработка",
+            "specialization": "Mobile"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 6,
+        "fields": {
+            "specialty": "Тестирование",
+            "specialization": "Automation QA"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 7,
+        "fields": {
+            "specialty": "Тестирование",
+            "specialization": "Manual QA"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 8,
+        "fields": {
+            "specialty": "Тестирование",
+            "specialization": "Performance QA"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 9,
+        "fields": {
+            "specialty": "Администрирование",
+            "specialization": "System Administration"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 10,
+        "fields": {
+            "specialty": "Администрирование",
+            "specialization": "DevOps"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 11,
+        "fields": {
+            "specialty": "Дизайнер",
+            "specialization": "UI/UX Designer"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 12,
+        "fields": {
+            "specialty": "Дизайнер",
+            "specialization": "Graphic Designer"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 13,
+        "fields": {
+            "specialty": "Менеджмент",
+            "specialization": "Project Manager"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 14,
+        "fields": {
+            "specialty": "Аналитика",
+            "specialization": "Systems Analyst"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 15,
+        "fields": {
+            "specialty": "Аналитика",
+            "specialization": "Business Analyst"
+        }
+    },
+    {
+        "model": "general.profession",
+        "pk": 16,
+        "fields": {
+            "specialty": "Аналитика",
+            "specialization": "Data Analyst"
+        }
+    }
+]

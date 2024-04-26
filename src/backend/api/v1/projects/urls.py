@@ -5,17 +5,27 @@ from api.v1.projects.views import (
     DirectionViewSet,
     DraftViewSet,
     ProjectPreviewMainViewSet,
+    ProjectSpecialistsViewSet,
     ProjectViewSet,
 )
 
 router = SimpleRouter()
 
 router.register(
-    "preview_main", ProjectPreviewMainViewSet, basename="projects-preview-main"
+    "projects/preview_main",
+    ProjectPreviewMainViewSet,
+    basename="projects-preview-main",
 )
-router.register("directions", DirectionViewSet, basename="projects-directions")
-router.register("drafts", DraftViewSet, basename="projects-drafts")
-router.register("", ProjectViewSet, basename="projects")
+router.register(
+    r"projects/project_specialists",
+    ProjectSpecialistsViewSet,
+    basename="projects-specialists",
+)
+router.register(
+    r"projects/directions", DirectionViewSet, basename="projects-directions"
+)
+router.register(r"projects/drafts", DraftViewSet, basename="projects-drafts")
+router.register(r"projects", ProjectViewSet, basename="projects")
 
 
 urlpatterns = [

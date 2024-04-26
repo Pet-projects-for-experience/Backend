@@ -89,8 +89,8 @@ class Skill(models.Model):
         return self.name
 
 
-class Specialist(models.Model):
-    """Модель специалиста."""
+class Profession(models.Model):
+    """Модель профессии."""
 
     specialty = models.CharField(
         verbose_name="Специализация",
@@ -122,17 +122,17 @@ class Specialist(models.Model):
     )
 
     class Meta:
-        verbose_name = "Специалист"
-        verbose_name_plural = "Специалисты"
+        verbose_name = "Профессия"
+        verbose_name_plural = "Профессии"
         constraints = (
             models.constraints.UniqueConstraint(
                 fields=("specialty", "specialization"),
-                name=("%(app_label)s_%(class)s_unique_specialist"),
+                name=("%(app_label)s_%(class)s_unique_profession"),
             ),
         )
 
     def __str__(self) -> str:
-        """Метод строкового представления объекта специалиста."""
+        """Метод строкового представления объекта профессии."""
 
         return f"{self.specialty} - {self.specialization}"
 
