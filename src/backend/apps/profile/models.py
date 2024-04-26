@@ -121,7 +121,7 @@ class Profile(ContactsFields, models.Model):
         verbose_name_plural = "Профили"
 
     def __str__(self):
-        return f"Профиль пользователя {self.pk}: {self.name}"
+        return f"Профиль {self.pk}"
 
 
 class Specialist(models.Model):
@@ -135,6 +135,7 @@ class Specialist(models.Model):
     profile = models.ForeignKey(
         to=Profile,
         on_delete=models.CASCADE,
+        verbose_name="Профиль пользователя"
     )
     level = models.IntegerField(
         verbose_name="Уровень квалификации",
@@ -149,6 +150,7 @@ class Specialist(models.Model):
 
     class Meta:
         verbose_name = "Специалист"
+        verbose_name_plural = "Специалисты"
         constraints = (
             models.UniqueConstraint(
                 fields=("profile", "profession"),
@@ -160,4 +162,4 @@ class Specialist(models.Model):
         default_related_name = "profile_professions"
 
     def __str__(self):
-        return f"{self.profession} - {self.profile}"
+        return f"{self.profile} - {self.profession}"

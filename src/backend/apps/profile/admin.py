@@ -1,13 +1,29 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
-from .constants import MAX_PROFILE_PROFESSIONS
 from .models import Profile, Specialist
 
 
-class SpecialistInline(admin.StackedInline):
-    model = Specialist
-    max_num = MAX_PROFILE_PROFESSIONS
+@admin.register(Specialist)
+class SpecialistAdmin(admin.ModelAdmin):
+    list_display = (
+        "profile",
+        "profession",
+        "level",
+        "skills_display"
+    )
+    list_filter = ("level", "profession__specialty")
 
+    @admin.display(description="Навыки")
+    @mark_safe
+    def skills_display(self, specialist):
+        return '<br>'.join(skill.name for skill in specialist.skills.all())
+
+    def get_queryset(self, request):
+        return (
+            Specialist.objects.select_related("profile", "profession")
+            .prefetch_related("skills")
+        )
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -25,7 +41,6 @@ class ProfileAdmin(admin.ModelAdmin):
         "visible_status",
         "visible_status_contacts"
     )
-    inlines = [SpecialistInline]
     fields = (
         "user",
         "name",

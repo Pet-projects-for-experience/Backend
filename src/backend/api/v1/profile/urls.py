@@ -1,10 +1,18 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import SimpleRouter
 
-from .views import SettingProfileView
+from .views import ProfileView, ProfileProfessionsViewSet
 
+router = SimpleRouter()
+router.register(
+    "profile/professions",
+    ProfileProfessionsViewSet,
+    basename="profile-professions"
+)
 
 urlpatterns = [
-    path("settings/profile/",
-         SettingProfileView.as_view(),
+    path("", include(router.urls)),
+    path("profile/",
+         ProfileView.as_view(),
          name="profile-settings"),
 ]
