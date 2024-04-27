@@ -16,8 +16,8 @@ from apps.general.constants import (
     MIN_LENGTH_SPECIALIZATION_NAME,
     MIN_LENGTH_SPECIALTY_NAME,
     MIN_LENGTH_TELEGRAM_NICK,
-    PHONE_NUMBER_REGEX,
-    PHONE_NUMBER_REGEX_ERROR_TEXT,
+    REGEX_PHONE_NUMBER,
+    REGEX_PHONE_NUMBER_ERROR_TEXT,
     REGEX_SPECIALIZATION_NAME,
     REGEX_SPECIALIZATION_NAME_ERROR_TEXT,
     REGEX_SPECIALTY_NAME,
@@ -143,17 +143,19 @@ class ContactsFields(models.Model):
     phone_number = models.CharField(
         max_length=MAX_LENGTH_PHONE_NUMBER,
         verbose_name="Номер телефона",
+        null=True,
         blank=True,
         validators=[
             RegexValidator(
-                regex=PHONE_NUMBER_REGEX,
-                message=PHONE_NUMBER_REGEX_ERROR_TEXT,
+                regex=REGEX_PHONE_NUMBER,
+                message=REGEX_PHONE_NUMBER_ERROR_TEXT,
             )
         ],
     )
     telegram_nick = models.CharField(
         max_length=MAX_LENGTH_TELEGRAM_NICK,
         verbose_name="Ник в телеграм",
+        null=True,
         blank=True,
         validators=[
             MinLengthValidator(
@@ -169,6 +171,7 @@ class ContactsFields(models.Model):
     email = models.EmailField(
         verbose_name="E-mail",
         max_length=MAX_LENGTH_EMAIL,
+        null=True,
         blank=True,
     )
 

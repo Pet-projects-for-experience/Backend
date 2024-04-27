@@ -5,7 +5,7 @@
         "fields": {
             "email": "admin@admin.ru",
             "username": "admin",
-            "password": "pbkdf2_sha256$720000$yDMjUkRaCfc23VahJhCosX$H4VZnxw2dGwiwMwEZxCbuH7F6UuwNoBM/GLyk7FZKDk=",
+            "password": "pbkdf2_sha256$720000$tOrYyYZoGEpyRBYwTH7YYp$DDr/IcXnf+2xpa4sdYKVhHqbjoqxpkFGTyueIMcf5kQ=",
             "is_superuser": true,
             "is_staff": true,
             "is_active": true,
@@ -19,7 +19,7 @@
         "fields": {
             "email": "test@mail.ru",
             "username": "test_user",
-            "password": "pbkdf2_sha256$720000$3c3o1zAifXJygUrWMW48L8$Te54hj38hdq7elG4KMthkuvo8HvfUfiaZUJp0t9wn+s=",
+            "password": "pbkdf2_sha256$720000$MufoOt2yyinUePtxBF5hxE$Wo3BFq++KaHA+emqcSoJScMIVWBwLJNOVgXsgGqSkT8=",
             "is_superuser": false,
             "is_staff": false,
             "is_active": true,

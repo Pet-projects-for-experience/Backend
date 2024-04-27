@@ -1,34 +1,82 @@
-services:
+version: '3.8'
 
+volumes:
+  pg_data:
+  static_volume:
+  media_value:
+  certbot:
+  letsencrypt:
+
+services:
   db:
     image: postgres:16.2-alpine
-    restart: always
+    restart: unless-stopped
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
-      - db_value:/var/lib/postgresql/data/
-
+      - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ../.
+    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_backend:latest
+    restart: unless-stopped
     env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - static_volume:/backend_static/
-      - ./.env:/app
+      - media_value:/backend_media/
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME_FRONT}/${PROJECT_NAME}_frontend:latest
+    command: cp -r out/. /frontend_static/
+    env_file: .env
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - static_volume:/frontend_static
+    depends_on:
+      db:
+        condition: service_healthy
 
   nginx:
-    build: ./nginx/.
-    env_file: .env
+    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_nginx:latest
     ports:
       - "80:80"
       - "443:443"
+    env_file: .env
+    environment:
+      - TZ=Europe/Moscow
     volumes:
       - static_volume:/staticfiles/
-      - /etc/letsencrypt:/etc/letsencrypt
+      - media_value:/mediafiles/
+      - certbot:/certbot/
+      - letsencrypt:/etc/letsencrypt/
+    restart: unless-stopped
     depends_on:
       - backend
+      - frontend
 
-volumes:
-  db_value:
-  static_volume:
+  certbot:
+    image: certbot/certbot
+    env_file: .env
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - certbot:/var/www/certbot/
+      - letsencrypt:/etc/letsencrypt/
+    command: certonly --webroot --agree-tos --no-eff-email --non-interactive --expand -w /var/www/certbot/ -d $SERVER_NAME_DEV -d www.$SERVER_NAME_DEV
