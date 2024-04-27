@@ -83,8 +83,8 @@ class ProfileProfessionWriteSerializer(ProfileProfessionReadSerializer):
         return specialist
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    """Сериализатор для чтения, обновления профиля его владельцем."""
+class ProfileReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения профиля его владельцем."""
 
     username = serializers.CharField(source="user.username", read_only=True)
     professions = ProfileProfessionReadSerializer(
@@ -111,4 +111,12 @@ class ProfileSerializer(serializers.ModelSerializer):
             "visible_status",
             "visible_status_contacts"
         )
+        read_only_fields = fields
+
+
+class ProfileWriteSerializer(ProfileReadSerializer):
+    """Сериализатор для обновления профиля его владельцем."""
+    username = serializers.CharField(source="user__username")
+
+    class Meta(ProfileReadSerializer.Meta):
         read_only_fields = ("user_id",)

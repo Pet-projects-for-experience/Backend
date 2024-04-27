@@ -11,7 +11,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from apps.profile.models import Profile, Specialist
 from .serializers import (
-    ProfileSerializer,
+    ProfileReadSerializer,
+    ProfileWriteSerializer,
     ProfileProfessionWriteSerializer
 )
 
@@ -28,7 +29,7 @@ class ProfileView(APIView):
     """Чтение, частичное изменение профиля его владельцем."""
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileReadSerializer
 
     @extend_schema(responses={200: serializer_class})
     def get(self, request):
@@ -49,7 +50,7 @@ class ProfileView(APIView):
         except Profile.DoesNotExist:
             return Response(HTTP_404_NOT_FOUND)
         return Response(
-            data=self.serializer_class(profile).data,
+            data=ProfileReadSerializer(profile).data,
             status=HTTP_200_OK
         )
 
@@ -59,7 +60,7 @@ class ProfileView(APIView):
         Редактирование профиля, в том числе настроек видимости.
         Доступно только авторизованному пользователю-владельцу.
         """
-        serializer = self.serializer_class(
+        serializer = ProfileWriteSerializer(
             request.user.profile,
             data=request.data,
             partial=True
