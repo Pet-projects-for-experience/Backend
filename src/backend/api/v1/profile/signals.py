@@ -1,3 +1,4 @@
+from django.db.models.fields.files import ImageFieldFile
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
@@ -17,7 +18,8 @@ def save_profile(sender, instance, **kwargs):
     instance.profile.save()
 
 
-def delete_image(image):
+def delete_image(image: ImageFieldFile) -> None:
+    """Удалить изображение."""
     if image and hasattr(image, "storage") and hasattr(image, "path"):
         storage, path = image.storage, image.path
         storage.delete(path)
@@ -25,12 +27,14 @@ def delete_image(image):
 
 @receiver(post_delete, sender=Profile)
 def handle_images_on_delete(sender, instance, **kwargs):
+    """Обработать изображение после удаления объекта профиля."""
     image_file = instance.avatar
     delete_image(image_file)
 
 
 @receiver(pre_save, sender=Profile)
 def set_instance_cache(sender, instance, **kwargs):
+    """Сохранить в кэше старое изображение перед обновлением профиля."""
     old_instance = sender.objects.filter(pk=instance.pk).first()
     if old_instance:
         instance.media_cache = {"avatar": old_instance.avatar}
@@ -38,6 +42,7 @@ def set_instance_cache(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Profile)
 def handle_images_on_update(sender, instance, **kwargs):
+    """Обработать изображение после обновления профиля."""
     if hasattr(instance, "media_cache") and instance.media_cache:
         old_image = instance.media_cache["avatar"]
         new_image = getattr(instance, "avatar", None)

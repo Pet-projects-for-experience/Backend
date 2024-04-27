@@ -1,19 +1,28 @@
 from django.db.models import Prefetch
 from drf_spectacular.utils import extend_schema
 from rest_framework.mixins import (
-    CreateModelMixin, UpdateModelMixin, DestroyModelMixin
+    CreateModelMixin,
+    DestroyModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.serializers import ValidationError
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from apps.profile.constants import MAX_PROFILE_PROFESSIONS
 from apps.profile.models import Profile, Specialist
+
 from .serializers import (
     ProfileReadSerializer,
     ProfileWriteSerializer,
-    ProfileProfessionWriteSerializer
+    SpecialistWriteSerializer,
 )
 
 USER_FIELDS_TO_DEFER = (
@@ -40,17 +49,19 @@ class ProfileView(APIView):
                     Prefetch(
                         "specialists",
                         queryset=(
-                            Specialist.objects.select_related("profession")
-                            .prefetch_related("skills")
-                        )
+                            Specialist.objects.select_related(
+                                "profession"
+                            ).prefetch_related("skills")
+                        ),
                     )
-                ).defer(*USER_FIELDS_TO_DEFER).get(user=request.user)
+                )
+                .defer(*USER_FIELDS_TO_DEFER)
+                .get(user=request.user)
             )
         except Profile.DoesNotExist:
             return Response(HTTP_404_NOT_FOUND)
         return Response(
-            data=ProfileReadSerializer(profile).data,
-            status=HTTP_200_OK
+            data=ProfileReadSerializer(profile).data, status=HTTP_200_OK
         )
 
     @extend_schema(
@@ -63,29 +74,42 @@ class ProfileView(APIView):
         Доступно только авторизованному пользователю-владельцу.
         """
         serializer = ProfileWriteSerializer(
-            request.user.profile,
-            data=request.data,
-            partial=True
+            request.user.profile, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, HTTP_200_OK)
 
 
-class ProfileProfessionsViewSet(CreateModelMixin,
-                                UpdateModelMixin,
-                                DestroyModelMixin,
-                                GenericViewSet):
+class ProfileSpecialistsViewSet(
+    CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet
+):
     """Представление специальностей в профиле пользователя-владельца."""
-    serializer_class = ProfileProfessionWriteSerializer
+
+    serializer_class = SpecialistWriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_url_kwarg = "specialist_id"
     http_method_names = ["post", "patch", "delete"]
 
+    def get_profile(self):
+        try:
+            profile = Profile.objects.only("pk").get(user=self.request.user)
+        except Profile.DoesNotExist:
+            return Response(HTTP_400_BAD_REQUEST)
+        return profile
+
     def get_queryset(self):
         return (
-            Specialist.objects
-            .select_related("profession")
+            Specialist.objects.select_related("profession")
             .prefetch_related("skills")
-            .filter(profile=self.request.user.profile)
+            .filter(profile=self.get_profile())
         )
+
+    def create(self, request, *args, **kwargs):
+        profile = self.get_profile()
+        if profile.specialists.count() == MAX_PROFILE_PROFESSIONS:
+            raise ValidationError(
+                "Можно добавить не более "
+                f"{MAX_PROFILE_PROFESSIONS} специальностей"
+            )
+        return super().create(request, *args, **kwargs)

@@ -1,28 +1,5 @@
-from datetime import date
-
 from django.core.exceptions import ValidationError
-from django.utils.deconstruct import deconstructible
 from PIL import Image
-
-
-@deconstructible
-class BirthdayValidator:
-    """
-    Валидатор, не позволяющий пользователю добавить будущую дату в качестве
-    своего дня рождения.
-    """
-
-    def __init__(self, min_age=0):
-        self.min_age = min_age
-
-    def __call__(self, value):
-        today = date.today()
-
-        if value > today:
-            raise ValidationError("Дата не может быть в будущем.")
-
-    def __eq__(self, other):
-        return self.min_age == other.min_age
 
 
 def validate_image_format(value):
