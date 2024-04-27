@@ -4,7 +4,7 @@ from apps.general.constants import LEVEL_CHOICES
 from apps.profile.models import Profile
 
 
-class ProfileFilter(FilterSet):
+class SpecialistsFilter(FilterSet):
     """Класс фильтрации специалистов, по запросу на главной странице."""
 
     ready_to_participate = filters.BooleanFilter()
