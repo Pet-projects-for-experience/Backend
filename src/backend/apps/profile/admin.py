@@ -55,7 +55,9 @@ class ProfileAdmin(admin.ModelAdmin):
         "email",
         "ready_to_participate",
         "visible_status",
-        "visible_status_contacts"
+        "visible_status_contacts",
+        "allow_notifications",
+        "subscribe_to_projects"
     )
     readonly_fields = ("user",)
 

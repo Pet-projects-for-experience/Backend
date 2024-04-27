@@ -48,9 +48,8 @@ REGEX_TELEGRAM_NICK_ERROR_TEXT = (
     "букв, цифр и символа подчеркивания."
 )
 LEVEL_CHOICES = (
-    (1, "intern"),
-    (2, "junior"),
-    (3, "middle"),
-    (4, "senior"),
-    (5, "lead"),
+    (1, "junior"),
+    (2, "middle"),
+    (3, "senior"),
+    (4, "lead"),
 )

@@ -119,6 +119,14 @@ class Profile(ContactsFields, models.Model):
         through="Specialist",
         verbose_name="Профессии"
     )
+    allow_notifications = models.BooleanField(
+        verbose_name="Отправлять уведомления",
+        default=True
+    )
+    subscribe_to_projects = models.BooleanField(
+        verbose_name="Подписаться на проекты",
+        default=True
+    )
 
     class Meta:
         verbose_name = "Профиль"
