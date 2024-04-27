@@ -25,6 +25,7 @@ class SpecialistAdmin(admin.ModelAdmin):
             .prefetch_related("skills")
         )
 
+
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -71,3 +72,12 @@ class ProfileAdmin(admin.ModelAdmin):
             "visible_status",
             "visible_status_contacts"
         )
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        return False
