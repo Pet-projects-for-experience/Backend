@@ -1,12 +1,19 @@
 from base64 import b64decode
 
 from django.core.files.base import ContentFile
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
 from apps.general.models import Profession, Skill
 from apps.profile.models import Profile, Specialist
+from apps.users.constants import (
+    MAX_LENGTH_USERNAME,
+    MIN_LENGTH_USERNAME,
+    USERNAME_ERROR_REGEX_TEXT,
+    USERNAME_REGEX,
+)
 
 
 class SkillField(serializers.PrimaryKeyRelatedField):
@@ -15,31 +22,28 @@ class SkillField(serializers.PrimaryKeyRelatedField):
         return SkillSerializer(skill).data
 
 
-class ProfileProfessionReadSerializer(serializers.ModelSerializer):
+class SpecialistReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения специализаций в профиле."""
+
     profession = ProfessionSerializer(read_only=True)
     specialist_id = serializers.IntegerField(source="id", read_only=True)
     skills = SkillField(many=True, read_only=True)
 
     class Meta:
         model = Specialist
-        fields = (
-            "specialist_id",
-            "profession",
-            "level",
-            "skills"
-        )
+        fields = ("specialist_id", "profession", "level", "skills")
         read_only_fields = fields
 
 
 class CurrentProfile(serializers.CurrentUserDefault):
 
     def __call__(self, serializer_field):
-        return serializer_field.context['request'].user.profile
+        return serializer_field.context["request"].user.profile
 
 
-class ProfileProfessionWriteSerializer(ProfileProfessionReadSerializer):
+class SpecialistWriteSerializer(SpecialistReadSerializer):
     """Сериализатор для создания, редактирования специализаций в профиле."""
+
     profession = serializers.PrimaryKeyRelatedField(
         queryset=Profession.objects.all()
     )
@@ -48,14 +52,15 @@ class ProfileProfessionWriteSerializer(ProfileProfessionReadSerializer):
 
     class Meta:
         model = Specialist
-        fields = (*ProfileProfessionReadSerializer.Meta.fields, "profile")
+        fields = (*SpecialistReadSerializer.Meta.fields, "profile")
         validators = (
             UniqueTogetherValidator(
                 queryset=(
                     Specialist.objects.select_related("profession")
-                    .prefetch_related("skills").all()
+                    .prefetch_related("skills")
+                    .all()
                 ),
-                fields=("profession", "profile")
+                fields=("profession", "profile"),
             ),
         )
 
@@ -90,7 +95,7 @@ class ProfileReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения профиля его владельцем."""
 
     username = serializers.CharField(source="user.username", read_only=True)
-    professions = ProfileProfessionReadSerializer(
+    professions = SpecialistReadSerializer(
         source="specialists", many=True, read_only=True
     )
 
@@ -114,7 +119,7 @@ class ProfileReadSerializer(serializers.ModelSerializer):
             "visible_status",
             "visible_status_contacts",
             "allow_notifications",
-            "subscribe_to_projects"
+            "subscribe_to_projects",
         )
         read_only_fields = fields
 
@@ -130,11 +135,39 @@ class Base64ImageField(serializers.ImageField):
 
 class ProfileWriteSerializer(ProfileReadSerializer):
     """Сериализатор для обновления профиля его владельцем."""
+
     avatar = Base64ImageField(required=False, allow_null=True)
-    username = serializers.CharField(source="user__username")
+    username = serializers.CharField(
+        source="user__username",
+        required=False,
+        min_length=MIN_LENGTH_USERNAME,
+        max_length=MAX_LENGTH_USERNAME,
+        validators=(
+            RegexValidator(
+                regex=USERNAME_REGEX, message=USERNAME_ERROR_REGEX_TEXT
+            ),
+        ),
+    )
 
-    class Meta(ProfileReadSerializer.Meta):
+    class Meta:
+        model = Profile
+        fields = (
+            "user_id",
+            "avatar",
+            "username",
+            "name",
+            "about",
+            "portfolio_link",
+            "phone_number",
+            "telegram_nick",
+            "email",
+            "birthday",
+            "country",
+            "city",
+            "ready_to_participate",
+            "visible_status",
+            "visible_status_contacts",
+            "allow_notifications",
+            "subscribe_to_projects",
+        )
         read_only_fields = ("user_id",)
-
-    def to_representation(self, instance):
-        return ProfileReadSerializer(instance).data

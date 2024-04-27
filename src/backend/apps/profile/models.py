@@ -46,7 +46,7 @@ class Profile(ContactsFields, models.Model):
         upload_to="images/",
         validators=[validate_image],
         blank=True,
-        null=True
+        null=True,
     )
     name = models.CharField(
         verbose_name="Имя",
@@ -91,14 +91,10 @@ class Profile(ContactsFields, models.Model):
         blank=True,
     )
     country = models.CharField(
-        verbose_name="Страна",
-        max_length=MAX_LENGTH_COUNTRY,
-        blank=True
+        verbose_name="Страна", max_length=MAX_LENGTH_COUNTRY, blank=True
     )
     city = models.CharField(
-        verbose_name="Город",
-        max_length=MAX_LENGTH_CITY,
-        blank=True
+        verbose_name="Город", max_length=MAX_LENGTH_CITY, blank=True
     )
     ready_to_participate = models.BooleanField(
         verbose_name="Готов(а) к участию в проектах",
@@ -107,7 +103,7 @@ class Profile(ContactsFields, models.Model):
     visible_status = models.PositiveSmallIntegerField(
         verbose_name="Видимость",
         choices=VisibilitySettings.choices,
-        default=VisibilitySettings.ALL
+        default=VisibilitySettings.ALL,
     )
     visible_status_contacts = models.PositiveSmallIntegerField(
         verbose_name="Видимость контактов",
@@ -115,17 +111,13 @@ class Profile(ContactsFields, models.Model):
         default=VisibilitySettings.ALL,
     )
     professions = models.ManyToManyField(
-        to=Profession,
-        through="Specialist",
-        verbose_name="Профессии"
+        to=Profession, through="Specialist", verbose_name="Профессии"
     )
     allow_notifications = models.BooleanField(
-        verbose_name="Отправлять уведомления",
-        default=True
+        verbose_name="Отправлять уведомления", default=True
     )
     subscribe_to_projects = models.BooleanField(
-        verbose_name="Подписаться на проекты",
-        default=True
+        verbose_name="Подписаться на проекты", default=True
     )
 
     class Meta:
@@ -140,25 +132,20 @@ class Specialist(models.Model):
     """Модель специалиста."""
 
     profession = models.ForeignKey(
-        to=Profession,
-        on_delete=models.CASCADE,
-        verbose_name="Профессия"
+        to=Profession, on_delete=models.CASCADE, verbose_name="Профессия"
     )
     profile = models.ForeignKey(
         to=Profile,
         on_delete=models.CASCADE,
-        verbose_name="Профиль пользователя"
+        verbose_name="Профиль пользователя",
     )
     level = models.IntegerField(
         verbose_name="Уровень квалификации",
         choices=LEVEL_CHOICES,
         null=True,
-        blank=True
+        blank=True,
     )
-    skills = models.ManyToManyField(
-        to=Skill,
-        verbose_name="Навыки"
-    )
+    skills = models.ManyToManyField(to=Skill, verbose_name="Навыки")
 
     class Meta:
         verbose_name = "Специалист"
@@ -166,9 +153,7 @@ class Specialist(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=("profile", "profession"),
-                name=(
-                    "%(app_label)s_%(class)s_unique_profession_per_profile"
-                ),
+                name=("%(app_label)s_%(class)s_unique_profession_per_profile"),
             ),
         )
         default_related_name = "specialists"
