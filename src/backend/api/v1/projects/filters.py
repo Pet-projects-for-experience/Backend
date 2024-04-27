@@ -12,11 +12,7 @@ class ProjectFilter(FilterSet):
     status = filters.MultipleChoiceFilter(choices=PROJECT_STATUS_CHOICES)
     started = filters.DateFromToRangeFilter()
     ended = filters.DateFromToRangeFilter()
-    recruitment_status = filters.MultipleChoiceFilter(
-        choices=(
-            ("1", "Набор открыт"),
-            ("2", "Набор закрыт"),
-        ),
+    recruitment_status = filters.NumberFilter(
         method="filter_recruitment_status",
     )
     specialization = filters.NumberFilter(
@@ -42,14 +38,14 @@ class ProjectFilter(FilterSet):
         )
 
     def filter_recruitment_status(self, queryset, name, value):
-        if value == "1":
-            queryset = queryset.filter(
-                Q(project_specialists__is_requred=True)
-                | ~Q(project_specialists__is_required=False)
+        if value == 1:
+            return queryset.exclude(
+                Q(project_specialists__is_required=False)
+                | Q(project_specialists=None)
             )
-        elif value == "2":
-            queryset = queryset.filter(
-                ~Q(project_specialists__is_reqiered=True),
-                Q(project_specialists__is_required=False),
+        elif value == 0:
+            return queryset.filter(
+                ~Q(project_specialists__is_required=True)
+                | Q(project_specialists=None)
             )
         return queryset

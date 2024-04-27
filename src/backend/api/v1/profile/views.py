@@ -1,4 +1,3 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 
 from api.v1.profile.permissions import IsOwnerOrReadOnly
@@ -8,8 +7,6 @@ from api.v1.profile.serializers import (
     ProfileVisibilitySerializer,
 )
 from apps.profile.models import Profile
-
-from .filters import SpecialistsFilter
 
 
 class ProfileUpdateView(generics.RetrieveUpdateAPIView):
@@ -29,8 +26,6 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = SpecialistsFilter
 
     def get_queryset(self):
         user = self.request.user
@@ -40,10 +35,8 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(
                 visible_status__in=[Profile.ALL, Profile.CREATOR_ONLY]
             )
-        else:
-            queryset = queryset.filter(visible_status=Profile.ALL)
-
-        return queryset
+            return queryset
+        return queryset.filter(visible_status=Profile.ALL)
 
 
 class ProfileVisibilityView(generics.RetrieveUpdateAPIView):

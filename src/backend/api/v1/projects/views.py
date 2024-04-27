@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
-from rest_framework.permissions import SAFE_METHODS, AllowAny
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
@@ -36,7 +36,7 @@ class DirectionViewSet(ReadOnlyModelViewSet):
 
     queryset = Direction.objects.all()
     serializer_class = DirectionSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
 
 class BaseProjectViewSet(ModelViewSet):
@@ -149,7 +149,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class DraftViewSet(BaseProjectViewSet):
-    """Представление черновиков проекта."""
+    """Представление для черновиков проекта."""
 
     permission_classes = (IsCreatorOrOwner,)
 
@@ -186,7 +186,7 @@ class ProjectSpecialistsViewSet(
     mixins.DestroyModelMixin,
     GenericViewSet,
 ):
-    """Представление специалистов проекта."""
+    """Представление для специалистов проекта."""
 
     queryset = ProjectSpecialist.objects.all()
     serializer_class = WriteProjectSpecialistSerializer
