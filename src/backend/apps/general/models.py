@@ -140,7 +140,7 @@ class Profession(models.Model):
 class ContactsFields(models.Model):
     """Абстрактная модель с полями контактов."""
 
-    phone_number = models.CharField(
+    phone_number = models.TextField(
         max_length=MAX_LENGTH_PHONE_NUMBER,
         verbose_name="Номер телефона",
         null=True,

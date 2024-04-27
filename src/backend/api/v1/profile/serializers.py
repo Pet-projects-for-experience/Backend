@@ -88,7 +88,7 @@ class ProfileReadSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(source="user.username", read_only=True)
     professions = ProfileProfessionReadSerializer(
-        source="profile_professions", many=True, read_only=True
+        source="specialists", many=True, read_only=True
     )
 
     class Meta:

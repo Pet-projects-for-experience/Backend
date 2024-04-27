@@ -39,7 +39,7 @@ class ProfileView(APIView):
                 Profile.objects.select_related("user")
                 .prefetch_related(
                     Prefetch(
-                        "profile_professions",
+                        "specialists",
                         queryset=(
                             Specialist.objects.select_related("profession")
                             .prefetch_related("skills")

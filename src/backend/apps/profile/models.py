@@ -159,7 +159,7 @@ class Specialist(models.Model):
                 ),
             ),
         )
-        default_related_name = "profile_professions"
+        default_related_name = "specialists"
 
     def __str__(self):
         return f"{self.profile} - {self.profession}"
