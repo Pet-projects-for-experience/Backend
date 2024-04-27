@@ -30,7 +30,7 @@ def validate_image_format(value):
     Валидатор, позволяющий добавить аватар только определенного формата .png,
     .jpg или .jpeg.
     """
-    valid_extensions = [".png", ".jpg", ".jpeg"]
+    valid_extensions = ["png", "jpg", "jpeg"]
     ext = value.name.lower().split(".")[-1]
     if ext not in valid_extensions:
         raise ValidationError(

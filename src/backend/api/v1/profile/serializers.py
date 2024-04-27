@@ -1,3 +1,6 @@
+from base64 import b64decode
+
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -109,14 +112,29 @@ class ProfileReadSerializer(serializers.ModelSerializer):
             "professions",
             "ready_to_participate",
             "visible_status",
-            "visible_status_contacts"
+            "visible_status_contacts",
+            "allow_notifications",
+            "subscribe_to_projects"
         )
         read_only_fields = fields
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith("data:image"):
+            format, imgstr = data.split(";base64,")
+            extension = format.split("/")[-1]
+            data = ContentFile(b64decode(imgstr), name="temp." + extension)
+        return super().to_internal_value(data)
+
+
 class ProfileWriteSerializer(ProfileReadSerializer):
     """Сериализатор для обновления профиля его владельцем."""
+    avatar = Base64ImageField(required=False, allow_null=True)
     username = serializers.CharField(source="user__username")
 
     class Meta(ProfileReadSerializer.Meta):
         read_only_fields = ("user_id",)
+
+    def to_representation(self, instance):
+        return ProfileReadSerializer(instance).data

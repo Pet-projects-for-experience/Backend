@@ -29,9 +29,8 @@ class ProfileView(APIView):
     """Чтение, частичное изменение профиля его владельцем."""
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ProfileReadSerializer
 
-    @extend_schema(responses={200: serializer_class})
+    @extend_schema(responses={200: ProfileReadSerializer})
     def get(self, request):
         """Просмотр профиля его владельцем."""
         try:
@@ -54,7 +53,10 @@ class ProfileView(APIView):
             status=HTTP_200_OK
         )
 
-    @extend_schema(responses={200: serializer_class})
+    @extend_schema(
+        request=ProfileWriteSerializer,
+        responses={200: ProfileWriteSerializer},
+    )
     def patch(self, request):
         """
         Редактирование профиля, в том числе настроек видимости.
