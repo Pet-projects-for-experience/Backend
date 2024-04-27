@@ -2,14 +2,14 @@ from django.db.models import Q
 from django_filters.rest_framework import FilterSet, filters
 
 from apps.general.constants import LEVEL_CHOICES
-from apps.projects.constants import BUSYNESS_CHOICES, STATUS_CHOICES
+from apps.projects.constants import BUSYNESS_CHOICES, PROJECT_STATUS_CHOICES
 from apps.projects.models import Project
 
 
 class ProjectFilter(FilterSet):
     """Класс фильтрации проектов, по запросу на главной странице."""
 
-    status = filters.MultipleChoiceFilter(choices=STATUS_CHOICES)
+    status = filters.MultipleChoiceFilter(choices=PROJECT_STATUS_CHOICES)
     started = filters.DateFromToRangeFilter()
     ended = filters.DateFromToRangeFilter()
     recruitment_status = filters.MultipleChoiceFilter(

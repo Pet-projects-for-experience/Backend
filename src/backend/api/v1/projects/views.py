@@ -79,11 +79,21 @@ class ProjectViewSet(BaseProjectViewSet):
     def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а c параметрами для проекта."""
 
-        if not isinstance(user, AnonymousUser):
-            return queryset.exclude(
-                Q(status=Project.DRAFT) & (~(Q(creator=user) | Q(owner=user)))
-            )
-        return queryset.exclude(status=Project.DRAFT)
+        if isinstance(user, AnonymousUser):
+            queryset = queryset.exclude(status=Project.DRAFT)
+        else:
+            participant_projects = queryset.filter(participants=user)
+            owner_projects = queryset.filter(Q(owner=user) | Q(creator=user))
+            if self.request.query_params.get("view") == "organizer":
+                queryset = owner_projects
+            elif self.request.query_params.get("view") == "participant":
+                queryset = participant_projects.exclude(status=Project.DRAFT)
+            else:
+                queryset = queryset.exclude(
+                    Q(status=Project.DRAFT)
+                    & (~(Q(creator=user) | Q(owner=user)))
+                )
+        return queryset
 
     def get_queryset(self):
         """Метод получения отфильтрованного queryset-a с фильтрами."""
