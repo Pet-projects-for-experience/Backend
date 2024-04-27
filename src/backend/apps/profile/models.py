@@ -13,11 +13,15 @@ from apps.profile.constants import (
     MAX_LENGTH_COUNTRY,
     MAX_LENGTH_NAME,
     MAX_LENGTH_URL,
+    MAX_LENGTH_URL_MESSAGE,
     MIN_LENGTH_ABOUT,
     MIN_LENGTH_NAME,
+    MIN_LENGTH_NAME_MESSAGE,
     MIN_LENGTH_PORTFOLIO,
     REGEX_PROFILE_ABOUT,
-    REGEX_PROFILE_NAME
+    REGEX_PROFILE_ABOUT_MESSAGE,
+    REGEX_PROFILE_NAME,
+    REGEX_PROFILE_NAME_MESSAGE,
 )
 from apps.profile.validators import BirthdayValidator, validate_image
 from apps.users.models import User
@@ -50,11 +54,11 @@ class Profile(ContactsFields, models.Model):
         validators=[
             RegexValidator(
                 regex=REGEX_PROFILE_NAME,
-                message="Введите кириллицу или латиницу",
+                message=REGEX_PROFILE_NAME_MESSAGE,
             ),
             MinLengthValidator(
                 limit_value=MIN_LENGTH_NAME,
-                message="Должно быть минимум символов",
+                message=MIN_LENGTH_NAME_MESSAGE,
             ),
         ],
         blank=False,
@@ -66,7 +70,7 @@ class Profile(ContactsFields, models.Model):
         validators=[
             RegexValidator(
                 regex=REGEX_PROFILE_ABOUT,
-                message="Введите кириллицу или латиницу",
+                message=REGEX_PROFILE_ABOUT_MESSAGE,
             ),
             MinLengthValidator(limit_value=MIN_LENGTH_ABOUT),
         ],
@@ -76,7 +80,7 @@ class Profile(ContactsFields, models.Model):
         blank=True,
         max_length=MAX_LENGTH_URL,
         validators=[
-            URLValidator(message="Введите корректный URL"),
+            URLValidator(message=MAX_LENGTH_URL_MESSAGE),
             MinLengthValidator(limit_value=MIN_LENGTH_PORTFOLIO),
         ],
     )
