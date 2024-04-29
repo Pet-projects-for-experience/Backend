@@ -29,14 +29,16 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = super().get_queryset()
+        queryset = Profile.objects.all()
         is_organizer = user.is_authenticated and user.is_organizer
         if is_organizer:
             queryset = queryset.filter(
                 visible_status__in=[Profile.ALL, Profile.CREATOR_ONLY]
             )
-            return queryset
-        return queryset.filter(visible_status=Profile.ALL)
+        else:
+            queryset = queryset.filter(visible_status=Profile.ALL)
+
+        return queryset
 
 
 class ProfileVisibilityView(generics.RetrieveUpdateAPIView):
