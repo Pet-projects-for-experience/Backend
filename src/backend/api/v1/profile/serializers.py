@@ -67,9 +67,24 @@ class SpecialistWriteSerializer(
             ),
         )
 
-    def validate_skills(self, skills):
-        if not skills:
+    @staticmethod
+    def check_empty(value):
+        if not value:
             raise serializers.ValidationError("Пустое значение.")
+        return value
+
+    @staticmethod
+    def check_duplicates(values):
+        duplicates = {value.id for value in values if values.count(value) > 1}
+        if duplicates:
+            raise serializers.ValidationError(
+                f"Значения дублируются: {duplicates}"
+            )
+        return values
+
+    def validate_skills(self, skills):
+        self.check_empty(skills)
+        self.check_duplicates(skills)
         return skills
 
     def create(self, validated_data):
@@ -116,7 +131,7 @@ class ProfileReadSerializer(serializers.ModelSerializer):
 
 
 class Base64ImageField(serializers.ImageField):
-    """Загрузка изображений в формате base64."""
+    """Обработка изображений в формате base64."""
 
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith("data:image"):

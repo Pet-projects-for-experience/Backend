@@ -81,7 +81,7 @@ class ProfileView(APIView):
         return Response(serializer.data, HTTP_200_OK)
 
 
-class ProfileSpecialistsViewSet(
+class SpecialistsViewSet(
     CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet
 ):
     """Представление специальностей в профиле пользователя-владельца."""
@@ -107,7 +107,7 @@ class ProfileSpecialistsViewSet(
 
     def create(self, request, *args, **kwargs):
         profile = self.get_profile()
-        if profile.specialists.count() == MAX_PROFILE_PROFESSIONS:
+        if profile.specialists.count() >= MAX_PROFILE_PROFESSIONS:
             raise ValidationError(
                 "Можно добавить не более "
                 f"{MAX_PROFILE_PROFESSIONS} специальностей"
