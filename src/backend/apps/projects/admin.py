@@ -2,7 +2,13 @@ from django.contrib import admin
 
 from api.v1.projects.mixins import RecruitmentStatusMixin
 from apps.projects.constants import PROJECTS_PER_PAGE
-from apps.projects.models import Profession, Project, ProjectSpecialist, Skill
+from apps.projects.models import (
+    Direction,
+    Profession,
+    Project,
+    ProjectSpecialist,
+    Skill,
+)
 
 
 @admin.register(Skill)
@@ -16,6 +22,12 @@ class ProfessionAdmin(admin.ModelAdmin):
     list_display = ("specialty", "specialization")
     list_filter = ("specialization",)
     search_fields = ("specialty", "specialization")
+
+
+@admin.register(Direction)
+class DirectionAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
 
 
 @admin.register(Project)

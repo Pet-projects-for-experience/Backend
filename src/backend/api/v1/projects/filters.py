@@ -22,6 +22,7 @@ class ProjectFilter(FilterSet):
     level = filters.MultipleChoiceFilter(choices=LEVEL_CHOICES)
     busyness = filters.MultipleChoiceFilter(choices=BUSYNESS_CHOICES)
     direction = filters.NumberFilter(field_name="direction")
+    project_role = filters.NumberFilter(method="get_project_role")
 
     class Meta:
         model = Project
@@ -47,5 +48,15 @@ class ProjectFilter(FilterSet):
             return queryset.filter(
                 ~Q(project_specialists__is_required=True)
                 | Q(project_specialists=None)
+            )
+        return queryset
+
+    def get_project_role(self, queryset, name, value):
+        user = self.request.user
+        if value == 1:
+            return queryset.filter(Q(owner=user) | Q(creator=user))
+        elif value == 0:
+            return queryset.filter(participants=user).exclude(
+                status=Project.DRAFT
             )
         return queryset
