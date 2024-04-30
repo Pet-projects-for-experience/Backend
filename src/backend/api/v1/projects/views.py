@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
 from rest_framework.permissions import SAFE_METHODS, AllowAny
 from rest_framework.viewsets import (
@@ -8,6 +9,7 @@ from rest_framework.viewsets import (
     ReadOnlyModelViewSet,
 )
 
+from api.v1.projects.filters import ProjectFilter
 from api.v1.projects.paginations import (
     ProjectPagination,
     ProjectPreviewMainPagination,
@@ -71,6 +73,8 @@ class ProjectViewSet(BaseProjectViewSet):
 
     permission_classes = (IsCreatorOrOwnerOrReadOnly,)
     pagination_class = ProjectPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ProjectFilter
 
     def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а c параметрами для проекта."""
@@ -80,6 +84,13 @@ class ProjectViewSet(BaseProjectViewSet):
                 Q(status=Project.DRAFT) & (~(Q(creator=user) | Q(owner=user)))
             )
         return queryset.exclude(status=Project.DRAFT)
+
+    def get_queryset(self):
+        """Метод получения отфильтрованного queryset-a с фильтрами."""
+
+        queryset = super().get_queryset()
+        queryset = self._get_queryset_with_params(queryset, self.request.user)
+        return queryset
 
     def get_serializer_class(self):
         """Метод получения сериализатора для проектов."""
@@ -128,7 +139,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class DraftViewSet(BaseProjectViewSet):
-    """Представление черновиков проекта."""
+    """Представление для черновиков проекта."""
 
     permission_classes = (IsCreatorOrOwner,)
 
@@ -165,7 +176,7 @@ class ProjectSpecialistsViewSet(
     mixins.DestroyModelMixin,
     GenericViewSet,
 ):
-    """Представление специалистов проекта."""
+    """Представление для специалистов проекта."""
 
     queryset = ProjectSpecialist.objects.all()
     serializer_class = WriteProjectSpecialistSerializer
