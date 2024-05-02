@@ -188,7 +188,7 @@ class WriteDraftSerializer(
     class Meta(BaseProjectSerializer.Meta):
         extra_kwargs = {
             "status": {"required": False},
-            "link": {"required": False},
+            "directions": {"required": False},
         }
 
 

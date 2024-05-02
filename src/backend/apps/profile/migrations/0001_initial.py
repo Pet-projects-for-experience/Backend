@@ -127,7 +127,6 @@ class Migration(migrations.Migration):
                     "birthday",
                     models.DateField(
                         null=True,
-                        validators=[apps.profile.validators.BirthdayValidator],
                         verbose_name="Дата рождения",
                     ),
                 ),
