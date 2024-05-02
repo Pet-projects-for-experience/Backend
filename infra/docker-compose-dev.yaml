@@ -8,6 +8,7 @@ volumes:
   letsencrypt:
   backend_logs:
 
+
 services:
   db:
     image: postgres:16.2-alpine

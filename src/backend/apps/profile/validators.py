@@ -1,23 +1,5 @@
-from datetime import date
-
 from django.core.exceptions import ValidationError
 from PIL import Image
-
-
-class BirthdayValidator:
-    """
-    Валидатор, не позволяющий пользователю добавить будущую дату в качестве
-    своего дня рождения.
-    """
-
-    def __init__(self, min_age=0):
-        self.min_age = min_age
-
-    def __call__(self, value):
-        today = date.today()
-
-        if value > today:
-            raise ValidationError("Дата не может быть в будущем.")
 
 
 def validate_image_format(value):
@@ -25,7 +7,7 @@ def validate_image_format(value):
     Валидатор, позволяющий добавить аватар только определенного формата .png,
     .jpg или .jpeg.
     """
-    valid_extensions = [".png", ".jpg", ".jpeg"]
+    valid_extensions = ["png", "jpg", "jpeg"]
     ext = value.name.lower().split(".")[-1]
     if ext not in valid_extensions:
         raise ValidationError(
