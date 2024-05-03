@@ -1,8 +1,10 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
-from rest_framework.permissions import SAFE_METHODS, AllowAny
+from rest_framework import mixins, status
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, SAFE_METHODS, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
@@ -109,6 +111,30 @@ class ProjectViewSet(BaseProjectViewSet):
             owner=self.request.user,
             status=Project.ACTIVE,
         )
+
+    @action(['post', 'delete'],
+            permission_classes=(IsAuthenticated,),
+            detail=True)
+    def favorite(self, request, *args, **kwargs):
+        """
+        Метод обрабатывает запросы POST и DELETE
+        для добавления и удаления проекта из избранного.
+
+        Пример использования:
+        POST /projects/<project_id>/favorite/ - добавить проект в избранное.
+        DELETE /projects/<project_id>/favorite/ - удалить проект из избранного.
+        """
+        method = request.method
+        user = request.user
+        project = self.get_object()
+        http_status = status.HTTP_400_BAD_REQUEST
+        if method == 'POST':
+            project.is_favorite.add(user)
+            http_status = status.HTTP_201_CREATED
+        if method == 'DELETE':
+            project.is_favorite.remove(user)
+            http_status = status.HTTP_204_NO_CONTENT
+        return Response(status=http_status)
 
 
 class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
