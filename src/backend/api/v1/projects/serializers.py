@@ -112,9 +112,12 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         """
         Метод возвращает True если user добавил проект в избранное.
         В противном случе возвращает False.
+        Для неавторизованных пользователей всегда возвращает False.
         """
         user = self.context['request'].user
-        return bool(user in project.is_favorite.all())
+        if user.is_authenticated:
+            return bool(user in project.is_favorite.all())
+        return False
 
 
 class WriteProjectSerializer(
