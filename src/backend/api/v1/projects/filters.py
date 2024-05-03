@@ -23,6 +23,7 @@ class ProjectFilter(FilterSet):
     busyness = filters.MultipleChoiceFilter(choices=BUSYNESS_CHOICES)
     direction = filters.NumberFilter(field_name="direction")
     project_role = filters.NumberFilter(method="get_project_role")
+    is_favorite = filters.NumberFilter(method="filter_is_favorite_project")
 
     class Meta:
         model = Project
@@ -59,4 +60,10 @@ class ProjectFilter(FilterSet):
             return queryset.filter(participants=user).exclude(
                 status=Project.DRAFT
             )
+        return queryset
+
+    def filter_is_favorite_project(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(is_favorite=user)
         return queryset
