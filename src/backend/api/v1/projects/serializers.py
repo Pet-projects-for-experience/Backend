@@ -100,11 +100,21 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     )
     project_specialists = ReadProjectSpecialistSerializer(many=True)
     recruitment_status = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta(BaseProjectSerializer.Meta):
         fields = BaseProjectSerializer.Meta.fields + (  # type: ignore
             "recruitment_status",
+            "is_favorite"
         )
+
+    def get_is_favorite(self, project) -> bool:
+        """
+        Метод возвращает True если user добавил проект в избранное.
+        В противном случе возвращает False.
+        """
+        user = self.context['request'].user
+        return bool(user in project.is_favorite.all())
 
 
 class WriteProjectSerializer(
