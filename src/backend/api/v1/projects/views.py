@@ -3,7 +3,7 @@ from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, SAFE_METHODS, IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import (
     GenericViewSet,
@@ -112,9 +112,9 @@ class ProjectViewSet(BaseProjectViewSet):
             status=Project.ACTIVE,
         )
 
-    @action(['post', 'delete'],
-            permission_classes=(IsAuthenticated,),
-            detail=True)
+    @action(
+        ["post", "delete"], permission_classes=(IsAuthenticated,), detail=True
+    )
     def favorite(self, request, *args, **kwargs):
         """
         Метод обрабатывает запросы POST и DELETE
@@ -128,10 +128,10 @@ class ProjectViewSet(BaseProjectViewSet):
         user = request.user
         project = self.get_object()
         http_status = status.HTTP_400_BAD_REQUEST
-        if method == 'POST':
+        if method == "POST":
             project.is_favorite.add(user)
             http_status = status.HTTP_201_CREATED
-        if method == 'DELETE':
+        if method == "DELETE":
             project.is_favorite.remove(user)
             http_status = status.HTTP_204_NO_CONTENT
         return Response(status=http_status)
