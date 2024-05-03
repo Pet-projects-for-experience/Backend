@@ -1,8 +1,8 @@
 from .base import *  # noqa
 
 DEBUG = False
-SERVER_HOST = getenv("SERVER_HOST_QA")
-SERVER_NAME = getenv("SERVER_NAME_QA")
+SERVER_HOST = getenv("SERVER_HOST")
+SERVER_NAME = getenv("SERVER_NAME")
 
 
 EMAIL_USE_TLS = True
