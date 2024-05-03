@@ -105,7 +105,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     class Meta(BaseProjectSerializer.Meta):
         fields = BaseProjectSerializer.Meta.fields + (  # type: ignore
             "recruitment_status",
-            "is_favorite"
+            "is_favorite",
         )
 
     def get_is_favorite(self, project) -> bool:
@@ -114,7 +114,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         В противном случе возвращает False.
         Для неавторизованных пользователей всегда возвращает False.
         """
-        user = self.context['request'].user
+        user = self.context["request"].user
         if user.is_authenticated:
             return bool(user in project.is_favorite.all())
         return False
