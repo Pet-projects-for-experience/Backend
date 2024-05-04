@@ -1,5 +1,5 @@
 from django.db.models import Prefetch
-from drf_spectacular.utils import extend_schema
+from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -7,25 +7,28 @@ from rest_framework.mixins import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
 )
-from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
-from apps.profile.constants import MAX_PROFILE_PROFESSIONS
 from apps.profile.models import Profile, Specialist
 
+from .paginations import ProfilesPagination
 from .serializers import (
-    ProfileReadSerializer,
-    ProfileWriteSerializer,
+    ProfileDetailReadSerializer,
+    ProfileMeReadSerializer,
+    ProfileMeWriteSerializer,
+    ProfilePreviewReadSerializer,
     SpecialistWriteSerializer,
 )
 
 USER_FIELDS_TO_DEFER = (
+    "user__email",
+    "user__modified",
+    "user__is_active",
     "user__password",
     "user__last_login",
     "user__is_superuser",
@@ -34,51 +37,95 @@ USER_FIELDS_TO_DEFER = (
 )
 
 
-class ProfileView(APIView):
-    """Чтение, частичное изменение профиля его владельцем."""
+class ProfilesViewSet(ReadOnlyModelViewSet):
+    """Представление профилей специалистов."""
 
-    permission_classes = [IsAuthenticated]
+    lookup_field = "user_id"
+    pagination_class = ProfilesPagination
+    queryset = (
+        Profile.objects.select_related("user")
+        .prefetch_related(
+            Prefetch(
+                "specialists",
+                queryset=(
+                    Specialist.objects.select_related(
+                        "profession"
+                    ).prefetch_related("skills")
+                ),
+            )
+        )
+        .order_by("-user__created")
+    )
 
-    @extend_schema(responses={200: ProfileReadSerializer})
-    def get(self, request):
-        """Просмотр профиля его владельцем."""
+    def get_serializer_class(self):
+        """Получение сериализатора для профилей."""
+
+        if self.action == "retrieve":
+            return ProfileDetailReadSerializer
+        if self.action == "me":
+            if self.request.method == "PATCH":
+                return ProfileMeWriteSerializer
+            return ProfileMeReadSerializer
+        return ProfilePreviewReadSerializer
+
+    def get_visible_profiles(self):
+        """Извлечение профилей, доступных другим пользователям."""
+
+        user = self.request.user
+        if user.is_authenticated and user.is_organizer:
+            return self.queryset.exclude(
+                visible_status=Profile.VisibilitySettings.NOBODY
+            )
+        return self.queryset.filter(
+            visible_status=Profile.VisibilitySettings.ALL
+        )
+
+    def get_queryset(self):
+        """Получение queryset-а профилей."""
+
+        if self.action == "list":
+            return self.get_visible_profiles().only(
+                "user_id",
+                "avatar",
+                "user__username",
+                "name",
+                "ready_to_participate",
+            )
+
+        if self.action == "retrieve":
+            return self.get_visible_profiles().defer(*USER_FIELDS_TO_DEFER)
+
+        return super().get_queryset()
+
+    @action(
+        methods=["get", "patch"],
+        detail=False,
+        permission_classes=[IsAuthenticated],
+    )
+    def me(self, request):
+        """Просмотр и редактирование профиля его владельцем."""
+
         try:
             profile = (
-                Profile.objects.select_related("user")
-                .prefetch_related(
-                    Prefetch(
-                        "specialists",
-                        queryset=(
-                            Specialist.objects.select_related(
-                                "profession"
-                            ).prefetch_related("skills")
-                        ),
-                    )
-                )
+                self.get_queryset()
                 .defer(*USER_FIELDS_TO_DEFER)
                 .get(user=request.user)
             )
         except Profile.DoesNotExist:
             return Response(HTTP_404_NOT_FOUND)
-        return Response(
-            data=ProfileReadSerializer(profile).data, status=HTTP_200_OK
-        )
 
-    @extend_schema(
-        request=ProfileWriteSerializer,
-        responses={200: ProfileWriteSerializer},
-    )
-    def patch(self, request):
-        """
-        Редактирование профиля, в том числе настроек видимости.
-        Доступно только авторизованному пользователю-владельцу.
-        """
-        serializer = ProfileWriteSerializer(
-            request.user.profile, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, HTTP_200_OK)
+        if request.method == "GET":
+            data = self.get_serializer_class()(profile).data
+
+        if request.method == "PATCH":
+            serializer = self.get_serializer_class()(
+                profile, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            data = serializer.data
+
+        return Response(data, HTTP_200_OK)
 
 
 class SpecialistsViewSet(
@@ -92,6 +139,8 @@ class SpecialistsViewSet(
     http_method_names = ["post", "patch", "delete"]
 
     def get_profile(self):
+        """Извлечение профиля пользователя."""
+
         try:
             profile = Profile.objects.only("pk").get(user=self.request.user)
         except Profile.DoesNotExist:
@@ -99,17 +148,10 @@ class SpecialistsViewSet(
         return profile
 
     def get_queryset(self):
+        """Получение queryset-а специализаций профиля пользователя."""
+
         return (
             Specialist.objects.select_related("profession")
             .prefetch_related("skills")
             .filter(profile=self.get_profile())
         )
-
-    def create(self, request, *args, **kwargs):
-        profile = self.get_profile()
-        if profile.specialists.count() >= MAX_PROFILE_PROFESSIONS:
-            raise ValidationError(
-                "Можно добавить не более "
-                f"{MAX_PROFILE_PROFESSIONS} специальностей"
-            )
-        return super().create(request, *args, **kwargs)
