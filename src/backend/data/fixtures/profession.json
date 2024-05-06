@@ -4,7 +4,7 @@
         "pk": 1,
         "fields": {
             "specialty": "Разработка",
-            "specialization": "Десктоп разработчик / Software Developer"
+            "specialization": "Software"
         }
     },
     {
@@ -12,7 +12,7 @@
         "pk": 2,
         "fields": {
             "specialty": "Разработка",
-            "specialization": "Бэкенд разработчик / Backend Developer"
+            "specialization": "Backend"
         }
     },
     {
@@ -20,7 +20,7 @@
         "pk": 3,
         "fields": {
             "specialty": "Разработка",
-            "specialization": "Фронтенд разработчик / Frontend Developer"
+            "specialization": "Frontend"
         }
     },
     {
@@ -28,7 +28,7 @@
         "pk": 4,
         "fields": {
             "specialty": "Разработка",
-            "specialization": "Фулстек разработчик / Fullstack Developer"
+            "specialization": "Fullstack"
         }
     },
     {
@@ -36,7 +36,7 @@
         "pk": 5,
         "fields": {
             "specialty": "Разработка",
-            "specialization": "Разработчик мобильных приложений / Mobile Application Developer"
+            "specialization": "Mobile"
         }
     },
     {
@@ -44,7 +44,7 @@
         "pk": 6,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по автоматизации тестирования / Automation QA Engineer"
+            "specialization": "Automation QA"
         }
     },
     {
@@ -52,7 +52,7 @@
         "pk": 7,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по ручному тестированию / Manual QA Engineer"
+            "specialization": "Manual QA"
         }
     },
     {
@@ -60,7 +60,7 @@
         "pk": 8,
         "fields": {
             "specialty": "Тестирование",
-            "specialization": "Инженер по нагрузочному тестированию / Performance QA Engineer"
+            "specialization": "Performance QA"
         }
     },
     {
@@ -68,7 +68,7 @@
         "pk": 9,
         "fields": {
             "specialty": "Администрирование",
-            "specialization": "Системный администратор / System Administration"
+            "specialization": "System Administration"
         }
     },
     {
@@ -76,7 +76,7 @@
         "pk": 10,
         "fields": {
             "specialty": "Администрирование",
-            "specialization": "DevOps-инженер / DevOps"
+            "specialization": "DevOps"
         }
     },
     {
@@ -84,7 +84,7 @@
         "pk": 11,
         "fields": {
             "specialty": "Дизайнер",
-            "specialization": "UI/UX дизайнер / UI/UX Designer"
+            "specialization": "UI/UX Designer"
         }
     },
     {
@@ -92,7 +92,7 @@
         "pk": 12,
         "fields": {
             "specialty": "Дизайнер",
-            "specialization": "Графический дизайнер / Graphic Designer"
+            "specialization": "Graphic Designer"
         }
     },
     {
@@ -100,7 +100,7 @@
         "pk": 13,
         "fields": {
             "specialty": "Менеджмент",
-            "specialization": "Менеджер проекта / general Manager"
+            "specialization": "Project Manager"
         }
     },
     {
@@ -108,7 +108,7 @@
         "pk": 14,
         "fields": {
             "specialty": "Аналитика",
-            "specialization": "Системный аналитик / Systems Analyst"
+            "specialization": "Systems Analyst"
         }
     },
     {
@@ -116,7 +116,7 @@
         "pk": 15,
         "fields": {
             "specialty": "Аналитика",
-            "specialization": "Бизнес-аналитик / Business Analyst"
+            "specialization": "Business Analyst"
         }
     },
     {
@@ -124,7 +124,7 @@
         "pk": 16,
         "fields": {
             "specialty": "Аналитика",
-            "specialization": "Аналитик по данным / Data Analyst"
+            "specialization": "Data Analyst"
         }
     }
 ]

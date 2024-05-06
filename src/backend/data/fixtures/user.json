@@ -19,7 +19,7 @@
         "fields": {
             "email": "test@mail.ru",
             "username": "test_user",
-            "password": "pbkdf2_sha256$720000$AqLSKFim8xW1O3IExjHpWx$BdT/sTCmWEOYYvvKPpLzlDmEdGjf3NYzV2PN3Z0TUfE=",
+            "password": "pbkdf2_sha256$720000$MufoOt2yyinUePtxBF5hxE$Wo3BFq++KaHA+emqcSoJScMIVWBwLJNOVgXsgGqSkT8=",
             "is_superuser": false,
             "is_staff": false,
             "is_active": true,

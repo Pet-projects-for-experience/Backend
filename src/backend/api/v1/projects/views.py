@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
@@ -10,6 +11,7 @@ from rest_framework.viewsets import (
     ReadOnlyModelViewSet,
 )
 
+from api.v1.projects.filters import ProjectFilter
 from api.v1.projects.paginations import (
     ProjectPagination,
     ProjectPreviewMainPagination,
@@ -45,7 +47,7 @@ class DirectionViewSet(ReadOnlyModelViewSet):
 
     queryset = Direction.objects.all()
     serializer_class = DirectionSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
 
 class BaseProjectViewSet(ModelViewSet):
@@ -57,6 +59,7 @@ class BaseProjectViewSet(ModelViewSet):
             "creator",
             "owner",
         )
+        .prefetch_related("favorited_by")
         .order_by("status", "-created")
     )
 
@@ -82,6 +85,8 @@ class ProjectViewSet(BaseProjectViewSet):
 
     permission_classes = (IsCreatorOrOwnerOrReadOnly,)
     pagination_class = ProjectPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ProjectFilter
 
     def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а c параметрами для проекта."""
@@ -91,6 +96,13 @@ class ProjectViewSet(BaseProjectViewSet):
                 Q(status=Project.DRAFT) & (~(Q(creator=user) | Q(owner=user)))
             )
         return queryset.exclude(status=Project.DRAFT)
+
+    def get_queryset(self):
+        """Метод получения отфильтрованного queryset-a с фильтрами."""
+
+        queryset = super().get_queryset()
+        queryset = self._get_queryset_with_params(queryset, self.request.user)
+        return queryset
 
     def get_serializer_class(self):
         """Метод получения сериализатора для проектов."""
@@ -109,6 +121,27 @@ class ProjectViewSet(BaseProjectViewSet):
             owner=self.request.user,
             status=Project.ACTIVE,
         )
+
+    @action(
+        ["post", "delete"], permission_classes=(IsAuthenticated,), detail=True
+    )
+    def favorite(self, request, *args, **kwargs):
+        """
+        Метод обрабатывает запросы POST и DELETE
+        для добавления и удаления проекта из избранного.
+
+        Пример использования:
+        POST /projects/<project_id>/favorite/ - добавить проект в избранное.
+        DELETE /projects/<project_id>/favorite/ - удалить проект из избранного.
+        """
+        method = request.method
+        user = request.user
+        project = self.get_object()
+        if method == "POST":
+            project.is_favorite.add(user)
+            return Response(status=status.HTTP_201_CREATED)
+        project.is_favorite.remove(user)
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
