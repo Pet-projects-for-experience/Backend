@@ -52,7 +52,7 @@ class BaseProjectViewSet(ModelViewSet):
             "creator",
             "owner",
         )
-        .prefetch_related("is_favorite")
+        .prefetch_related("favorited_by")
         .order_by("status", "-created")
     )
 
