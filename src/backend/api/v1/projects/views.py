@@ -133,6 +133,7 @@ class ProjectViewSet(BaseProjectViewSet):
         if method == "POST":
             project.is_favorite.add(user)
             return Response(status=HTTPStatus.CREATED)
+        project.is_favorite.remove(user)
         return Response(status=HTTPStatus.NO_CONTENT)
 
 
