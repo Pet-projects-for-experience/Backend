@@ -54,3 +54,15 @@ LEVEL_CHOICES = (
     (4, "senior"),
     (5, "lead"),
 )
+
+MAX_LENGTH_BASE_TEXT_FIELD = 750
+MIN_LENGTH_BASE_TEXT_FIELD = 5
+LENGTH_BASE_TEXT_FIELD_ERROR_TEXT = (
+    f"Длина поля от {MIN_LENGTH_BASE_TEXT_FIELD} до "
+    f"{MAX_LENGTH_BASE_TEXT_FIELD} символов."
+)
+REGEX_BASE_TEXT_FIELD = r"(^[-%!#$&*'+/=?^_;():@,.<>`{|}~-«»0-9A-ZА-ЯЁ\s]+)\Z"
+REGEX_BASE_TEXT_FIELD_ERROR_TEXT = (
+    "Поле может содержать: кириллические и латинские символы, цифры и "
+    "спецсимовлы -!#$%%&'*+/=?^_;():@,.<>`{}~«»"
+)

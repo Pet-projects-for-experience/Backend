@@ -3,6 +3,7 @@ from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
 from apps.general.constants import LEVEL_CHOICES
+from apps.general.fields import BaseTextField
 from apps.general.models import (
     ContactsFields,
     CreatedModifiedFields,
@@ -109,18 +110,15 @@ class Project(CreatedModifiedFields, ContactsFields):
     started = models.DateField(
         verbose_name="Дата начала",
         null=True,
-        blank=True,
     )
     ended = models.DateField(
         verbose_name="Дата завершения",
         null=True,
-        blank=True,
     )
     busyness = models.PositiveSmallIntegerField(
         verbose_name="Занятость (час/нед)",
         choices=BUSYNESS_CHOICES,
         null=True,
-        blank=True,
     )
     status = models.PositiveSmallIntegerField(
         verbose_name="Статус",
@@ -130,7 +128,6 @@ class Project(CreatedModifiedFields, ContactsFields):
         Direction,
         verbose_name="Направления разработки",
         related_name="projects_direction",
-        blank=True,
     )
     link = models.URLField(
         verbose_name="Ссылка",
@@ -141,12 +138,12 @@ class Project(CreatedModifiedFields, ContactsFields):
                 message=LENGTH_LINK_ERROR_TEXT,
             ),
         ),
+        null=True,
     )
     participants = models.ManyToManyField(
         User,
         verbose_name="Участники",
         related_name="projects_participated",
-        blank=True,
     )
 
     class Meta:
@@ -204,3 +201,63 @@ class ProjectSpecialist(models.Model):
                 name="%(app_label)s_%(class)s_unique_specialist_per_project",
             ),
         )
+
+
+class ParticipationRequest(CreatedModifiedFields):
+    """Модель запроса на участие в проекте."""
+
+    class RequestStatuses(models.IntegerChoices):
+        """Класс вариантов статуса запроса на участие."""
+
+        IN_PROGRESS = 1, "В процессе"
+        ACCEPTED = 2, "Принята"
+        REJECTED = 3, "Отклонена"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        verbose_name="Проект",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Претендент",
+    )
+    position = models.ForeignKey(
+        ProjectSpecialist,
+        on_delete=models.CASCADE,
+        verbose_name="Должность",
+    )
+    status = models.PositiveSmallIntegerField(
+        verbose_name="Статус",
+        choices=RequestStatuses.choices,
+        default=RequestStatuses.IN_PROGRESS,
+    )
+    is_viewed = models.BooleanField(
+        verbose_name="Просмотрено",
+        default=False,
+    )
+    cover_letter = BaseTextField(
+        verbose_name="Сопроводительное письмо",
+        null=True,
+    )
+    answer = BaseTextField(
+        verbose_name="Ответ",
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = "Запрос на участие"
+        verbose_name_plural = "Запросы на участие"
+        default_related_name = "participation_requests"
+        constraints = (
+            models.UniqueConstraint(
+                fields=("project", "user", "position"),
+                name="%(app_label)s_%(class)s_unique_request_per_project",
+            ),
+        )
+
+    def __str__(self) -> str:
+        """Метод строкового представления объекта запроса на участие."""
+
+        return f"{self.user} - {self.project}"
