@@ -65,5 +65,5 @@ class ProjectFilter(FilterSet):
     def filter_is_favorite_project(self, queryset, name, value):
         user = self.request.user
         if value == 1 and user.is_authenticated:
-            return queryset.filter(is_favorite=user)
+            return queryset.filter(favorited_by=user)
         return queryset
