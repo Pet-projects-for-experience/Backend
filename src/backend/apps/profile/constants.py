@@ -15,5 +15,6 @@ REGEX_PROFILE_ABOUT_MESSAGE = "Введите кириллицу или лати
 MAX_SPECIALISTS = 2
 MAX_BIRTHDAY_MESSAGE = "Дата не может быть в будущем."
 MAX_SPECIALISTS_MESSAGE = (
-    "У одного профиля может быть не более {} специальностей."
+    f"У одного профиля может быть не более "
+    f"{MAX_SPECIALISTS} специальностей."
 )

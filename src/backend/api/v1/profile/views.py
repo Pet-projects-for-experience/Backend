@@ -1,4 +1,5 @@
 from django.db.models import Prefetch
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -7,11 +8,6 @@ from rest_framework.mixins import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-)
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
 from apps.profile.models import Profile, Specialist
@@ -112,10 +108,12 @@ class ProfilesViewSet(ReadOnlyModelViewSet):
                 .get(user=request.user)
             )
         except Profile.DoesNotExist:
-            return Response(HTTP_404_NOT_FOUND)
+            return Response(status.HTTP_404_NOT_FOUND)
 
         if request.method == "GET":
-            data = self.get_serializer_class()(profile).data
+            return Response(
+                self.get_serializer_class()(profile).data, status.HTTP_200_OK
+            )
 
         if request.method == "PATCH":
             serializer = self.get_serializer_class()(
@@ -123,9 +121,7 @@ class ProfilesViewSet(ReadOnlyModelViewSet):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            data = serializer.data
-
-        return Response(data, HTTP_200_OK)
+            return Response(serializer.data, status.HTTP_200_OK)
 
 
 class SpecialistsViewSet(
@@ -136,7 +132,7 @@ class SpecialistsViewSet(
     serializer_class = SpecialistWriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_url_kwarg = "specialist_id"
-    http_method_names = ["post", "patch", "delete"]
+    http_method_names = ["post", "patch", "delete", "options", "head"]
 
     def get_profile(self):
         """Извлечение профиля пользователя."""
@@ -144,7 +140,7 @@ class SpecialistsViewSet(
         try:
             profile = Profile.objects.only("pk").get(user=self.request.user)
         except Profile.DoesNotExist:
-            return Response(HTTP_400_BAD_REQUEST)
+            return Response(status.HTTP_404_NOT_FOUND)
         return profile
 
     def get_queryset(self):
