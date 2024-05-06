@@ -116,7 +116,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         """
         user = self.context["request"].user
         if user.is_authenticated:
-            return project.favorited_by.all().filter(id=user.id).exists()
+            return project.favorited_by.filter(id=user.id).exists()
         return False
 
 
