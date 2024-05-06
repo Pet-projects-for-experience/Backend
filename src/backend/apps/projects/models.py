@@ -158,7 +158,7 @@ class Project(CreatedModifiedFields, ContactsFields):
         related_name="projects_participated",
         blank=True,
     )
-    is_favorite = models.ManyToManyField(
+    favorited_by = models.ManyToManyField(
         User,
         verbose_name="Добавили в избранное",
         related_name="favorite_projects",
