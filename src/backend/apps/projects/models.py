@@ -149,7 +149,6 @@ class Project(CreatedModifiedFields, ContactsFields):
                 message=LENGTH_LINK_ERROR_TEXT,
             ),
         ),
-        null=True,
     )
     participants = models.ManyToManyField(
         User,
