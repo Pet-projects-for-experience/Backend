@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import ClassVar, Optional
 
 from django.core.validators import RegexValidator
 from django.db.models import Q
@@ -105,7 +105,7 @@ class ProfilePreviewReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = (
+        fields: ClassVar[tuple[str, ...]] = (
             "user_id",
             "avatar",
             "username",
@@ -122,7 +122,7 @@ class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
     projects = serializers.SerializerMethodField(read_only=True)
 
     class Meta(ProfilePreviewReadSerializer.Meta):
-        fields = (  # type: ignore
+        fields: ClassVar[tuple[str, ...]] = (
             *ProfilePreviewReadSerializer.Meta.fields,
             "about",
             "portfolio_link",
@@ -174,7 +174,7 @@ class ProfileMeReadSerializer(ProfilePreviewReadSerializer):
     """Сериализатор для чтения профиля его владельцем."""
 
     class Meta(ProfilePreviewReadSerializer.Meta):
-        fields = (  # type: ignore
+        fields: ClassVar[tuple[str, ...]] = (
             *ProfilePreviewReadSerializer.Meta.fields,
             "about",
             "portfolio_link",
