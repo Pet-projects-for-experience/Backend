@@ -12,5 +12,9 @@ REGEX_PROFILE_NAME = r"^[a-zA-Zа-яА-Я -]+$"
 REGEX_PROFILE_NAME_MESSAGE = "Введите кириллицу или латиницу"
 REGEX_PROFILE_ABOUT = r"^[a-zA-Zа-яА-Я0-9\s!@#$%^&*()-_+=<>?]+$"
 REGEX_PROFILE_ABOUT_MESSAGE = "Введите кириллицу или латиницу"
-MAX_PROFILE_PROFESSIONS = 2
+MAX_SPECIALISTS = 2
 MAX_BIRTHDAY_MESSAGE = "Дата не может быть в будущем."
+MAX_SPECIALISTS_MESSAGE = (
+    f"У одного профиля может быть не более "
+    f"{MAX_SPECIALISTS} специальностей."
+)
