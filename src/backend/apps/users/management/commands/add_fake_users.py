@@ -58,13 +58,14 @@ class Command(BaseCommand):
 
     def add_users(self):
         for i in range(self.amount):
-            user = User(
+            user = dict(
                 email=self.fake.unique.email(),
                 username=self.fake.unique.user_name(),
                 password=self.fake.password(),
             )
             self.users.append(user)
-        User.objects.bulk_create(self.users)
+            # bulk_create не работает для User из-за хэширования паролей
+            User.objects.create_user(**user)
         if self.save:
             self._save_data()
 
@@ -73,10 +74,4 @@ class Command(BaseCommand):
             writer = csv.writer(file)
             writer.writerow(("email", "username", "password"))
             for user in self.users:
-                writer.writerow(
-                    (
-                        user.email,
-                        user.username,
-                        user.password,
-                    )
-                )
+                writer.writerow((user.values()))
