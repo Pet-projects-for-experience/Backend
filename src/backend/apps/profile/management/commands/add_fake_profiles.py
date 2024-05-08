@@ -42,8 +42,7 @@ class Command(BaseCommand):
             action="store",
             default=None,
             help=":str. Save email and password to "
-            "<path_to_file.csv>. Default <None>"
-            "This file os required fo create fake profiles",
+            "<path_to_file.csv>. Default <None>",
             required=False,
         )
         parser.add_argument(
