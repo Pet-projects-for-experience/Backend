@@ -41,7 +41,7 @@ class Command(BaseCommand):
             "--save",
             action="store",
             default=None,
-            help=":str. Save email, username and password to "
+            help=":str. Save id, email, username and password to "
             "<path_to_file.csv>. Default <None>"
             "This file os required fo create fake profiles",
             required=False,
@@ -58,20 +58,23 @@ class Command(BaseCommand):
 
     def add_users(self):
         for i in range(self.amount):
-            user = dict(
+            password = self.fake.password()
+            # bulk_create не работает для User из-за хэширования паролей
+            user = User.objects.create_user(
                 email=self.fake.unique.email(),
                 username=self.fake.unique.user_name(),
-                password=self.fake.password(),
+                password=password,
             )
+            user.password = password
             self.users.append(user)
-            # bulk_create не работает для User из-за хэширования паролей
-            User.objects.create_user(**user)
         if self.save:
             self._save_data()
 
     def _save_data(self):
         with open(self.save, "w") as file:
             writer = csv.writer(file)
-            writer.writerow(("email", "username", "password"))
+            writer.writerow(("id", "email", "username", "password"))
             for user in self.users:
-                writer.writerow((user.values()))
+                writer.writerow(
+                    (user.id, user.email, user.username, user.password)
+                )
