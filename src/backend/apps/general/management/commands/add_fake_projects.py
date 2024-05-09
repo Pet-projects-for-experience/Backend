@@ -32,7 +32,7 @@ class Command(BaseCommand):
         self.add_projects()
         self.stdout.write(
             self.style.SUCCESS(
-                f"{self.amount} profiles have been added successfully"
+                f"{self.amount} projects have been added successfully"
             )
         )
 
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             type=int,
             action="store",
             default=1,
-            help=":int. Number of profiles. Default 1",
+            help=":int. Number of projects. Default 1",
             required=False,
         )
 
