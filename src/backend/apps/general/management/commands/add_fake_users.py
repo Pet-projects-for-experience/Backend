@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
 
+from .utils import create_fake_user
+
 User = get_user_model()
 
 
@@ -58,12 +60,7 @@ class Command(BaseCommand):
     def add_users(self):
         for i in range(self.amount):
             password = self.fake.password()
-            # bulk_create не работает для User из-за хэширования паролей
-            user = User.objects.create_user(
-                email=self.fake.unique.email(),
-                username=self.fake.unique.user_name(),
-                password=password,
-            )
+            user = create_fake_user(password=password)
             user.password = password
             self.users.append(user)
         if self.save:

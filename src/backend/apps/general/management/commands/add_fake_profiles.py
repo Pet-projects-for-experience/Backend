@@ -14,6 +14,8 @@ from apps.general.models import Profession
 from apps.profile.constants import MAX_LENGTH_ABOUT
 from apps.profile.models import Profile
 
+from .utils import create_fake_user
+
 User = get_user_model()
 
 
@@ -101,8 +103,5 @@ class Command(BaseCommand):
         """
         user = User.objects.filter(profile__isnull=True).first()
         if not user:
-            user = User.objects.create_user(
-                email=self.fake.unique.email(),
-                username=self.fake.unique.user_name(),
-            )
+            user = create_fake_user()
         return user
