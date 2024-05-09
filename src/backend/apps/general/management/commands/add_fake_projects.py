@@ -109,5 +109,4 @@ class Command(BaseCommand):
             for _ in range(random_number - len(users)):
                 users.append(create_fake_user())
         random.shuffle(users)
-        print(users)
         return users[:random_number]
