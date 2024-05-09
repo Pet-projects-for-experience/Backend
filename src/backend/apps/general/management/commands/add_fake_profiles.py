@@ -96,7 +96,7 @@ class Command(BaseCommand):
             professions = Profession.objects.all()
         return self.fake.random_choices(professions, amount_professions)
 
-    def _get_or_create_user(self) -> TypeAlias[User]:
+    def _get_or_create_user(self) -> TypeAlias:
         """
         Метод возвращает user который не связан с профилем,
         если создает нового пользователя.
