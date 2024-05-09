@@ -70,6 +70,7 @@ class Command(BaseCommand):
             self._save_data()
 
     def _save_data(self):
+        """Метод сохраняет данные в файл"""
         with open(self.save, "w") as file:
             writer = csv.writer(file)
             writer.writerow(("id", "email", "username", "password"))
