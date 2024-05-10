@@ -97,8 +97,8 @@ class SpecialistWriteSerializer(
         return super().update(specialist, validated_data)
 
 
-class ProfilePreviewReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для чтения превью профилей специалистов."""
+class BaseProfileSerializer(serializers.ModelSerializer):
+    """Базовый класс для сериализаторов профилей."""
 
     username = serializers.CharField(source="user.username", read_only=True)
     specialists = SpecialistReadSerializer(many=True, read_only=True)
@@ -113,7 +113,26 @@ class ProfilePreviewReadSerializer(serializers.ModelSerializer):
             "ready_to_participate",
             "specialists",
         )
+
+
+class ProfilePreviewReadSerializer(BaseProfileSerializer):
+    """Сериализатор для чтения превью профилей специалистов."""
+
+    is_favorite = serializers.SerializerMethodField(read_only=True)
+
+    class Meta(BaseProfileSerializer.Meta):
+        fields: ClassVar[tuple[str, ...]] = (
+            *BaseProfileSerializer.Meta.fields,
+            "is_favorite",
+        )
         read_only_fields = fields
+
+    def get_is_favorite(self, profile):
+        user = self.context["request"].user
+        return (
+            user.is_authenticated
+            and profile.favorited_by.filter(id=user.pk).exists()
+        )
 
 
 class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
@@ -170,12 +189,12 @@ class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
         return data
 
 
-class ProfileMeReadSerializer(ProfilePreviewReadSerializer):
+class ProfileMeReadSerializer(BaseProfileSerializer):
     """Сериализатор для чтения профиля его владельцем."""
 
-    class Meta(ProfilePreviewReadSerializer.Meta):
+    class Meta(BaseProfileSerializer.Meta):
         fields: ClassVar[tuple[str, ...]] = (
-            *ProfilePreviewReadSerializer.Meta.fields,
+            *BaseProfileSerializer.Meta.fields,
             "about",
             "portfolio_link",
             "phone_number",
@@ -189,6 +208,7 @@ class ProfileMeReadSerializer(ProfilePreviewReadSerializer):
             "allow_notifications",
             "subscribe_to_projects",
         )
+        read_only_fields = fields
 
 
 class ProfileMeWriteSerializer(ProfileMeReadSerializer):
@@ -208,4 +228,4 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
     )
 
     class Meta(ProfileMeReadSerializer.Meta):
-        pass
+        read_only_fields = ("user_id", "specialists")
