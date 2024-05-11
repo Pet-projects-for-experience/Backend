@@ -101,7 +101,6 @@ class ProjectSpecialistAdmin(admin.ModelAdmin):
 
 @admin.register(ParticipationRequest)
 class ParticipationRequestAdmin(admin.ModelAdmin):
-
     def get_queryset(self, request):
         """Метод получения queryset-а для запросов на участие в проекте."""
 

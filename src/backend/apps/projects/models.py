@@ -33,6 +33,7 @@ from apps.projects.constants import (
     REGEX_DIRECTION_NAME_ERROR_TEXT,
     REGEX_PROJECT_NAME,
     REGEX_PROJECT_NAME_ERROR_TEXT,
+    RequestStatuses,
 )
 
 User = get_user_model()
@@ -222,13 +223,6 @@ class ProjectSpecialist(models.Model):
 class ParticipationRequest(CreatedModifiedFields):
     """Модель запроса на участие в проекте."""
 
-    class RequestStatuses(models.IntegerChoices):
-        """Класс вариантов статуса запроса на участие."""
-
-        IN_PROGRESS = 1, "В процессе"
-        ACCEPTED = 2, "Принята"
-        REJECTED = 3, "Отклонена"
-
     project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,
@@ -270,6 +264,7 @@ class ParticipationRequest(CreatedModifiedFields):
             models.UniqueConstraint(
                 fields=("project", "user", "position"),
                 name="%(app_label)s_%(class)s_unique_request_per_project",
+                condition=models.Q(status=RequestStatuses.IN_PROGRESS),
             ),
         )
 

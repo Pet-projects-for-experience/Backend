@@ -21,6 +21,7 @@ from api.v1.projects.permissions import (
     IsCreatorOrOwnerOrReadOnly,
     IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     IsProjectCreatorOrOwner,
+    IsProjectCreatorOrOwnerForParticipationRequest,
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
@@ -34,6 +35,7 @@ from api.v1.projects.serializers import (
     WriteProjectSerializer,
     WriteProjectSpecialistSerializer,
 )
+from apps.projects.constants import RequestStatuses
 from apps.projects.models import (
     Direction,
     ParticipationRequest,
@@ -267,7 +269,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         """Метод получения объекта запроса на участие в проекте."""
         participation_request = super().get_object()
         if (
-            self.request.method in SAFE_METHODS
+            self.request.method == "GET"
             and not participation_request.is_viewed
             and self.request.user
             in (
@@ -292,14 +294,13 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         """
 
         serializer.save(
-            user=self.request.user,
-            status=ParticipationRequest.RequestStatuses.IN_PROGRESS,
+            user=self.request.user, status=RequestStatuses.IN_PROGRESS
         )
 
     @action(
         detail=True,
         methods=["patch"],
-        permission_classes=(IsProjectCreatorOrOwner,),
+        permission_classes=(IsProjectCreatorOrOwnerForParticipationRequest,),
         serializer_class=WriteParticipationRequestAnswerSerializer,
     )
     def answer(self, request, pk):
@@ -307,7 +308,10 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
 
         participation_request = self.get_object()
         serializer = self.serializer_class(
-            instance=participation_request, data=request.data, partial=True
+            instance=participation_request,
+            data=request.data,
+            context=self.get_serializer_context(),
+            partial=True,
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()

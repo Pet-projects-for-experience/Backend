@@ -9,7 +9,11 @@ from api.v1.projects.mixins import (
     ProjectOrDraftValidateMixin,
     RecruitmentStatusMixin,
 )
-from apps.projects.constants import BUSYNESS_CHOICES, PROJECT_STATUS_CHOICES
+from apps.projects.constants import (
+    BUSYNESS_CHOICES,
+    PROJECT_STATUS_CHOICES,
+    RequestStatuses,
+)
 from apps.projects.models import (
     Direction,
     ParticipationRequest,
@@ -271,9 +275,10 @@ class WriteParticipationRequestSerializer(
         """
         Метод получения существующего запроса на участие в проекте."""
 
-        if attrs is not None and attrs:
+        if attrs:
             filters: Dict = {
                 "user": self.context.get("request").user,
+                "status": RequestStatuses.IN_PROGRESS,
             }
             filters_keys = ("project", "position")
             for filter_key in filters_keys:
@@ -333,15 +338,9 @@ class WriteParticipationRequestSerializer(
             )
             if participation_request is not None:
                 status_errors_types = {
-                    ParticipationRequest.RequestStatuses.IN_PROGRESS: (
-                        "unique_in_progress"
-                    ),
-                    ParticipationRequest.RequestStatuses.REJECTED: (
-                        "unique_rejected"
-                    ),
-                    ParticipationRequest.RequestStatuses.ACCEPTED: (
-                        "unique_accepted"
-                    ),
+                    RequestStatuses.IN_PROGRESS: ("unique_in_progress"),
+                    RequestStatuses.REJECTED: ("unique_rejected"),
+                    RequestStatuses.ACCEPTED: ("unique_accepted"),
                 }
                 error_type = status_errors_types.get(
                     participation_request.status, "unknown"
@@ -412,11 +411,36 @@ class WriteParticipationRequestAnswerSerializer(
     def validate_status(self, value):
         """Метод валидации статуса заявки на участие в проекте."""
 
-        if value not in (
-            ParticipationRequest.RequestStatuses.ACCEPTED,
-            ParticipationRequest.RequestStatuses.REJECTED,
-        ):
+        if value not in (RequestStatuses.ACCEPTED, RequestStatuses.REJECTED):
             raise serializers.ValidationError(
                 "При ответе, заявку можно только принять или отклонить."
             )
         return value
+
+    def validate(self, attrs) -> Dict[str, Any]:
+        """Метод валидации атрибутов заявки на участие в проекте."""
+
+        errors: Dict = {}
+
+        if attrs.get("status", None) == RequestStatuses.ACCEPTED:
+            participants = getattr(self.instance.project, "participants", None)
+            user = getattr(self.instance, "user", None)
+            if (
+                participants
+                and user
+                and participants.filter(id=user.id).exists()
+            ):
+                errors.setdefault("already", []).append(
+                    "Этот специалист уже участвует в проекте."
+                )
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
+    def update(self, instance, validated_data):
+        """Метод обновления заявки на участие в проекте."""
+
+        if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
+            instance.project.participants.add(instance.user)
+        return super().update(instance, validated_data)
