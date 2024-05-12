@@ -1,6 +1,8 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
@@ -158,6 +160,9 @@ class Project(CreatedModifiedFields, ContactsFields):
         related_name="projects_participated",
         blank=True,
     )
+    search_vector = SearchVectorField(
+        verbose_name="Поле полнотекствого поиска", null=True
+    )
 
     class Meta:
         verbose_name = "Проект"
@@ -169,6 +174,7 @@ class Project(CreatedModifiedFields, ContactsFields):
                 name=("%(app_label)s_%(class)s_unique_name_per_creator"),
             ),
         )
+        indexes = [GinIndex(fields=["search_vector"])]
 
     def __str__(self) -> str:
         """Метод строкового представления объекта проекта."""

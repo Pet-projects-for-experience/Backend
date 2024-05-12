@@ -1,9 +1,11 @@
+from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Q
 from django_filters.rest_framework import FilterSet, filters
 
 from apps.general.constants import LEVEL_CHOICES
+from apps.general.models import Profession, Skill
 from apps.projects.constants import BUSYNESS_CHOICES, PROJECT_STATUS_CHOICES
-from apps.projects.models import Project
+from apps.projects.models import Direction, Project
 
 
 class ProjectFilter(FilterSet):
@@ -15,14 +17,22 @@ class ProjectFilter(FilterSet):
     recruitment_status = filters.NumberFilter(
         method="filter_recruitment_status",
     )
-    specialization = filters.NumberFilter(
-        field_name="project_specialists__specialist"
+    specialization = filters.ModelMultipleChoiceFilter(
+        field_name="project_specialists__profession",
+        queryset=Profession.objects.all(),
     )
-    skill = filters.NumberFilter(field_name="project_specialists__skills")
-    level = filters.MultipleChoiceFilter(choices=LEVEL_CHOICES)
+    skill = filters.ModelMultipleChoiceFilter(
+        field_name="project_specialists__skills", queryset=Skill.objects.all()
+    )
+    level = filters.MultipleChoiceFilter(
+        field_name="project_specialists__level", choices=LEVEL_CHOICES
+    )
     busyness = filters.MultipleChoiceFilter(choices=BUSYNESS_CHOICES)
-    direction = filters.NumberFilter(field_name="direction")
+    directions = filters.ModelMultipleChoiceFilter(
+        field_name="directions", queryset=Direction.objects.all()
+    )
     project_role = filters.NumberFilter(method="get_project_role")
+    search = filters.CharFilter(method="project_search")
 
     class Meta:
         model = Project
@@ -35,7 +45,8 @@ class ProjectFilter(FilterSet):
             "skill",
             "level",
             "busyness",
-            "direction",
+            "directions",
+            "search",
         )
 
     def filter_recruitment_status(self, queryset, name, value):
@@ -59,4 +70,12 @@ class ProjectFilter(FilterSet):
             return queryset.filter(participants=user).exclude(
                 status=Project.DRAFT
             )
+        return queryset
+
+    def project_search(self, queryset, name, value):
+        if value:
+            search_query = SearchQuery(value)
+            return queryset.annotate(
+                search=SearchVector("name", "description")
+            ).filter(search=search_query)
         return queryset
