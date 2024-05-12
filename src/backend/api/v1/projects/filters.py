@@ -33,6 +33,7 @@ class ProjectFilter(FilterSet):
     )
     project_role = filters.NumberFilter(method="get_project_role")
     search = filters.CharFilter(method="project_search")
+    is_favorite = filters.NumberFilter(method="filter_is_favorite_project")
 
     class Meta:
         model = Project
@@ -78,4 +79,10 @@ class ProjectFilter(FilterSet):
             return queryset.annotate(
                 search=SearchVector("name", "description")
             ).filter(search=search_query)
+        return queryset
+
+    def filter_is_favorite_project(self, queryset, name, value):
+        user = self.request.user
+        if value == 1 and user.is_authenticated:
+            return queryset.filter(favorited_by=user)
         return queryset

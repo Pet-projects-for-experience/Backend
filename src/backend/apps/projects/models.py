@@ -163,6 +163,12 @@ class Project(CreatedModifiedFields, ContactsFields):
     search_vector = SearchVectorField(
         verbose_name="Поле полнотекствого поиска", null=True
     )
+    favorited_by = models.ManyToManyField(
+        User,
+        verbose_name="Добавили в избранное",
+        related_name="favorite_projects",
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "Проект"
