@@ -75,10 +75,13 @@ class ProjectFilter(FilterSet):
 
     def project_search(self, queryset, name, value):
         if value:
-            search_query = SearchQuery(value)
-            return queryset.annotate(
-                search=SearchVector("name", "description")
-            ).filter(search=search_query)
+            search_query_ru = SearchQuery(value, config="russian")
+            search_query_en = SearchQuery(value, config="english")
+            vector_ru = SearchVector("name", "description", config="russian")
+            vector_en = SearchVector("name", "description", config="english")
+            return queryset.annotate(search=vector_ru | vector_en).filter(
+                search=search_query_ru | search_query_en
+            )
         return queryset
 
     def filter_is_favorite_project(self, queryset, name, value):
