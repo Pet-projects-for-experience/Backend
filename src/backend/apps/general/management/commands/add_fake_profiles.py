@@ -79,10 +79,10 @@ class Command(BaseCommand):
         Если нужного количество нет, создает новые
         """
         amount_professions = random.randint(1, 5)
-        professions = Profession.objects.all()
-        if len(professions) != amount_professions:
+        professions_count = Profession.objects.count()
+        if professions_count != amount_professions:
             new_professions = list()
-            for _ in range(amount_professions - len(professions)):
+            for _ in range(amount_professions - professions_count):
                 profession = Profession(
                     specialty=self.fake.text(
                         max_nb_chars=MAX_LENGTH_SPECIALTY_NAME
@@ -93,7 +93,7 @@ class Command(BaseCommand):
                 )
                 new_professions.append(profession)
             Profession.objects.bulk_create(new_professions)
-            professions = Profession.objects.all()
+        professions = Profession.objects.all()
         return self.fake.random_choices(professions, amount_professions)
 
     def _get_or_create_user(self) -> TypeAlias:

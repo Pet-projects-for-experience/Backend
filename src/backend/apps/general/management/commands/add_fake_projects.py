@@ -1,9 +1,10 @@
 import random
-from typing import TypeAlias
+from typing import Sequence, TypeAlias
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
+from faker.providers import T
 
 from apps.projects.constants import (
     MAX_LENGTH_DESCRIPTION,
@@ -102,11 +103,11 @@ class Command(BaseCommand):
             directions += created_directions
         return directions
 
-    def _get_or_create_random_number_users(self) -> list[TypeAlias]:
+    def _get_or_create_random_number_users(self) -> Sequence[T]:
         random_number = random.randint(1, 10)
         users = list(User.objects.all())
         if len(users) < random_number:
             for _ in range(random_number - len(users)):
                 users.append(create_fake_user())
-        random.shuffle(users)
-        return users[:random_number]
+
+        return self.fake.random_choices(users, random_number)
