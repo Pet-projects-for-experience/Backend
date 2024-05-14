@@ -1,4 +1,4 @@
-name: Codepet QA deploy
+name: Codepet deploy from QA
 
 on:
   workflow_call:

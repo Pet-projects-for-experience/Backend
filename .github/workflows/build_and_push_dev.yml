@@ -1,4 +1,4 @@
-name: Codepet build nginx and backend
+name: Codepet build nginx and backend from Develop
 
 on:
   push:
@@ -50,11 +50,10 @@ jobs:
             SERVER_HOST=${{ secrets.SERVER_HOST_DEV }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
-  deploy_uses_other_file:
+  deploy_uses_other_file_from_develop:
     if:
       contains('
         refs/heads/develop
-        refs/heads/main
       ', github.ref)
     uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
     needs:

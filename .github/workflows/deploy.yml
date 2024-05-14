@@ -1,4 +1,4 @@
-name: Codepet deploy
+name: Codepet deploy from Develop
 
 on:
   workflow_call:
