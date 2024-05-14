@@ -1,3 +1,5 @@
+from django.db import models
+
 MAX_LENGTH_DESCRIPTION = 750
 MIN_LENGTH_DESCRIPTION = 50
 LENGTH_DESCRIPTION_ERROR_TEXT = (
@@ -53,3 +55,11 @@ PROJECT_STATUS_CHOICES = (
 )
 
 PROJECTS_PER_PAGE = 10
+
+
+class RequestStatuses(models.IntegerChoices):
+    """Класс вариантов статуса запроса на участие."""
+
+    IN_PROGRESS = 1, "В процессе"
+    ACCEPTED = 2, "Принята"
+    REJECTED = 3, "Отклонена"
