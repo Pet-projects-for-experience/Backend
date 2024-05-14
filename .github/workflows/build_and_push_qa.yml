@@ -3,6 +3,8 @@ name: Codepet build nginx and backend
 on:
   push:
     branches: [ 'main', 'QA' ]
+  pull_request:
+    branches: [ 'QA' ]
   workflow_dispatch:
 
 jobs:
