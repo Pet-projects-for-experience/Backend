@@ -2,8 +2,6 @@ name: Codepet build nginx and backend
 
 on:
   push:
-    branches: [ 'main', 'QA' ]
-  pull_request:
     branches: [ 'QA' ]
   workflow_dispatch:
 
@@ -56,7 +54,6 @@ jobs:
     if:
       contains('
         refs/heads/QA
-        refs/heads/main
       ', github.ref)
     uses: Pet-projects-CodePET/Backend/.github/workflows/qa_deploy.yml@QA
     needs:
