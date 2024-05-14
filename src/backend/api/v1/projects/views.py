@@ -143,7 +143,7 @@ class ProjectViewSet(BaseProjectViewSet):
             project.is_favorite.add(user)
             return Response(status=status.HTTP_201_CREATED)
         project.is_favorite.remove(user)
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
