@@ -10,6 +10,11 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
+    - name: Checkout Backend repo
+      uses: actions/checkout@v4
+      with:
+        repository: Pet-projects-CodePET/Backend
+        path: backend
     - name: Create project directory and .env-file
       uses: appleboy/ssh-action@master
       with:
@@ -53,7 +58,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/docker-compose-dev.yaml"
+        source: "backend/infra/docker-compose-dev.yaml"
         target: "codepet"
     - name: Copy certbot_renew script via ssh
       uses: appleboy/scp-action@master
@@ -62,7 +67,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/certbot_renew_dev.sh"
+        source: "backend/infra/certbot_renew_dev.sh"
         target: "codepet"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
