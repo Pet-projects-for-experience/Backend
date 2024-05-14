@@ -1,0 +1,2 @@
+MAX_PAGE_SIZE = 100
+PAGE_SIZE_QUERY_PARAM = "page_size"

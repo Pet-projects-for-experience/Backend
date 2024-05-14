@@ -111,12 +111,12 @@ class Profile(ContactsFields, models.Model):
     visible_status = models.PositiveSmallIntegerField(
         verbose_name="Видимость",
         choices=VisibilitySettings.choices,
-        default=VisibilitySettings.ALL,
+        default=VisibilitySettings.NOBODY,
     )
     visible_status_contacts = models.PositiveSmallIntegerField(
         verbose_name="Видимость контактов",
         choices=VisibilitySettings.choices,
-        default=VisibilitySettings.ALL,
+        default=VisibilitySettings.NOBODY,
     )
     professions = models.ManyToManyField(
         to=Profession, through="Specialist", verbose_name="Профессии"

@@ -1,30 +1,23 @@
-from base64 import b64decode
+from typing import ClassVar, Optional
 
-from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from api.v1.general.fields import Base64ImageField, SkillField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
 from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
 from apps.general.models import Profession, Skill
+from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
+from apps.projects.models import Project
 from apps.users.constants import (
     MAX_LENGTH_USERNAME,
     MIN_LENGTH_USERNAME,
     USERNAME_ERROR_REGEX_TEXT,
     USERNAME_REGEX,
 )
-
-
-class SkillField(serializers.PrimaryKeyRelatedField):
-    """
-    Поле навыков: запись по первичному ключу,
-    чтение в виде вложенной структуры.
-    """
-
-    def to_representation(self, skill):
-        return SkillSerializer(skill).data
 
 
 class CurrentProfile(serializers.CurrentUserDefault):
@@ -82,6 +75,11 @@ class SpecialistWriteSerializer(
             )
         return values
 
+    def validate_profile(self, profile):
+        if profile.specialists.count() >= MAX_SPECIALISTS:
+            raise serializers.ValidationError(MAX_SPECIALISTS_MESSAGE)
+        return profile
+
     def validate_skills(self, skills):
         self.check_empty(skills)
         self.check_duplicates(skills)
@@ -99,19 +97,85 @@ class SpecialistWriteSerializer(
         return super().update(specialist, validated_data)
 
 
-class ProfileReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для чтения профиля его владельцем."""
+class ProfilePreviewReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения превью профилей специалистов."""
 
     username = serializers.CharField(source="user.username", read_only=True)
     specialists = SpecialistReadSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
-        fields = (
+        fields: ClassVar[tuple[str, ...]] = (
             "user_id",
             "avatar",
             "username",
             "name",
+            "ready_to_participate",
+            "specialists",
+        )
+        read_only_fields = fields
+
+
+class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
+    """Сериализатор для чтения подробной информации профиля специалиста."""
+
+    projects = serializers.SerializerMethodField(read_only=True)
+
+    class Meta(ProfilePreviewReadSerializer.Meta):
+        fields: ClassVar[tuple[str, ...]] = (
+            *ProfilePreviewReadSerializer.Meta.fields,
+            "about",
+            "portfolio_link",
+            "birthday",
+            "country",
+            "city",
+            "phone_number",
+            "telegram_nick",
+            "email",
+            "projects",
+        )
+
+    @staticmethod
+    def get_projects(profile: Profile) -> list[Optional[dict]]:
+        """
+        Получение активных и завершенных проектов специалиста,
+        где он участник, организатор и/или владелец.
+        """
+
+        user = profile.user
+        user_projects = (
+            Project.objects.filter(
+                Q(creator=user) | Q(participants=user) | Q(owner=user)
+            )
+            .exclude(status=Project.DRAFT)
+            .only("id", "name")
+        )
+
+        return [
+            dict(id=project.pk, name=project.name) for project in user_projects
+        ]
+
+    def to_representation(self, profile):
+        """Представление контактов согласно настройкам видимости."""
+
+        data = super().to_representation(profile)
+        user = self.context["request"].user
+        visibility = profile.visible_status_contacts
+        if visibility == Profile.VisibilitySettings.NOBODY or (
+            not (user.is_authenticated and user.is_organizer)
+            and visibility == Profile.VisibilitySettings.CREATOR_ONLY
+        ):
+            for contact_field in ["phone_number", "telegram_nick", "email"]:
+                data[contact_field] = None
+        return data
+
+
+class ProfileMeReadSerializer(ProfilePreviewReadSerializer):
+    """Сериализатор для чтения профиля его владельцем."""
+
+    class Meta(ProfilePreviewReadSerializer.Meta):
+        fields: ClassVar[tuple[str, ...]] = (
+            *ProfilePreviewReadSerializer.Meta.fields,
             "about",
             "portfolio_link",
             "phone_number",
@@ -120,28 +184,14 @@ class ProfileReadSerializer(serializers.ModelSerializer):
             "birthday",
             "country",
             "city",
-            "specialists",
-            "ready_to_participate",
             "visible_status",
             "visible_status_contacts",
             "allow_notifications",
             "subscribe_to_projects",
         )
-        read_only_fields = fields
 
 
-class Base64ImageField(serializers.ImageField):
-    """Обработка изображений в формате base64."""
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith("data:image"):
-            format, imgstr = data.split(";base64,")
-            extension = format.split("/")[-1]
-            data = ContentFile(b64decode(imgstr), name="temp." + extension)
-        return super().to_internal_value(data)
-
-
-class ProfileWriteSerializer(ProfileReadSerializer):
+class ProfileMeWriteSerializer(ProfileMeReadSerializer):
     """Сериализатор для обновления профиля его владельцем."""
 
     avatar = Base64ImageField(required=False, allow_null=True)
@@ -157,7 +207,5 @@ class ProfileWriteSerializer(ProfileReadSerializer):
         ),
     )
 
-    class Meta:
-        model = Profile
-        fields = ProfileReadSerializer.Meta.fields
-        read_only_fields = ("user_id",)
+    class Meta(ProfileMeReadSerializer.Meta):
+        pass
