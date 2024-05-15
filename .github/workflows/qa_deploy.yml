@@ -1,4 +1,4 @@
-name: Codepet QA deploy
+name: Codepet deploy from QA
 
 on:
   workflow_call:
@@ -34,7 +34,7 @@ jobs:
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             NGINX_NAME_DEV=${{ secrets.NGINX_DEV }}
             NGINX_NAME_QA=${{ secrets.NGINX_QA }}
-            DOMAIN_NAME=${{ secrets.DOMAIN_DEV }}
+            DOMAIN_NAME=${{ secrets.DOMAIN_QA }}
             EMAIL_HOST=${{ secrets.EMAIL_HOST }}
             EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
             EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}

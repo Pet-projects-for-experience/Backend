@@ -127,13 +127,20 @@ class Profile(ContactsFields, models.Model):
     subscribe_to_projects = models.BooleanField(
         verbose_name="Подписаться на проекты", default=True
     )
+    favorited_by = models.ManyToManyField(
+        to=User,
+        blank=True,
+        verbose_name="Добавили в избранное",
+        related_name="favorite_profiles",
+    )
 
     class Meta:
         verbose_name = "Профиль"
         verbose_name_plural = "Профили"
+        ordering = ("-user__created",)
 
     def __str__(self):
-        return f"Профиль {self.pk}"
+        return f"Профиль {self.user}"
 
 
 class Specialist(models.Model):

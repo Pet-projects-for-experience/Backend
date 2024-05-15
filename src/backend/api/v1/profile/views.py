@@ -1,4 +1,5 @@
 from django.db.models import Prefetch
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -12,6 +13,7 @@ from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
 from apps.profile.models import Profile, Specialist
 
+from .filters import ProfileFilter
 from .paginations import ProfilesPagination
 from .serializers import (
     ProfileDetailReadSerializer,
@@ -38,6 +40,8 @@ class ProfilesViewSet(ReadOnlyModelViewSet):
 
     lookup_field = "user_id"
     pagination_class = ProfilesPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ProfileFilter
     queryset = (
         Profile.objects.select_related("user")
         .prefetch_related(
@@ -91,6 +95,9 @@ class ProfilesViewSet(ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return self.get_visible_profiles().defer(*USER_FIELDS_TO_DEFER)
 
+        if self.action == "favorite":
+            return Profile.objects.only("pk")
+
         return super().get_queryset()
 
     @action(
@@ -122,6 +129,25 @@ class ProfilesViewSet(ReadOnlyModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status.HTTP_200_OK)
+
+    @action(
+        methods=["post", "delete"],
+        detail=True,
+        permission_classes=[IsAuthenticated],
+    )
+    def favorite(self, request, user_id=None):
+        """Добавить или удалить профиль специалиста из избранного."""
+
+        user = request.user
+        profile = self.get_object()
+
+        if request.method == "POST":
+            profile.favorited_by.add(user)
+            return Response(status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            profile.favorited_by.remove(user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SpecialistsViewSet(

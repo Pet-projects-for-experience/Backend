@@ -19,18 +19,29 @@ from api.v1.projects.paginations import (
 from api.v1.projects.permissions import (
     IsCreatorOrOwner,
     IsCreatorOrOwnerOrReadOnly,
+    IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     IsProjectCreatorOrOwner,
+    IsProjectCreatorOrOwnerForParticipationRequest,
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
+    ReadParticipationRequestSerializer,
     ReadProjectSerializer,
     WriteDraftSerializer,
+    WriteParticipationRequestAnswerSerializer,
+    WriteParticipationRequestSerializer,
     WriteProjectSerializer,
     WriteProjectSpecialistSerializer,
 )
-from apps.projects.models import Direction, Project, ProjectSpecialist
+from apps.projects.constants import RequestStatuses
+from apps.projects.models import (
+    Direction,
+    ParticipationRequest,
+    Project,
+    ProjectSpecialist,
+)
 
 
 class DirectionViewSet(ReadOnlyModelViewSet):
@@ -132,7 +143,7 @@ class ProjectViewSet(BaseProjectViewSet):
             project.is_favorite.add(user)
             return Response(status=status.HTTP_201_CREATED)
         project.is_favorite.remove(user)
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -185,7 +196,8 @@ class DraftViewSet(BaseProjectViewSet):
 
     def perform_create(self, serializer):
         """
-        Метод подготовки данных для процесса предварительного создания проекта.
+        Метод подготовки данных для процесса предварительного создания
+        черновика проекта.
         """
 
         return serializer.save(
@@ -205,3 +217,102 @@ class ProjectSpecialistsViewSet(
     queryset = ProjectSpecialist.objects.all()
     serializer_class = WriteProjectSpecialistSerializer
     permission_classes = (IsProjectCreatorOrOwner,)
+
+
+class ProjectParticipationRequestsViewSet(ModelViewSet):
+    """Представление для запросов на участие в проекте."""
+
+    queryset = ParticipationRequest.objects.all().select_related("user")
+    permission_classes = (
+        IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
+    )
+    http_method_names = ("get", "post", "patch", "delete", "options")
+
+    def get_queryset(self):
+        """Метод получения queryset-а для запросов на участие в проекте."""
+
+        queryset = super().get_queryset()
+        if self.request.method != "DELETE":
+            queryset = (
+                queryset.select_related(
+                    "project",
+                    "project__creator",
+                    "project__owner",
+                    "position__profession",
+                )
+                .prefetch_related(
+                    "project__directions",
+                )
+                .only(
+                    "user",
+                    "project__name",
+                    "project__creator",
+                    "project__owner",
+                    "position__is_required",
+                    "position__profession",
+                    "status",
+                    "is_viewed",
+                    "cover_letter",
+                    "answer",
+                    "created",
+                )
+            )
+        return queryset.filter(
+            Q(user=self.request.user)
+            | (
+                Q(project__owner=self.request.user)
+                | Q(project__creator=self.request.user)
+            )
+        )
+
+    def get_object(self):
+        """Метод получения объекта запроса на участие в проекте."""
+        participation_request = super().get_object()
+        if (
+            self.request.method == "GET"
+            and not participation_request.is_viewed
+            and self.request.user
+            in (
+                participation_request.project.creator,
+                participation_request.project.owner,
+            )
+        ):
+            participation_request.is_viewed = True
+            participation_request.save()
+        return participation_request
+
+    def get_serializer_class(self):
+        """Метод получения сериализатора для запросов на участие в проекте."""
+
+        if self.request.method in SAFE_METHODS:
+            return ReadParticipationRequestSerializer
+        return WriteParticipationRequestSerializer
+
+    def perform_create(self, serializer):
+        """
+        Метод предварительного создания объекта запроса на участие в проекте.
+        """
+
+        serializer.save(
+            user=self.request.user, status=RequestStatuses.IN_PROGRESS
+        )
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        permission_classes=(IsProjectCreatorOrOwnerForParticipationRequest,),
+        serializer_class=WriteParticipationRequestAnswerSerializer,
+    )
+    def answer(self, request, pk):
+        """Метод ответа на запрос на участие в проекте."""
+
+        participation_request = self.get_object()
+        serializer = self.serializer_class(
+            instance=participation_request,
+            data=request.data,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
