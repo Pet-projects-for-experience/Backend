@@ -3,7 +3,7 @@ from typing import ClassVar, Optional
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from api.v1.general.fields import Base64ImageField, SkillField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
@@ -224,6 +224,7 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
             RegexValidator(
                 regex=USERNAME_REGEX, message=USERNAME_ERROR_REGEX_TEXT
             ),
+            UniqueValidator(queryset=Profile.objects.all()),
         ),
     )
 
