@@ -67,36 +67,32 @@ class Command(BaseCommand):
         for i in range(self.amount):
             password = self.fake.password()
             user = create_fake_user(password=password)
-            if not Profile.objects.filter(user=user).exists():
-                self.add_profiles(user)
+            self.add_data_into_profiles(user)
             user.password = password
             self.users.append(user)
         if self.save:
             self._save_data()
 
-    def add_profiles(self, user: TypeAlias):
-        for _ in range(self.amount):
-            profile = Profile(
-                user=user,
-                name=self.fake.first_name(),
-                about=self.fake.text(max_nb_chars=MAX_LENGTH_ABOUT),
-                portfolio_link=self.fake.url(),
-                birthday=self.fake.date_of_birth(
-                    minimum_age=18, maximum_age=70
-                ),
-                country=self.fake.country(),
-                city=self.fake.city(),
-                ready_to_participate=self.fake.boolean(),
-                visible_status=random.randint(1, 3),
-                visible_status_contacts=random.randint(1, 3),
-                allow_notifications=self.fake.boolean(),
-                subscribe_to_projects=self.fake.boolean(),
-                phone_number=self.fake.phone_number(),
-                telegram_nick=self.fake.name(),
-                email=self.fake.email(),
-            )
-            profile.save()
-            profile.professions.add(*get_random_professions())
+    def add_data_into_profiles(self, user: TypeAlias):
+        profile = Profile.objects.get(user=user)
+        profile.name = self.fake.first_name()
+        profile.about = self.fake.text(max_nb_chars=MAX_LENGTH_ABOUT)
+        profile.portfolio_link = self.fake.url()
+        profile.birthday = self.fake.date_of_birth(
+            minimum_age=18, maximum_age=70
+        )
+        profile.country = self.fake.country()
+        profile.city = self.fake.city()
+        profile.ready_to_participate = self.fake.boolean()
+        profile.visible_status = random.randint(1, 3)
+        profile.visible_status_contacts = random.randint(1, 3)
+        profile.allow_notifications = self.fake.boolean()
+        profile.subscribe_to_projects = self.fake.boolean()
+        profile.phone_number = self.fake.phone_number()
+        profile.telegram_nick = self.fake.name()
+        profile.email = self.fake.email()
+        profile.save()
+        profile.professions.add(*get_random_professions())
 
     def _save_data(self):
         """Метод сохраняет данные в файл"""
