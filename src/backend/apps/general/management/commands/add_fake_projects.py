@@ -90,26 +90,29 @@ class Command(BaseCommand):
             user = create_fake_user()
         return user
 
-    def _get_random_number_directions(self) -> list[Direction]:
+    def _get_random_number_directions(self) -> Sequence[T]:
         """Метод возвращает случайное количество направлений разработки"""
         random_number = random.randint(1, 5)
-        directions = list(Direction.objects.all()[:random_number])
-        if len(directions) < random_number:
-            created_directions = list()
-            for _ in range(random_number - len(directions)):
-                direction = Direction(
-                    name=self.fake.text(max_nb_chars=MAX_LENGTH_DIRECTION_NAME)
-                )
-                created_directions.append(direction)
-            Direction.objects.bulk_create(created_directions)
-            directions += created_directions
-        return directions
+        directions_len = Direction.objects.count()
+        if directions_len < random_number:
+            Direction.objects.bulk_create(
+                [
+                    Direction(
+                        name=self.fake.text(
+                            max_nb_chars=MAX_LENGTH_DIRECTION_NAME
+                        )
+                    )
+                    for _ in range(random_number - directions_len)
+                ]
+            )
+        directions = Direction.objects.all()
+        return self.fake.random_choices(directions, random_number)
 
     def _get_or_create_random_number_users(self) -> Sequence[T]:
         random_number = random.randint(1, 10)
-        users = list(User.objects.all())
-        if len(users) < random_number:
-            for _ in range(random_number - len(users)):
-                users.append(create_fake_user())
-
+        users_len = User.objects.count()
+        if users_len < random_number:
+            for _ in range(random_number - users_len):
+                create_fake_user()
+        users = User.objects.all()
         return self.fake.random_choices(users, random_number)
