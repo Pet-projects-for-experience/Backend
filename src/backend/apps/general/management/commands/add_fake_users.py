@@ -74,6 +74,7 @@ class Command(BaseCommand):
             self._save_data()
 
     def add_data_into_profiles(self, user: TypeAlias):
+        """Метод добавляет данные в профиль."""
         profile = Profile.objects.get(user=user)
         profile.name = self.fake.first_name()
         profile.about = self.fake.text(max_nb_chars=MAX_LENGTH_ABOUT)
