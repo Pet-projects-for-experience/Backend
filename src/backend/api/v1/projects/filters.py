@@ -1,6 +1,7 @@
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Q
 from django_filters.rest_framework import FilterSet, filters
+from langdetect import detect
 
 from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import Profession, Skill
@@ -75,13 +76,17 @@ class ProjectFilter(FilterSet):
 
     def project_search(self, queryset, name, value):
         if value:
-            search_query_ru = SearchQuery(value, config="russian")
-            search_query_en = SearchQuery(value, config="english")
-            vector_ru = SearchVector("name", "description", config="russian")
-            vector_en = SearchVector("name", "description", config="english")
-            return queryset.annotate(search=vector_ru | vector_en).filter(
-                search=search_query_ru | search_query_en
-            )
+            search_language = detect(value)
+            if search_language == "ru":
+                search_query = SearchQuery(value, config="russian")
+                vector = SearchVector("name", "description", config="russian")
+            elif search_language == "en":
+                search_query = SearchQuery(value, config="english")
+                vector = SearchVector("name", "description", config="english")
+            else:
+                search_query = SearchQuery(value)
+                vector = SearchVector("name", "description")
+            return queryset.annotate(search=vector).filter(search=search_query)
         return queryset
 
     def filter_is_favorite_project(self, queryset, name, value):
