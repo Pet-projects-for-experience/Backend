@@ -14,7 +14,7 @@ from apps.general.models import Profession
 from apps.profile.constants import MAX_LENGTH_ABOUT
 from apps.profile.models import Profile
 
-from .utils import create_fake_user
+from ._utils import create_fake_user
 
 User = get_user_model()
 

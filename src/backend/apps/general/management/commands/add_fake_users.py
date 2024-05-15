@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
 
-from .utils import create_fake_user
+from ._utils import create_fake_user
 
 User = get_user_model()
 

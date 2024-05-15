@@ -7,13 +7,15 @@ from faker import Faker
 from faker.providers import T
 
 from apps.projects.constants import (
+    BUSYNESS_CHOICES,
     MAX_LENGTH_DESCRIPTION,
     MAX_LENGTH_DIRECTION_NAME,
     MAX_LENGTH_PROJECT_NAME,
+    PROJECT_STATUS_CHOICES,
 )
 from apps.projects.models import Direction, Project
 
-from .utils import create_fake_user
+from ._utils import create_fake_user
 
 User = get_user_model()
 
@@ -59,8 +61,8 @@ class Command(BaseCommand):
                 owner=self._get_or_create_users_without_projects(),
                 started=self.fake.date_this_year(),
                 ended=self.fake.date_this_year(after_today=True),
-                busyness=random.randrange(5, 50, 5),
-                status=random.randint(1, 3),
+                busyness=self.fake.random_element(BUSYNESS_CHOICES)[0],
+                status=self.fake.random_element(PROJECT_STATUS_CHOICES)[0],
                 link=self.fake.url(),
                 phone_number=self.fake.phone_number(),
                 telegram_nick=self.fake.name(),
