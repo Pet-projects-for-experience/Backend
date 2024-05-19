@@ -2,6 +2,7 @@ from typing import Any, ClassVar, Dict, Optional, Tuple
 
 from rest_framework import serializers
 
+from api.v1.general.fields import CustomEmailField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
 from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
 from api.v1.projects.mixins import (
@@ -35,7 +36,7 @@ class BaseProjectSpecialistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectSpecialist
-        fields = (
+        fields: ClassVar[Tuple[str, ...]] = (
             "id",
             "profession",
             "skills",
@@ -61,9 +62,11 @@ class ReadProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
 class BaseProjectSerializer(serializers.ModelSerializer):
     """Общий сериализатор для проектов и черновиков."""
 
+    email = CustomEmailField()
+
     class Meta:
         model = Project
-        fields = (
+        fields: ClassVar[Tuple[str, ...]] = (
             "id",
             "name",
             "description",
@@ -116,7 +119,8 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     is_favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta(BaseProjectSerializer.Meta):
-        fields = BaseProjectSerializer.Meta.fields + (  # type: ignore
+        fields: ClassVar[Tuple[str, ...]] = (
+            *BaseProjectSerializer.Meta.fields,
             "recruitment_status",
             "is_favorite",
         )
@@ -168,7 +172,7 @@ class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
     profession = ProfessionSerializer()
 
     class Meta(BaseProjectSpecialistSerializer.Meta):
-        fields = (  # type: ignore
+        fields: ClassVar[Tuple[str, ...]] = (
             "id",
             "profession",
             "is_required",

@@ -6,7 +6,6 @@ from apps.general.constants import (
     LENGTH_SPECIALTY_NAME_ERROR_TEXT,
     LENGTH_TELEGRAM_NICK_ERROR_TEXT,
     MAX_LENGTH_DESCRIPTION,
-    MAX_LENGTH_EMAIL,
     MAX_LENGTH_PHONE_NUMBER,
     MAX_LENGTH_SKILL_NAME,
     MAX_LENGTH_SPECIALIZATION_NAME,
@@ -25,6 +24,7 @@ from apps.general.constants import (
     REGEX_TELEGRAM_NICK,
     REGEX_TELEGRAM_NICK_ERROR_TEXT,
 )
+from apps.general.fields import CustomEmailField
 
 
 class CreatedModifiedFields(models.Model):
@@ -168,9 +168,7 @@ class ContactsFields(models.Model):
             ),
         ],
     )
-    email = models.EmailField(
-        verbose_name="E-mail",
-        max_length=MAX_LENGTH_EMAIL,
+    email = CustomEmailField(
         null=True,
         blank=True,
     )
