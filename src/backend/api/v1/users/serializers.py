@@ -18,8 +18,8 @@ class CustomUserSerializer(UserSerializer):
 
 
 class CustomUserCreateSerializer(
-    UserCreatePasswordRetypeSerializer,
     OverridedFieldMappingMixin,
+    UserCreatePasswordRetypeSerializer,
 ):
     """Сериализатор для регистрации пользователя с подтверждением пароля."""
 

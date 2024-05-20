@@ -5,7 +5,8 @@ from apps.general.models import Profession, Section, Skill
 
 
 class CustomModelSerializer(
-    serializers.ModelSerializer, OverridedFieldMappingMixin
+    OverridedFieldMappingMixin,
+    serializers.ModelSerializer,
 ):
     """
     Модифицированный сериализатор модели с измененным атрибутом сопоставления

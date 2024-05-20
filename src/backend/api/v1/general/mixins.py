@@ -1,11 +1,9 @@
 from typing import Dict
 
-from django.core.validators import EmailValidator
 from django.db import models
 from rest_framework import fields
-from rest_framework.fields import EmailField
 
-from apps.general.validators import CustomEmailValidator
+from api.v1.general.fields import CustomEmailField
 
 
 class ToRepresentationOnlyIdMixin:
@@ -15,17 +13,6 @@ class ToRepresentationOnlyIdMixin:
         """Метод представления объекта в виде словаря с полем 'id'."""
 
         return {"id": instance.id}
-
-
-class CustomEmailField(EmailField):
-    """Кастомное поле для email."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.validators = [
-            v for v in self.validators if not isinstance(v, EmailValidator)
-        ]
-        self.validators.append(CustomEmailValidator())
 
 
 class OverridedFieldMappingMixin:
