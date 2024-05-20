@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.utils.deconstruct import deconstructible
@@ -9,12 +11,14 @@ class CustomEmailValidator(EmailValidator):
     """Кастомный валидатор email адреса."""
 
     custom_user_regex = _lazy_re_compile(
-        r"^[a-z0-9]([^\\x00-\\x7F\\-]?[\w\.-]{0,61}[a-z0-9])?$"
+        r"^[a-z0-9]([^\\x00-\\x7F\\-]?[\w\.-]{0,61}[a-z0-9])?$",
+        re.IGNORECASE,
     )
     custom_domain_regex = _lazy_re_compile(
         r"^(?:[a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])"
         r"(\.[a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])*"
-        r"(\.[a-z]{2,})?$"
+        r"(\.[a-z]{2,})?$",
+        re.IGNORECASE,
     )
 
     def __call__(self, value) -> None:
