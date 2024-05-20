@@ -5,14 +5,14 @@ from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
-from api.v1.general.fields import Base64ImageField, SkillField
+from api.v1.general.fields import Base64ImageField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
 from api.v1.general.serializers import (
     CustomModelSerializer,
     ProfessionSerializer,
     SkillSerializer,
 )
-from apps.general.models import Profession, Skill
+from apps.general.models import Profession
 from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
 from apps.projects.models import Project
@@ -31,32 +31,44 @@ class CurrentProfile(serializers.CurrentUserDefault):
         return serializer_field.context["request"].user.profile
 
 
-class SpecialistReadSerializer(CustomModelSerializer):
+class BaseSpecialistSerializer(CustomModelSerializer):
+    """Базовый сериализатор специалиста."""
+
+    class Meta:
+        model = Specialist
+        fields: ClassVar[tuple[str, ...]] = (
+            "id",
+            "profession",
+            "level",
+            "skills",
+        )
+
+
+class SpecialistReadSerializer(BaseSpecialistSerializer):
     """Сериализатор для чтения специализаций в профиле."""
 
     profession = ProfessionSerializer(read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Specialist
-        fields = ("id", "profession", "level", "skills")
-        read_only_fields = fields
+    class Meta(BaseSpecialistSerializer.Meta):
+        read_only_fields = BaseSpecialistSerializer.Meta.fields
 
 
 class SpecialistWriteSerializer(
-    ToRepresentationOnlyIdMixin, SpecialistReadSerializer
+    ToRepresentationOnlyIdMixin, BaseSpecialistSerializer
 ):
     """Сериализатор для создания, редактирования специализаций в профиле."""
 
     profession = serializers.PrimaryKeyRelatedField(
         queryset=Profession.objects.all()
     )
-    skills = SkillField(many=True, queryset=Skill.objects.all())
     profile = serializers.HiddenField(default=CurrentProfile())
 
-    class Meta:
-        model = Specialist
-        fields = (*SpecialistReadSerializer.Meta.fields, "profile")
+    class Meta(BaseSpecialistSerializer.Meta):
+        fields: ClassVar[tuple[str, ...]] = (
+            *SpecialistReadSerializer.Meta.fields,
+            "profile",
+        )
         validators = (
             UniqueTogetherValidator(
                 queryset=(Specialist.objects.all()),
