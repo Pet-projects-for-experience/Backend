@@ -5,13 +5,13 @@ from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
-from api.v1.general.fields import (
-    Base64ImageField,
-    CustomEmailField,
-    SkillField,
-)
+from api.v1.general.fields import Base64ImageField, SkillField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
-from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
+from api.v1.general.serializers import (
+    CustomModelSerializer,
+    ProfessionSerializer,
+    SkillSerializer,
+)
 from apps.general.models import Profession, Skill
 from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
@@ -31,7 +31,7 @@ class CurrentProfile(serializers.CurrentUserDefault):
         return serializer_field.context["request"].user.profile
 
 
-class SpecialistReadSerializer(serializers.ModelSerializer):
+class SpecialistReadSerializer(CustomModelSerializer):
     """Сериализатор для чтения специализаций в профиле."""
 
     profession = ProfessionSerializer(read_only=True)
@@ -101,11 +101,10 @@ class SpecialistWriteSerializer(
         return super().update(specialist, validated_data)
 
 
-class BaseProfileSerializer(serializers.ModelSerializer):
+class BaseProfileSerializer(CustomModelSerializer):
     """Базовый класс для сериализаторов профилей."""
 
     username = serializers.CharField(source="user.username", read_only=True)
-    email = CustomEmailField()
     specialists = SpecialistReadSerializer(many=True, read_only=True)
 
     class Meta:

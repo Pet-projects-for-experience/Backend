@@ -1,5 +1,12 @@
 from typing import Dict
 
+from django.core.validators import EmailValidator
+from django.db import models
+from rest_framework import fields
+from rest_framework.fields import EmailField
+
+from apps.general.validators import CustomEmailValidator
+
 
 class ToRepresentationOnlyIdMixin:
     """Миксин с методом to_representation, возвращающим только id объекта."""
@@ -8,3 +15,47 @@ class ToRepresentationOnlyIdMixin:
         """Метод представления объекта в виде словаря с полем 'id'."""
 
         return {"id": instance.id}
+
+
+class CustomEmailField(EmailField):
+    """Кастомное поле для email."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.validators = [
+            v for v in self.validators if not isinstance(v, EmailValidator)
+        ]
+        self.validators.append(CustomEmailValidator())
+
+
+class OverridedFieldMappingMixin:
+    """Миксин с переопределенным атрибутом сопоставления полей модели."""
+
+    serializer_field_mapping = {
+        models.AutoField: fields.IntegerField,
+        models.BigIntegerField: fields.IntegerField,
+        models.BooleanField: fields.BooleanField,
+        models.CharField: fields.CharField,
+        models.CommaSeparatedIntegerField: fields.CharField,
+        models.DateField: fields.DateField,
+        models.DateTimeField: fields.DateTimeField,
+        models.DecimalField: fields.DecimalField,
+        models.DurationField: fields.DurationField,
+        models.EmailField: CustomEmailField,
+        models.Field: fields.ModelField,
+        models.FileField: fields.FileField,
+        models.FloatField: fields.FloatField,
+        models.ImageField: fields.ImageField,
+        models.IntegerField: fields.IntegerField,
+        models.NullBooleanField: fields.BooleanField,
+        models.PositiveIntegerField: fields.IntegerField,
+        models.PositiveSmallIntegerField: fields.IntegerField,
+        models.SlugField: fields.SlugField,
+        models.SmallIntegerField: fields.IntegerField,
+        models.TextField: fields.CharField,
+        models.TimeField: fields.TimeField,
+        models.URLField: fields.URLField,
+        models.UUIDField: fields.UUIDField,
+        models.GenericIPAddressField: fields.IPAddressField,
+        models.FilePathField: fields.FilePathField,
+    }

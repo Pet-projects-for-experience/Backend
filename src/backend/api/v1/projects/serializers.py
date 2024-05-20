@@ -2,9 +2,12 @@ from typing import Any, ClassVar, Dict, Optional, Tuple
 
 from rest_framework import serializers
 
-from api.v1.general.fields import CustomEmailField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
-from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
+from api.v1.general.serializers import (
+    CustomModelSerializer,
+    ProfessionSerializer,
+    SkillSerializer,
+)
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
@@ -23,7 +26,7 @@ from apps.projects.models import (
 )
 
 
-class DirectionSerializer(serializers.ModelSerializer):
+class DirectionSerializer(CustomModelSerializer):
     """Сериализатор направления разработки."""
 
     class Meta:
@@ -31,7 +34,7 @@ class DirectionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class BaseProjectSpecialistSerializer(serializers.ModelSerializer):
+class BaseProjectSpecialistSerializer(CustomModelSerializer):
     """Общий сериализатор для специалиста необходимого проекту."""
 
     class Meta:
@@ -59,10 +62,8 @@ class ReadProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
         return obj.get_level_display()
 
 
-class BaseProjectSerializer(serializers.ModelSerializer):
+class BaseProjectSerializer(CustomModelSerializer):
     """Общий сериализатор для проектов и черновиков."""
-
-    email = CustomEmailField()
 
     class Meta:
         model = Project
@@ -179,7 +180,7 @@ class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
         )
 
 
-class ProjectPreviewMainSerializer(serializers.ModelSerializer):
+class ProjectPreviewMainSerializer(CustomModelSerializer):
     """Сериализатор для чтения превью проекта на главной странице."""
 
     project_specialists = ShortProjectSpecialistSerializer(many=True)
@@ -251,7 +252,7 @@ class WriteProjectSpecialistSerializer(
         return attrs
 
 
-class BaseParticipationRequestSerializer(serializers.ModelSerializer):
+class BaseParticipationRequestSerializer(CustomModelSerializer):
     """Базовый сериализатор запросов на участие в проекте."""
 
     class Meta:
@@ -360,7 +361,7 @@ class WriteParticipationRequestSerializer(
         return attrs
 
 
-class ShortProjectSerializer(serializers.ModelSerializer):
+class ShortProjectSerializer(CustomModelSerializer):
     """Сериализатор краткой информации на чтение проектов."""
 
     directions = DirectionSerializer(many=True)
