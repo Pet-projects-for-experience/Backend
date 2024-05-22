@@ -87,10 +87,8 @@ class SpecialistWriteSerializer(
     def check_duplicates(values):
         duplicates = {value.id for value in values if values.count(value) > 1}
         if duplicates:
-            raise serializers.ValidationError(
-                f"Значения дублируются: {duplicates}"
-            )
-        return values
+            return f"Значения дублируются: {duplicates}"
+        return False
 
     def validate_profile(self, profile):
         if profile.specialists.count() >= MAX_SPECIALISTS:
@@ -99,9 +97,13 @@ class SpecialistWriteSerializer(
 
     def validate_skills(self, skills):
         self.check_empty(skills)
-        self.check_duplicates(skills)
+        errors = list()
+        if duplicates := self.check_duplicates(skills):
+            errors.append(duplicates)
         if len(skills) > MAX_SKILLS:
-            raise serializers.ValidationError(MAX_SKILLS_MESSAGE)
+            errors.append(MAX_SKILLS_MESSAGE)
+        if errors:
+            raise serializers.ValidationError(errors)
         return skills
 
     def create(self, validated_data):
