@@ -13,7 +13,12 @@ from api.v1.general.serializers import (
     SkillSerializer,
 )
 from apps.general.models import Profession
-from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
+from apps.profile.constants import (
+    MAX_SKILLS,
+    MAX_SKILLS_MESSAGE,
+    MAX_SPECIALISTS,
+    MAX_SPECIALISTS_MESSAGE,
+)
 from apps.profile.models import Profile, Specialist
 from apps.projects.models import Project
 from apps.users.constants import (
@@ -99,6 +104,8 @@ class SpecialistWriteSerializer(
     def validate_skills(self, skills):
         self.check_empty(skills)
         self.check_duplicates(skills)
+        if len(skills) > MAX_SKILLS:
+            raise serializers.ValidationError(MAX_SKILLS_MESSAGE)
         return skills
 
     def create(self, validated_data):
