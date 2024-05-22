@@ -1,4 +1,5 @@
 from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
@@ -162,11 +163,7 @@ class SpecialistsViewSet(
 
     def get_profile(self):
         """Извлечение профиля пользователя."""
-
-        try:
-            profile = Profile.objects.only("pk").get(user=self.request.user)
-        except Profile.DoesNotExist:
-            return Response(status.HTTP_404_NOT_FOUND)
+        profile = get_object_or_404(Profile, user=self.request.user)
         return profile
 
     def get_queryset(self):
