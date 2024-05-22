@@ -18,7 +18,3 @@ MAX_SPECIALISTS_MESSAGE = (
     f"У одного профиля может быть не более "
     f"{MAX_SPECIALISTS} специальностей."
 )
-MAX_SKILLS = 15
-MAX_SKILLS_MESSAGE = (
-    f"У одной специальности может быть не более {MAX_SKILLS} навыков."
-)

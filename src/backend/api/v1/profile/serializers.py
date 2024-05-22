@@ -12,13 +12,9 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
+from apps.general.constants import MAX_SKILLS, MAX_SKILLS_MESSAGE
 from apps.general.models import Profession
-from apps.profile.constants import (
-    MAX_SKILLS,
-    MAX_SKILLS_MESSAGE,
-    MAX_SPECIALISTS,
-    MAX_SPECIALISTS_MESSAGE,
-)
+from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
 from apps.projects.models import Project
 from apps.users.constants import (
