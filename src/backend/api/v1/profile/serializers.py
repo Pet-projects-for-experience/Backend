@@ -12,6 +12,7 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
+from apps.general.constants import MAX_SKILLS, MAX_SKILLS_MESSAGE
 from apps.general.models import Profession
 from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
@@ -77,28 +78,25 @@ class SpecialistWriteSerializer(
         )
 
     @staticmethod
-    def check_empty(value):
-        if not value:
-            raise serializers.ValidationError("Пустое значение.")
-        return value
-
-    @staticmethod
-    def check_duplicates(values):
+    def check_duplicates(values) -> str | bool:
         duplicates = {value.id for value in values if values.count(value) > 1}
         if duplicates:
-            raise serializers.ValidationError(
-                f"Значения дублируются: {duplicates}"
-            )
-        return values
+            return f"Значения дублируются: {duplicates}"
+        return False
 
     def validate_profile(self, profile):
         if profile.specialists.count() >= MAX_SPECIALISTS:
             raise serializers.ValidationError(MAX_SPECIALISTS_MESSAGE)
         return profile
 
-    def validate_skills(self, skills):
-        self.check_empty(skills)
-        self.check_duplicates(skills)
+    def validate_skills(self, skills) -> list[int]:
+        errors = list()
+        if duplicates := self.check_duplicates(skills):
+            errors.append(duplicates)
+        if len(skills) > MAX_SKILLS:
+            errors.append(MAX_SKILLS_MESSAGE)
+        if errors:
+            raise serializers.ValidationError(errors)
         return skills
 
     def create(self, validated_data):
