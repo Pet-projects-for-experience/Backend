@@ -161,7 +161,7 @@ class SpecialistsViewSet(
     lookup_url_kwarg = "specialist_id"
     http_method_names = ["post", "patch", "delete", "options", "head"]
 
-    def get_profile(self):
+    def get_profile(self) -> Profile:
         """Извлечение профиля пользователя."""
         profile = get_object_or_404(Profile, user=self.request.user)
         return profile
