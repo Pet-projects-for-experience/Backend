@@ -78,13 +78,7 @@ class SpecialistWriteSerializer(
         )
 
     @staticmethod
-    def check_empty(value):
-        if not value:
-            raise serializers.ValidationError("Пустое значение.")
-        return value
-
-    @staticmethod
-    def check_duplicates(values):
+    def check_duplicates(values) -> str | bool:
         duplicates = {value.id for value in values if values.count(value) > 1}
         if duplicates:
             return f"Значения дублируются: {duplicates}"
@@ -95,8 +89,7 @@ class SpecialistWriteSerializer(
             raise serializers.ValidationError(MAX_SPECIALISTS_MESSAGE)
         return profile
 
-    def validate_skills(self, skills):
-        self.check_empty(skills)
+    def validate_skills(self, skills) -> list[int]:
         errors = list()
         if duplicates := self.check_duplicates(skills):
             errors.append(duplicates)
