@@ -20,6 +20,7 @@ from apps.projects.constants import (
 )
 from apps.projects.models import (
     Direction,
+    InvitationToProject,
     ParticipationRequest,
     Project,
     ProjectSpecialist,
@@ -449,3 +450,27 @@ class WriteParticipationRequestAnswerSerializer(
         if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
             instance.project.participants.add(instance.user)
         return super().update(instance, validated_data)
+
+
+class ReadInvitationToProjectSerializer(ReadParticipationRequestSerializer):
+    """Сериализатор на чтение приглашений в проект."""
+
+    class Meta(ReadParticipationRequestSerializer.Meta):
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = (
+            *BaseParticipationRequestSerializer.Meta.fields,
+            "author",
+        )
+
+
+class WriteInvitationToProjectSerializer(
+    WriteParticipationRequestAnswerSerializer
+):
+    """Сериализатор на запись ответа на приглашение в проект."""
+
+    class Meta(WriteParticipationRequestAnswerSerializer.Meta):
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = (
+            *BaseParticipationRequestSerializer.Meta.fields,
+            "author",
+        )

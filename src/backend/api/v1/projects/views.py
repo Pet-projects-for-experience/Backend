@@ -27,9 +27,11 @@ from api.v1.projects.serializers import (
     DirectionSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
+    ReadInvitationToProjectSerializer,
     ReadParticipationRequestSerializer,
     ReadProjectSerializer,
     WriteDraftSerializer,
+    WriteInvitationToProjectSerializer,
     WriteParticipationRequestAnswerSerializer,
     WriteParticipationRequestSerializer,
     WriteProjectSerializer,
@@ -38,6 +40,7 @@ from api.v1.projects.serializers import (
 from apps.projects.constants import RequestStatuses
 from apps.projects.models import (
     Direction,
+    InvitationToProject,
     ParticipationRequest,
     Project,
     ProjectSpecialist,
@@ -316,3 +319,44 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class InvitationToProjectViewSet(ModelViewSet):
+    """Представление для создания и управления приглашениями в проект"""
+
+    http_method_names = ("get", "post", "patch", "delete", "options")
+
+    def get_queryset(self):
+        user = self.request.user
+        return (
+            InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
+            .select_related(
+                "project",
+                "position" "position__profession",
+            )
+            .prefetch_related(
+                "project__directions",
+            )
+            .only(
+                "user",
+                "author",
+                "project__name",
+                "position__is_required",
+                "position__profession",
+                "status",
+                "is_viewed",
+                "cover_letter",
+                "answer",
+                "created",
+            )
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return ReadInvitationToProjectSerializer
+        return WriteInvitationToProjectSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, status=RequestStatuses.IN_PROGRESS
+        )
