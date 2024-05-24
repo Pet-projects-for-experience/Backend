@@ -19,6 +19,7 @@ from api.v1.projects.paginations import (
 from api.v1.projects.permissions import (
     IsCreatorOrOwner,
     IsCreatorOrOwnerOrReadOnly,
+    IsInvitationAuthorOrUser,
     IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     IsProjectCreatorOrOwner,
     IsProjectCreatorOrOwnerForParticipationRequest,
@@ -325,6 +326,7 @@ class InvitationToProjectViewSet(ModelViewSet):
     """Представление для создания и управления приглашениями в проект"""
 
     http_method_names = ("get", "post", "patch", "delete", "options")
+    permission_classes = IsInvitationAuthorOrUser
 
     def get_queryset(self):
         user = self.request.user
@@ -332,7 +334,8 @@ class InvitationToProjectViewSet(ModelViewSet):
             InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
             .select_related(
                 "project",
-                "position" "position__profession",
+                "position",
+                "position__profession",
             )
             .prefetch_related(
                 "project__directions",

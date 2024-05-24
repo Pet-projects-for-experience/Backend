@@ -73,3 +73,8 @@ class IsProjectCreatorOrOwnerForParticipationRequest(IsProjectCreatorOrOwner):
             )
             and request.user in (obj.project.owner, obj.project.creator)
         )
+
+
+class IsInvitationAuthorOrUser(IsAuthenticated):
+    def has_object_permission(self, request, view, obj) -> bool:
+        return request.user in (obj.user, obj.author)

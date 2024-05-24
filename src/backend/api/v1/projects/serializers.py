@@ -460,6 +460,7 @@ class ReadInvitationToProjectSerializer(ReadParticipationRequestSerializer):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
             "author",
+            "user",
         )
 
 
@@ -472,5 +473,5 @@ class WriteInvitationToProjectSerializer(
         model = InvitationToProject
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
-            "author",
+            "user",
         )
