@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from itertools import chain
+from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
 from rest_framework import serializers
 
@@ -475,3 +476,31 @@ class WriteInvitationToProjectSerializer(
             *BaseParticipationRequestSerializer.Meta.fields,
             "user",
         )
+
+    def validate(self, attrs) -> OrderedDict:
+        """Метод валидации атрибутов приглашения."""
+        errors: Dict = {}
+        project = attrs.get("project", None)
+        user = attrs.get("user", None)
+        position = attrs.get("position", None)
+        if position and position not in project.project_specialists.all():
+            errors.setdefault("position", []).append(
+                "Этот специалист не требуется проекту"
+            )
+        if user:
+            if user.id in chain(
+                project.participants.all().values_list("id", flat=True),
+                project.invitation_to_project.all().values_list(
+                    "user_id", flat=True
+                ),
+            ):
+                errors.setdefault("user", []).append(
+                    "Этот пользователь уже участвует в проекте или приглашен"
+                )
+            if position.profession not in user.profile.professions.all():
+                errors.setdefault("user", []).append(
+                    "У пользователя нет подходящей специальности"
+                )
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs

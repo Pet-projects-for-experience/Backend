@@ -326,7 +326,7 @@ class InvitationToProjectViewSet(ModelViewSet):
     """Представление для создания и управления приглашениями в проект"""
 
     http_method_names = ("get", "post", "patch", "delete", "options")
-    permission_classes = IsInvitationAuthorOrUser
+    permission_classes = (IsInvitationAuthorOrUser,)
 
     def get_queryset(self):
         user = self.request.user
@@ -339,6 +339,8 @@ class InvitationToProjectViewSet(ModelViewSet):
             )
             .prefetch_related(
                 "project__directions",
+                "project__project_specialists__profession",
+                "user__profile__professions",
             )
             .only(
                 "user",
