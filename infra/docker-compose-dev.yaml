@@ -67,7 +67,7 @@ services:
     volumes:
       - static_volume:/staticfiles/
       - media_value:/mediafiles/
-      - certbot:/certbot/
+      - certbot:/var/www/certbot/
       - letsencrypt:/etc/letsencrypt/
     restart: unless-stopped
     depends_on:
