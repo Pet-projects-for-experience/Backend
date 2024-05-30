@@ -45,6 +45,7 @@ jobs:
             SERVER_HOST_DEV=${{ secrets.SERVER_HOST_DEV }}
             SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
             SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
+            BACKEND_LOGS_DIR=${{ secrets.BACKEND_LOGS_DIR }}
           _EOF_
     - name: Copy docker-compose-dev.yaml via ssh
       uses: appleboy/scp-action@master
@@ -79,6 +80,4 @@ jobs:
           sudo docker compose -f docker-compose-dev.yaml exec backend python manage.py migrate
           sudo docker compose -f docker-compose-dev.yaml exec backend python manage.py collectstatic --no-input
           sudo docker compose -f docker-compose-dev.yaml exec backend cp -r static/. /backend_static/static/
-          sudo docker compose -f docker-compose-dev.yaml restart nginx
-          sudo echo "0 */12 * * * /root/codepet/infra/certbot_renew.sh && perl -e 'sleep int(rand(43200))" | crontab -
           sudo docker system prune -f
