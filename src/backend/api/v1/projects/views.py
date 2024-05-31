@@ -334,11 +334,11 @@ class InvitationToProjectViewSet(ModelViewSet):
             InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
             .select_related(
                 "project",
-                "position",
                 "position__profession",
             )
             .prefetch_related(
                 "project__directions",
+                "project__project_specialists",
                 "project__project_specialists__profession",
                 "user__profile__professions",
             )

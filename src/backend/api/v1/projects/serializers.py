@@ -504,3 +504,9 @@ class WriteInvitationToProjectSerializer(
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
+
+    def update(self, instance, validated_data):
+        status = validated_data.get("status", None)
+        if status == RequestStatuses.ACCEPTED:
+            instance.project.participants.add(instance.user)
+        return super().update(instance, validated_data)
