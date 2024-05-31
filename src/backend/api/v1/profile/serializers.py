@@ -3,12 +3,17 @@ from typing import ClassVar, Optional
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
-from api.v1.general.fields import Base64ImageField, SkillField
+from api.v1.general.fields import Base64ImageField
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
-from api.v1.general.serializers import ProfessionSerializer, SkillSerializer
-from apps.general.models import Profession, Skill
+from api.v1.general.serializers import (
+    CustomModelSerializer,
+    ProfessionSerializer,
+    SkillSerializer,
+)
+from apps.general.constants import MAX_SKILLS, MAX_SKILLS_MESSAGE
+from apps.general.models import Profession
 from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
 from apps.profile.models import Profile, Specialist
 from apps.projects.models import Project
@@ -27,32 +32,44 @@ class CurrentProfile(serializers.CurrentUserDefault):
         return serializer_field.context["request"].user.profile
 
 
-class SpecialistReadSerializer(serializers.ModelSerializer):
+class BaseSpecialistSerializer(CustomModelSerializer):
+    """Базовый сериализатор специалиста."""
+
+    class Meta:
+        model = Specialist
+        fields: ClassVar[tuple[str, ...]] = (
+            "id",
+            "profession",
+            "level",
+            "skills",
+        )
+
+
+class SpecialistReadSerializer(BaseSpecialistSerializer):
     """Сериализатор для чтения специализаций в профиле."""
 
     profession = ProfessionSerializer(read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Specialist
-        fields = ("id", "profession", "level", "skills")
-        read_only_fields = fields
+    class Meta(BaseSpecialistSerializer.Meta):
+        read_only_fields = BaseSpecialistSerializer.Meta.fields
 
 
 class SpecialistWriteSerializer(
-    ToRepresentationOnlyIdMixin, SpecialistReadSerializer
+    ToRepresentationOnlyIdMixin, BaseSpecialistSerializer
 ):
     """Сериализатор для создания, редактирования специализаций в профиле."""
 
     profession = serializers.PrimaryKeyRelatedField(
         queryset=Profession.objects.all()
     )
-    skills = SkillField(many=True, queryset=Skill.objects.all())
     profile = serializers.HiddenField(default=CurrentProfile())
 
-    class Meta:
-        model = Specialist
-        fields = (*SpecialistReadSerializer.Meta.fields, "profile")
+    class Meta(BaseSpecialistSerializer.Meta):
+        fields: ClassVar[tuple[str, ...]] = (
+            *SpecialistReadSerializer.Meta.fields,
+            "profile",
+        )
         validators = (
             UniqueTogetherValidator(
                 queryset=(Specialist.objects.all()),
@@ -61,28 +78,25 @@ class SpecialistWriteSerializer(
         )
 
     @staticmethod
-    def check_empty(value):
-        if not value:
-            raise serializers.ValidationError("Пустое значение.")
-        return value
-
-    @staticmethod
-    def check_duplicates(values):
+    def check_duplicates(values) -> str | bool:
         duplicates = {value.id for value in values if values.count(value) > 1}
         if duplicates:
-            raise serializers.ValidationError(
-                f"Значения дублируются: {duplicates}"
-            )
-        return values
+            return f"Значения дублируются: {duplicates}"
+        return False
 
     def validate_profile(self, profile):
         if profile.specialists.count() >= MAX_SPECIALISTS:
             raise serializers.ValidationError(MAX_SPECIALISTS_MESSAGE)
         return profile
 
-    def validate_skills(self, skills):
-        self.check_empty(skills)
-        self.check_duplicates(skills)
+    def validate_skills(self, skills) -> list[int]:
+        errors = list()
+        if duplicates := self.check_duplicates(skills):
+            errors.append(duplicates)
+        if len(skills) > MAX_SKILLS:
+            errors.append(MAX_SKILLS_MESSAGE)
+        if errors:
+            raise serializers.ValidationError(errors)
         return skills
 
     def create(self, validated_data):
@@ -97,7 +111,7 @@ class SpecialistWriteSerializer(
         return super().update(specialist, validated_data)
 
 
-class BaseProfileSerializer(serializers.ModelSerializer):
+class BaseProfileSerializer(CustomModelSerializer):
     """Базовый класс для сериализаторов профилей."""
 
     username = serializers.CharField(source="user.username", read_only=True)
@@ -224,6 +238,7 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
             RegexValidator(
                 regex=USERNAME_REGEX, message=USERNAME_ERROR_REGEX_TEXT
             ),
+            UniqueValidator(queryset=Profile.objects.all()),
         ),
     )
 
