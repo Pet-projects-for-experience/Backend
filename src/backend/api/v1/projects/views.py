@@ -332,6 +332,7 @@ class InvitationToProjectViewSet(ModelViewSet):
         user = self.request.user
         return (
             InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
+            .order_by("-created")
             .select_related(
                 "project",
                 "position",
