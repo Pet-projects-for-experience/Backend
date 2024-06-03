@@ -1,4 +1,3 @@
-from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
 from rest_framework import serializers
@@ -459,21 +458,22 @@ class ReadInvitationToProjectSerializer(ReadParticipationRequestSerializer):
     class Meta(ReadParticipationRequestSerializer.Meta):
         model = InvitationToProject
         fields: ClassVar[Tuple[str, ...]] = (
-            *BaseParticipationRequestSerializer.Meta.fields,
+            *ReadParticipationRequestSerializer.Meta.fields,
             "author",
-            "user",
         )
 
 
 class WriteInvitationToProjectSerializer(
-    WriteParticipationRequestAnswerSerializer
+    ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
 ):
-    """Сериализатор на запись ответа на приглашение в проект."""
+    """Сериализатор на запись приглашение в проект."""
 
-    class Meta(WriteParticipationRequestAnswerSerializer.Meta):
+    class Meta:
         model = InvitationToProject
         fields: ClassVar[Tuple[str, ...]] = (
-            *BaseParticipationRequestSerializer.Meta.fields,
+            "position",
+            "project",
+            "cover_letter",
             "user",
         )
 
@@ -483,21 +483,25 @@ class WriteInvitationToProjectSerializer(
         project = attrs.get("project", None)
         user = attrs.get("user", None)
         position = attrs.get("position", None)
-        if position and position not in project.project_specialists.all():
+        if not project.project_specialists.filter(
+            id=position.id,
+            is_required=True,
+        ).exists():
             errors.setdefault("position", []).append(
                 "Этот специалист не требуется проекту"
             )
         if user:
-            if user.id in chain(
-                project.participants.all().values_list("id", flat=True),
-                project.invitation_to_project.all().values_list(
-                    "user_id", flat=True
-                ),
+            if (
+                project.participants.filter(id=user.id).exists()
+                or project.invitation_to_project.filter(user=user).exists()
             ):
                 errors.setdefault("user", []).append(
                     "Этот пользователь уже участвует в проекте или приглашен"
                 )
-            if position.profession not in user.profile.professions.all():
+            if not user.profile.professions.filter(
+                specialty=position.profession.specialty,
+                specialization=position.profession.specialization,
+            ).exists():
                 errors.setdefault("user", []).append(
                     "У пользователя нет подходящей специальности"
                 )
