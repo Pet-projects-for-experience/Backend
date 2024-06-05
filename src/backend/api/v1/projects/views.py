@@ -26,6 +26,7 @@ from api.v1.projects.permissions import (
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
+    PartialWriteInvitationToProjectSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
     ReadInvitationToProjectSerializer,
@@ -362,6 +363,8 @@ class InvitationToProjectViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return ReadInvitationToProjectSerializer
+        if self.request.method == "PATCH":
+            return PartialWriteInvitationToProjectSerializer
         return WriteInvitationToProjectSerializer
 
     def perform_create(self, serializer):

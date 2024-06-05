@@ -292,8 +292,8 @@ class InvitationToProject(ParticipationRequestAndInvitationBasemodel):
     )
 
     class Meta:
-        verbose_name = "Приглашение участника"
-        verbose_name_plural = "Приглашения участников"
+        verbose_name = "Приглашение для участия"
+        verbose_name_plural = "Приглашения для участия"
         default_related_name = "invitation_to_project"
         constraints = (
             models.UniqueConstraint(

@@ -466,7 +466,7 @@ class ReadInvitationToProjectSerializer(ReadParticipationRequestSerializer):
 class WriteInvitationToProjectSerializer(
     ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
 ):
-    """Сериализатор на запись приглашение в проект."""
+    """Сериализатор на запись приглашения в проект."""
 
     class Meta:
         model = InvitationToProject
@@ -490,23 +490,42 @@ class WriteInvitationToProjectSerializer(
             errors.setdefault("position", []).append(
                 "Этот специалист не требуется проекту"
             )
-        if user:
-            if (
-                project.participants.filter(id=user.id).exists()
-                or project.invitation_to_project.filter(user=user).exists()
-            ):
-                errors.setdefault("user", []).append(
-                    "Этот пользователь уже участвует в проекте или приглашен"
-                )
-            if not user.profile.professions.filter(
-                specialty=position.profession.specialty,
-                specialization=position.profession.specialization,
-            ).exists():
-                errors.setdefault("user", []).append(
-                    "У пользователя нет подходящей специальности"
-                )
+        if (
+            project.participants.filter(id=user.id).exists()
+            or project.invitation_to_project.filter(user=user).exists()
+        ):
+            errors.setdefault("user", []).append(
+                "Этот пользователь уже участвует в проекте или приглашен"
+            )
+        if not user.profile.professions.filter(
+            specialty=position.profession.specialty,
+            specialization=position.profession.specialization,
+        ).exists():
+            errors.setdefault("user", []).append(
+                "У пользователя нет подходящей специальности"
+            )
         if errors:
             raise serializers.ValidationError(errors)
+        return attrs
+
+
+class PartialWriteInvitationToProjectSerializer(
+    ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
+):
+    """Сериализатор на обновление приглашения в проект."""
+
+    class Meta:
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = (
+            *WriteInvitationToProjectSerializer.Meta.fields,
+            "status",
+        )
+
+    def validate(self, attrs) -> OrderedDict:
+        if len(attrs) > 1 or "status" not in attrs.keys():
+            raise serializers.ValidationError(
+                {"error": "Вы можете изменить только статус приглашения"}
+            )
         return attrs
 
     def update(self, instance, validated_data):
