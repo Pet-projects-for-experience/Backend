@@ -7,7 +7,7 @@
 {% block text_body %}
 {% trans "You have been invited to join our project!" %}
 
-Что бы принять или отклонить приглашение, перейдите в личный кабинет: {{ protocol }}://{{ url }}
+Что бы принять или отклонить приглашение, перейдите в личный кабинет: {{ protocol }}://{{ url|safe }}
 
 {% trans "Thanks for using our site!" %}
 
@@ -16,6 +16,9 @@
 
 {% block html_body %}
 <p>{% trans "You have been invited to join our project!" %}</p>
+
+<p>Что бы принять или отклонить приглашение, перейдите в личный кабинет:</p>
+<p><a href="{{ protocol }}://{{ url|safe }}">{{ protocol }}://{{ url|safe }}</a></p>
 
 <p>{% trans "Thanks for using our site!" %}</p>
 
