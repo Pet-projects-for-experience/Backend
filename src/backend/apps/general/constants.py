@@ -1,3 +1,5 @@
+from django.conf import settings
+
 MAX_LENGTH_SKILL_NAME = 100
 
 MAX_LENGTH_SPECIALIZATION_NAME = 100
@@ -72,3 +74,4 @@ MAX_SKILLS = 15
 MAX_SKILLS_MESSAGE = (
     f"У одной специальности может быть не более {MAX_SKILLS} навыков."
 )
+URL_TO_PROFILE = f"{getattr(settings, 'SERVER_NAME', 'localhost')}/profile"
