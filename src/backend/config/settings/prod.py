@@ -18,6 +18,7 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     f"http://{SERVER_HOST}",
     f"https://{SERVER_NAME}",
+    "http://localhost:8000",
 ]
 
 
