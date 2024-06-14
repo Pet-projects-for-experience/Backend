@@ -24,7 +24,7 @@ jobs:
           sudo rm -r ${{ secrets.PROJECT_NAME }}
           sudo mkdir -p ${{ secrets.PROJECT_NAME }}/infra
           sudo chmod 777 ${{ secrets.PROJECT_NAME }}/infra
-          if [ "${{ inputs.environment }}" == "dev"]; then
+          if [ "${{ inputs.environment }}" = "dev" ]; then
           sudo cat > ${{ secrets.PROJECT_NAME }}/infra/.env << _EOF_
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
