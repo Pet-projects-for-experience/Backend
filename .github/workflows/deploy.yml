@@ -34,7 +34,6 @@ jobs:
             PROJECT_NAME=${{ secrets.PROJECT_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             DJANGO_SETTINGS_MODULE=${{ secrets.DJANGO_SETTINGS_MODULE }}
-            DOCKERHUB_USERNAME_FRONT=${{ secrets.DOCKERHUB_USERNAME_FRONT }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             NGINX_NAME=${{ secrets.NGINX_NAME }}
