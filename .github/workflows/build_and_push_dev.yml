@@ -11,7 +11,6 @@ on:
 jobs:
   build_and_push_to_docker_hub_backend:
     name: Push backend Docker image to DockerHub
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -32,7 +31,6 @@ jobs:
 
   build_and_push_to_docker_hub_nginx:
     name: Push nginx Docker image to DockerHub
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
