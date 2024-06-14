@@ -2,11 +2,15 @@ name: Codepet deploy from Develop
 
 on:
   workflow_call:
-
+    inputs:
+      environment:
+        type: string
+        required: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -22,11 +26,6 @@ jobs:
           sudo mkdir -p ${{ secrets.PROJECT_NAME }}/infra
           sudo chmod 777 ${{ secrets.PROJECT_NAME }}/infra
           sudo cat > ${{ secrets.PROJECT_NAME }}/infra/.env << _EOF_
-            HOST=${{ secrets.HOST }}
-            HOST_QA=${{ secrets.HOST_QA }}
-            USER=${{ secrets.USER }}
-            SSH_KEY=${{ secrets.SSH_KEY }}
-            SSH_PASSPHRASE=${{ secrets.SSH_PASSPHRASE }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
@@ -34,25 +33,18 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             PROJECT_NAME=${{ secrets.PROJECT_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DJANGO_SETTINGS_MODULE=${{ secrets.DJANGO_SETTINGS_MODULE }}
             DOCKERHUB_USERNAME_FRONT=${{ secrets.DOCKERHUB_USERNAME_FRONT }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
-            NGINX_NAME_DEV=${{ secrets.NGINX_DEV }}
-            NGINX_NAME_QA=${{ secrets.NGINX_QA }}
-            DOMAIN_NAME=${{ secrets.DOMAIN_DEV }}
-            DOMAIN_NAME_DEV=${{ secrets.DOMAIN_DEV }}
-            DOMAIN_NAME_QA=${{ secrets.DOMAIN_QA }}
+            NGINX_NAME=${{ secrets.NGINX_NAME }}
             EMAIL_HOST=${{ secrets.EMAIL_HOST }}
             EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
             EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
             NEXT_PUBLIC_CAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
             NEXT_SHARP_PATH=${{ secrets.NEXT_SHARP_PATH }}
-            SERVER_NAME_DEV=${{ secrets.SERVER_NAME_DEV }}
-            SERVER_HOST_DEV=${{ secrets.SERVER_HOST_DEV }}
-            SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
-            SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
             BACKEND_LOGS_DIR=${{ secrets.BACKEND_LOGS_DIR }}
-            DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
+            BRANCH_TAG=${{ github.ref_name }}
           _EOF_
     - name: Copy docker-compose-dev.yaml via ssh
       uses: appleboy/scp-action@master
@@ -62,15 +54,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "infra/docker-compose-dev.yaml"
-        target: "codepet"
-    - name: Copy certbot_renew script via ssh
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "infra/certbot_renew_dev.sh"
         target: "codepet"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master

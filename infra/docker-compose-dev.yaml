@@ -31,7 +31,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_backend:latest
+    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_backend_${BRANCH_TAG}:latest
     restart: unless-stopped
     env_file: .env
     environment:
@@ -57,7 +57,7 @@ services:
         condition: service_healthy
 
   nginx:
-    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_nginx:latest
+    image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_nginx_${BRANCH_TAG}:latest
     ports:
       - "80:80"
 #       - "443:443"
