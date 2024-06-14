@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
@@ -302,6 +303,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             user=self.request.user, status=RequestStatuses.IN_PROGRESS
         )
 
+    @extend_schema(
+        request=WriteParticipationRequestAnswerSerializer,
+    )
     @action(
         detail=True,
         methods=["patch"],
