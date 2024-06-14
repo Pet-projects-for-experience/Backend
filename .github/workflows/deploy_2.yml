@@ -2,68 +2,7 @@ name: Codepet deploy from Develop
 
 on:
   workflow_call:
-    inputs:
-      environment:
-        type: string
-        description: environment to deploy to
-        required: true
-    secrets:
-      HOST:
-        required: true
-      USER:
-        required: true
-      SSH_KEY:
-        required: true
-      SSH_PASSPHRASE:
-        required: true
-      PROJECT_NAME:
-        required: true
-      POSTGRES_DB:
-        required: true
-      POSTGRES_HOST:
-        required: true
-      POSTGRES_PORT:
-        required: true
-      POSTGRES_USER:
-        required: true
-      POSTGRES_PASSWORD:
-        required: true
-      SECRET_KEY:
-        required: true
-      DJANGO_SETTING_MODULE:
-        required: true
-      DOCKERHUB_USERNAME_FRONT:
-        required: true
-      DOCKERHUB_USERNAME:
-        required: true
-      ALLOWED_HOSTS:
-        required: true
-      NGINX_NAME_DEV:
-        required: true
-      NGINX_NAME_QA:
-        required: true
-      DOMAIN_NAME:
-        required: true
-      EMAIL_HOST:
-        required: true
-      EMAIL_HOST_USER:
-        required: true
-      EAMIL_HOST_PASSWORD:
-        required: true
-      NEXT_PUBLIC_CAPTCHA_SITE_KEY:
-        required: true
-      NEXT_SHARP_PATH:
-        required: true
-      SERVER_NAME_DEV:
-        required: true
-      SERVER_HOST_DEV:
-        required: true
-      SERVER_NAME_QA:
-        required: true
-      SERVER_HOST_QA:
-        required: true
-      BACKEND_LOGS_DIR:
-        required: true
+
 
 jobs:
   deploy:
@@ -83,6 +22,11 @@ jobs:
           sudo mkdir -p ${{ secrets.PROJECT_NAME }}/infra
           sudo chmod 777 ${{ secrets.PROJECT_NAME }}/infra
           sudo cat > ${{ secrets.PROJECT_NAME }}/infra/.env << _EOF_
+            HOST=${{ secrets.HOST }}
+            HOST_QA=${{ secrets.HOST_QA }}
+            USER=${{ secrets.USER }}
+            SSH_KEY=${{ secrets.SSH_KEY }}
+            SSH_PASSPHRASE=${{ secrets.SSH_PASSPHRASE }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
@@ -90,13 +34,14 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             PROJECT_NAME=${{ secrets.PROJECT_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
-            DJANGO_SETTINGS_MODULE=${{ secrets.DJANGO_SETTINGS_MODULE }}
             DOCKERHUB_USERNAME_FRONT=${{ secrets.DOCKERHUB_USERNAME_FRONT }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             NGINX_NAME_DEV=${{ secrets.NGINX_DEV }}
             NGINX_NAME_QA=${{ secrets.NGINX_QA }}
             DOMAIN_NAME=${{ secrets.DOMAIN_DEV }}
+            DOMAIN_NAME_DEV=${{ secrets.DOMAIN_DEV }}
+            DOMAIN_NAME_QA=${{ secrets.DOMAIN_QA }}
             EMAIL_HOST=${{ secrets.EMAIL_HOST }}
             EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
             EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
@@ -107,6 +52,7 @@ jobs:
             SERVER_NAME_QA=${{ secrets.SERVER_NAME_QA }}
             SERVER_HOST_QA=${{ secrets.SERVER_HOST_QA }}
             BACKEND_LOGS_DIR=${{ secrets.BACKEND_LOGS_DIR }}
+            DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
           _EOF_
     - name: Copy docker-compose-dev.yaml via ssh
       uses: appleboy/scp-action@master

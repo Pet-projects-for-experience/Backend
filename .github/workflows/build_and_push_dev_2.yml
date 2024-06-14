@@ -1,17 +1,13 @@
-name: Codepet build nginx and backend from Develop
+name: Codepet build nginx and backend from develop
 
 on:
   push:
-    branches:
-      - 'develop'
-      - 'QA'
+    branches: [ 'develop' ]
   workflow_dispatch:
-
 
 jobs:
   build_and_push_to_docker_hub_backend:
     name: Push backend Docker image to DockerHub
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -28,11 +24,10 @@ jobs:
         with:
           context: ./
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_backend_${{ github.ref_name }}:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_backend:latest
 
   build_and_push_to_docker_hub_nginx:
     name: Push nginx Docker image to DockerHub
-    environment: dev
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -50,25 +45,18 @@ jobs:
           context: ./infra/nginx/
           push: true
           build-args: |
-            NGINX_NAME=${{ secrets.NGINX_NAME }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx_${{ github.ref_name }}:latest
+            NGINX_NAME=${{ secrets.NGINX_DEV}}
+            SERVER_NAME=${{ secrets.SERVER_NAME_DEV }}
+            SERVER_HOST=${{ secrets.SERVER_HOST_DEV }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
 
-  deploy_uses_other_file_from_develop:
-    if: github.ref == 'refs/heads/develop'
+  deploy_uses_other_file_from_QA:
+    if:
+      contains('
+        refs/heads/develop
+      ', github.ref)
     uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
     needs:
       - build_and_push_to_docker_hub_backend
       - build_and_push_to_docker_hub_nginx
-    with:
-      environment: dev
     secrets: inherit
-
-  deploy_uses_other_file_from_QA:
-      if: github.ref == 'refs/heads/QA'
-      uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@QA
-      needs:
-        - build_and_push_to_docker_hub_backend
-        - build_and_push_to_docker_hub_nginx
-      with:
-        environment: prod
-      secrets: inherit
