@@ -16,7 +16,7 @@ jobs:
     - name: Create project directory and .env-file
       uses: appleboy/ssh-action@master
       with:
-        host: $HOST
+        host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
