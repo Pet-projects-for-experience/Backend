@@ -2,8 +2,11 @@ name: Codepet build nginx and backend from Develop
 
 on:
   push:
-    branches: [ 'develop' ]
+    branches:
+      - 'develop'
+      - 'QA'
   workflow_dispatch:
+
 
 jobs:
   build_and_push_to_docker_hub_backend:
@@ -24,7 +27,7 @@ jobs:
         with:
           context: ./
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_backend_${{ github.ref_name }}:latest
 
   build_and_push_to_docker_hub_nginx:
     name: Push nginx Docker image to DockerHub
@@ -45,18 +48,25 @@ jobs:
           context: ./infra/nginx/
           push: true
           build-args: |
-            NGINX_NAME=${{ secrets.NGINX_DEV }}
-            SERVER_NAME=${{ secrets.SERVER_NAME_DEV }}
-            SERVER_HOST=${{ secrets.SERVER_HOST_DEV }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx:latest
+            NGINX_NAME=${{ secrets.NGINX_NAME }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}_nginx_${{ github.ref_name }}:latest
 
   deploy_uses_other_file_from_develop:
-    if:
-      contains('
-        refs/heads/develop
-      ', github.ref)
+    if: github.ref == 'refs/heads/develop'
     uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
     needs:
       - build_and_push_to_docker_hub_backend
       - build_and_push_to_docker_hub_nginx
+    with:
+      environment: dev
     secrets: inherit
+
+  deploy_uses_other_file_from_QA:
+      if: github.ref == 'refs/heads/QA'
+      uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
+      needs:
+        - build_and_push_to_docker_hub_backend
+        - build_and_push_to_docker_hub_nginx
+      with:
+        environment: prod
+      secrets: inherit

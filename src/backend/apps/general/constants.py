@@ -28,12 +28,15 @@ MAX_LENGTH_TITLE = 100
 MAX_LENGTH_DESCRIPTION = 250
 
 MAX_LENGTH_EMAIL = 256
+MIN_LENGTH_EMAIL = 5
+LENGTH_EMAIL_ERROR_TEXT = (
+    f"Длина поля от {MIN_LENGTH_EMAIL} до {MAX_LENGTH_EMAIL} символов."
+)
 
 MAX_LENGTH_PHONE_NUMBER = 12
 REGEX_PHONE_NUMBER = r"^\+7\d{10}$"
 REGEX_PHONE_NUMBER_ERROR_TEXT = (
-    "Телефон может содержать: цифры, спецсимволы, длина не должна превышать "
-    "12 символов"
+    "Допустимый формат +7XXXXXXXXXX, где X - цифры."
 )
 
 MAX_LENGTH_TELEGRAM_NICK = 32
@@ -64,4 +67,8 @@ REGEX_BASE_TEXT_FIELD = r"(^[-%!#$&*'+/=?^_;():@,.<>`{|}~-«»0-9A-ZА-ЯЁ\s]+)
 REGEX_BASE_TEXT_FIELD_ERROR_TEXT = (
     "Поле может содержать: кириллические и латинские символы, цифры и "
     "спецсимовлы -!#$%%&'*+/=?^_;():@,.<>`{}~«»"
+)
+MAX_SKILLS = 15
+MAX_SKILLS_MESSAGE = (
+    f"У одной специальности может быть не более {MAX_SKILLS} навыков."
 )

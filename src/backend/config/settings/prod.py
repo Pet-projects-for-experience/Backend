@@ -1,8 +1,8 @@
 from .base import *  # noqa
 
 DEBUG = False
-SERVER_HOST = getenv("SERVER_HOST_QA")
-SERVER_NAME = getenv("SERVER_NAME_QA")
+SERVER_HOST = getenv("SERVER_HOST")
+SERVER_NAME = getenv("SERVER_NAME")
 
 
 EMAIL_USE_TLS = True
@@ -18,6 +18,7 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     f"http://{SERVER_HOST}",
     f"https://{SERVER_NAME}",
+    "http://localhost:8000",
 ]
 
 

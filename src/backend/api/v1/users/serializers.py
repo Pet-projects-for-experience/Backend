@@ -4,6 +4,7 @@ from djoser.serializers import (
     UserSerializer,
 )
 
+from api.v1.general.mixins import OverridedFieldMappingMixin
 from api.v1.users import constants
 
 User = get_user_model()
@@ -16,7 +17,10 @@ class CustomUserSerializer(UserSerializer):
         fields = constants.ORDERED_USERS_FIELDS
 
 
-class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
+class CustomUserCreateSerializer(
+    OverridedFieldMappingMixin,
+    UserCreatePasswordRetypeSerializer,
+):
     """Сериализатор для регистрации пользователя с подтверждением пароля."""
 
     class Meta(UserCreatePasswordRetypeSerializer.Meta):

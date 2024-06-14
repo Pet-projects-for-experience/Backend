@@ -3,7 +3,7 @@ from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.general.constants import MAX_LENGTH_EMAIL
+from apps.general.fields import CustomEmailField
 from apps.general.models import CreatedModifiedFields
 from apps.users.constants import (
     MAX_LENGTH_USERNAME,
@@ -35,8 +35,7 @@ class User(CreatedModifiedFields, AbstractUser):
     """Модель пользователя."""
 
     date_joined = first_name = last_name = None
-    email = models.EmailField(
-        max_length=MAX_LENGTH_EMAIL,
+    email = CustomEmailField(
         unique=True,
         blank=False,
     )

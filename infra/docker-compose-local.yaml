@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:16.2-alpine
     restart: always
-    env_file: .env
+    env_file: ../.env
     ports:
       - "5432:5432"
     volumes:
@@ -16,11 +16,13 @@ services:
       retries: 5
 
   backend:
-    build: ../.
-    env_file: .env
+    build:
+      context: ../.
+      dockerfile: Dockerfile
+    env_file: ../.env
     volumes:
       - static_volume:/backend_static/
-      - ./.env:/app
+      - ../.env:/app
     command:
       - /bin/sh
       - -c

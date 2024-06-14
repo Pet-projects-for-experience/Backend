@@ -1,9 +1,22 @@
 from rest_framework import serializers
 
+from api.v1.general.mixins import OverridedFieldMappingMixin
 from apps.general.models import Profession, Section, Skill
 
 
-class SectionSerializer(serializers.ModelSerializer):
+class CustomModelSerializer(
+    OverridedFieldMappingMixin,
+    serializers.ModelSerializer,
+):
+    """
+    Модифицированный сериализатор модели с измененным атрибутом сопоставления
+    полей модели.
+    """
+
+    pass
+
+
+class SectionSerializer(CustomModelSerializer):
     """Сериализатор информационной секции для страниц сайта."""
 
     class Meta:
@@ -11,7 +24,7 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProfessionSerializer(serializers.ModelSerializer):
+class ProfessionSerializer(CustomModelSerializer):
     """Сериализатор профессии."""
 
     class Meta:
@@ -19,7 +32,7 @@ class ProfessionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class SkillSerializer(serializers.ModelSerializer):
+class SkillSerializer(CustomModelSerializer):
     """Сериализатор навыков."""
 
     class Meta:

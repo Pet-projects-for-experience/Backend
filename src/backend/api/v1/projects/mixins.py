@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 from queue import Queue
 from typing import Any, Dict, List
@@ -25,15 +26,6 @@ class RecruitmentStatusMixin:
 
 class ProjectOrDraftValidateMixin:
     """Миксин валидации данных проекта или его черновика."""
-
-    def _validate_date(self, value, field_name) -> date:
-        """Метод валидации даты."""
-
-        if value < date.today():
-            raise serializers.ValidationError(
-                f"Дата {field_name} не может быть в прошлом."
-            )
-        return value
 
     def _check_not_unique_project_name(self, request=None, name=None) -> bool:
         """
@@ -73,12 +65,11 @@ class ProjectOrDraftValidateMixin:
     def validate_started(self, value) -> date:
         """Метод валидации даты начала проекта."""
 
-        return self._validate_date(value, "начала проекта")
-
-    def validate_ended(self, value) -> date:
-        """Метод валидации даты завершения проекта."""
-
-        return self._validate_date(value, "завершения проекта")
+        if value < date.today():
+            raise serializers.ValidationError(
+                "Дата начала проекта не может быть в прошлом."
+            )
+        return value
 
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации данных проекта или черновика."""
@@ -123,9 +114,10 @@ class ProjectOrDraftValidateMixin:
 
         started = attrs.get("started", None)
         ended = attrs.get("ended", None)
-        if (started and ended) is not None and started > ended:
+        if started + datetime.timedelta(days=2) > ended:
             errors.setdefault("invalid_dates", []).append(
-                "Дата завершения проекта не может быть раньше даты начала."
+                "Дата завершения проекта не может быть "
+                "раньше чем через 2 дня после начала."
             )
 
         if errors:
