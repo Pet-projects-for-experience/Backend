@@ -56,19 +56,19 @@ jobs:
   deploy_uses_other_file_from_develop:
     if: github.ref == 'refs/heads/develop'
     uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
-    with:
-      environment: dev
     needs:
       - build_and_push_to_docker_hub_backend
       - build_and_push_to_docker_hub_nginx
+    with:
+      environment: dev
     secrets: inherit
 
   deploy_uses_other_file_from_QA:
       if: github.ref == 'refs/heads/QA'
       uses: Pet-projects-CodePET/Backend/.github/workflows/deploy.yml@develop
-      with:
-        environment: prod
       needs:
         - build_and_push_to_docker_hub_backend
         - build_and_push_to_docker_hub_nginx
+      with:
+        environment: prod
       secrets: inherit
