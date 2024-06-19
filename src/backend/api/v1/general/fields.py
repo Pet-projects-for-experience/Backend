@@ -1,11 +1,9 @@
 from base64 import b64decode
 
 from django.core.files.base import ContentFile
-from django.core.validators import EmailValidator
-from rest_framework.fields import EmailField
+from django.utils.translation import gettext_lazy as _
+from rest_framework.fields import CharField
 from rest_framework.serializers import ImageField
-
-from apps.general.validators import CustomEmailValidator
 
 
 class Base64ImageField(ImageField):
@@ -19,12 +17,19 @@ class Base64ImageField(ImageField):
         return super().to_internal_value(data)
 
 
-class CustomEmailField(EmailField):
+class CustomEmailField(CharField):
     """Кастомное поле для email."""
+
+    default_error_messages = {"invalid": _("Enter a valid email address.")}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.validators = [
-            v for v in self.validators if not isinstance(v, EmailValidator)
-        ]
-        self.validators.append(CustomEmailValidator())
+
+
+class CustomURLField(CharField):
+    """Кастомное поле для URL."""
+
+    default_error_messages = {"invalid": _("Enter a valid URL.")}
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

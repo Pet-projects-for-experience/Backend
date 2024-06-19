@@ -3,7 +3,7 @@ from typing import Dict
 from django.db import models
 from rest_framework import fields
 
-from api.v1.general.fields import CustomEmailField
+from .fields import CustomEmailField, CustomURLField
 
 
 class ToRepresentationOnlyIdMixin:
@@ -41,7 +41,7 @@ class OverridedFieldMappingMixin:
         models.SmallIntegerField: fields.IntegerField,
         models.TextField: fields.CharField,
         models.TimeField: fields.TimeField,
-        models.URLField: fields.URLField,
+        models.URLField: CustomURLField,
         models.UUIDField: fields.UUIDField,
         models.GenericIPAddressField: fields.IPAddressField,
         models.FilePathField: fields.FilePathField,
