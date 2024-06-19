@@ -1,34 +1,36 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.core.validators import (
     MaxValueValidator,
     MinLengthValidator,
     RegexValidator,
-    URLValidator,
 )
 from django.db import models
 
 from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import ContactsFields, Profession, Skill
+from apps.general.validators import CustomURLValidator
 from apps.profile.constants import (
+    LENGTH_PORTFOLIO_URL_MESSAGE,
     MAX_BIRTHDAY_MESSAGE,
     MAX_LENGTH_ABOUT,
     MAX_LENGTH_CITY,
     MAX_LENGTH_COUNTRY,
     MAX_LENGTH_NAME,
-    MAX_LENGTH_URL,
-    MAX_LENGTH_URL_MESSAGE,
+    MAX_LENGTH_PORTFOLIO_URL,
     MIN_LENGTH_ABOUT,
     MIN_LENGTH_NAME,
     MIN_LENGTH_NAME_MESSAGE,
-    MIN_LENGTH_PORTFOLIO,
+    MIN_LENGTH_PORTFOLIO_URL,
     REGEX_PROFILE_ABOUT,
     REGEX_PROFILE_ABOUT_MESSAGE,
     REGEX_PROFILE_NAME,
     REGEX_PROFILE_NAME_MESSAGE,
 )
 from apps.profile.validators import validate_image
-from apps.users.models import User
+
+User = get_user_model()
 
 
 class Profile(ContactsFields, models.Model):
@@ -82,10 +84,13 @@ class Profile(ContactsFields, models.Model):
     portfolio_link = models.URLField(
         verbose_name="Ссылка на портфолио",
         blank=True,
-        max_length=MAX_LENGTH_URL,
+        max_length=MAX_LENGTH_PORTFOLIO_URL,
         validators=[
-            URLValidator(message=MAX_LENGTH_URL_MESSAGE),
-            MinLengthValidator(limit_value=MIN_LENGTH_PORTFOLIO),
+            CustomURLValidator(),
+            MinLengthValidator(
+                limit_value=MIN_LENGTH_PORTFOLIO_URL,
+                message=LENGTH_PORTFOLIO_URL_MESSAGE,
+            ),
         ],
     )
     birthday = models.DateField(
