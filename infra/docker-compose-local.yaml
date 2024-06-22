@@ -1,9 +1,13 @@
 name: code-pet
 
+volumes:
+  db_value:
+  static_volume:
+  media_volume:
+
 services:
   db:
     image: postgres:16.2-alpine
-    restart: always
     env_file: ../.env
     ports:
       - "5432:5432"
@@ -14,15 +18,17 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build:
       context: ../.
-      dockerfile: Dockerfile
+      dockerfile: ./infra/backend/Dockerfile
     env_file: ../.env
     volumes:
       - static_volume:/backend_static/
-      - ../.env:/app
+      - media_volume:/backend/media/
+      - ./../src/backend/data/logs:/backend/data/logs
     command:
       - /bin/sh
       - -c
@@ -40,7 +46,6 @@ services:
 
   redis:
     image: redis:alpine3.18
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -48,20 +53,24 @@ services:
       retries: 5
 
   celery:
-    build: ../.
+    build:
+      context: ../.
+      dockerfile: ./infra/backend/Dockerfile
     env_file: .env
-    command: celery -A config.celery worker -l info -E
     volumes:
-      - ./.env:/app
+      - ./../src/backend/data/logs:/backend/data/logs
+    command: celery -A config.celery worker -l warning -E --logfile=./data/logs/celery-worker.log
     depends_on:
       - backend
 
   celery-beat:
-    build: ../.
+    build:
+      context: ../.
+      dockerfile: ./infra/backend/Dockerfile
     env_file: .env
-    command: celery -A config beat -l info
     volumes:
-      - ./.env:/app
+      - ./../src/backend/data/logs:/backend/data/logs
+    command: celery -A config beat -l warning  --logfile=./data/logs/celery-beat.log
     depends_on:
       - backend
 
@@ -74,7 +83,3 @@ services:
       - static_volume:/staticfiles/
     depends_on:
       - backend
-
-volumes:
-  db_value:
-  static_volume:

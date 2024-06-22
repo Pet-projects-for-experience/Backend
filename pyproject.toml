@@ -14,7 +14,6 @@ python = "^3.12.1"
 django = "5.0.1"
 djangorestframework = "3.14.0"
 psycopg2-binary = "^2.9.9"
-gunicorn = "^21.2.0"
 python-dotenv = "^1.0.0"
 pillow = "^10.1.0"
 djoser = "^2.2.2"
@@ -31,6 +30,11 @@ pre-commit = "^3.5.0"
 black = "^23.12.1"
 isort = "5.13.2"
 flake8 = "^7.0.0"
+
+
+
+[tool.poetry.group.prod.dependencies]
+gunicorn = "^22.0.0"
 
 [build-system]
 requires = ["poetry-core"]
