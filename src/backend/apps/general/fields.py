@@ -2,26 +2,27 @@ import re
 
 from django import forms
 from django.core.validators import MinLengthValidator, RegexValidator
-from django.db.models import EmailField, TextField
+from django.db.models import CharField, TextField
 from django.utils.translation import gettext_lazy as _
 
-from apps.general.constants import (
+from .constants import (
     LENGTH_BASE_TEXT_FIELD_ERROR_TEXT,
     LENGTH_EMAIL_ERROR_TEXT,
     MAX_LENGTH_BASE_TEXT_FIELD,
     MAX_LENGTH_EMAIL,
+    MAX_LENGTH_URL,
     MIN_LENGTH_BASE_TEXT_FIELD,
     MIN_LENGTH_EMAIL,
     REGEX_BASE_TEXT_FIELD,
     REGEX_BASE_TEXT_FIELD_ERROR_TEXT,
 )
-from apps.general.validators import CustomEmailValidator
+from .validators import CustomEmailValidator, CustomURLValidator
 
 
 class BaseTextField(TextField):
     """Базовый класс для текстового поля."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         if kwargs.get("validators") is None:
             kwargs["validators"] = [
                 RegexValidator(
@@ -39,7 +40,7 @@ class BaseTextField(TextField):
         super().__init__(*args, **kwargs)
 
 
-class CustomEmailField(EmailField):
+class CustomEmailField(CharField):
     """Кастомное поле для email."""
 
     default_validators = [
@@ -48,32 +49,41 @@ class CustomEmailField(EmailField):
         ),
         CustomEmailValidator(),
     ]
-    default_max_length = MAX_LENGTH_EMAIL
-    default_verbose_name = _("Email address")
+    description = _("Email address")
 
-    def __init__(
-        self,
-        *args,
-        verbose_name=None,
-        max_length=None,
-        **kwargs,
-    ) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Метод инициализации объекта класса."""
 
-        self.max_length = max_length or self.default_max_length
-        self.verbose_name = verbose_name or self.default_verbose_name
-        super().__init__(
-            max_length=self.max_length,
-            verbose_name=self.verbose_name,
-            *args,
-            **kwargs,
-        )
+        kwargs.setdefault("max_length", MAX_LENGTH_EMAIL)
+        kwargs.setdefault("verbose_name", self.description)
+        super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs) -> forms.EmailField:
-        """Метод формирования поля для формы."""
+        """Метод определения поля формы для данного поля."""
 
         defaults = {
             "form_class": forms.EmailField,
+            "validators": self.default_validators,
+        }
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
+
+
+class CustomURLField(CharField):
+    default_validators = [CustomURLValidator()]
+    description = _("URL")
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Метод инициализации объекта класса."""
+
+        kwargs.setdefault("max_length", MAX_LENGTH_URL)
+        super().__init__(*args, **kwargs)
+
+    def formfield(self, **kwargs) -> forms.URLField:
+        """Метод определения поля формы для данного поля."""
+
+        defaults = {
+            "form_class": forms.URLField,
             "validators": self.default_validators,
         }
         defaults.update(kwargs)
