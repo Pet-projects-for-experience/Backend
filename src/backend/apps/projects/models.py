@@ -5,7 +5,7 @@ from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
 from apps.general.constants import LEVEL_CHOICES
-from apps.general.fields import BaseTextField
+from apps.general.fields import BaseTextField, CustomURLField
 from apps.general.models import (
     ContactsFields,
     CreatedModifiedFields,
@@ -139,7 +139,7 @@ class Project(CreatedModifiedFields, ContactsFields):
         verbose_name="Направления разработки",
         related_name="projects_direction",
     )
-    link = models.URLField(
+    link = CustomURLField(
         verbose_name="Ссылка",
         max_length=MAX_LENGTH_LINK,
         null=True,
