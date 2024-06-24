@@ -394,7 +394,6 @@ class ReadParticipationRequestSerializer(BaseParticipationRequestSerializer):
             "status",
             "created",
         )
-        read_only_fields = fields
 
     def get_status(self, obj) -> str:
         """Метод получения статуса запроса."""
@@ -412,7 +411,6 @@ class WriteParticipationRequestAnswerSerializer(
         fields: ClassVar[Tuple[str, ...]] = (
             "id",
             "answer",
-            "is_viewed",
             "status",
         )
 
