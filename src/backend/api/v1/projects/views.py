@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
@@ -27,6 +28,7 @@ from api.v1.projects.serializers import (
     DirectionSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
+    ReadParticipantSerializer,
     ReadParticipationRequestSerializer,
     ReadProjectSerializer,
     WriteDraftSerializer,
@@ -40,6 +42,7 @@ from apps.projects.models import (
     Direction,
     ParticipationRequest,
     Project,
+    ProjectParticipant,
     ProjectSpecialist,
 )
 
@@ -228,7 +231,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
     )
     http_method_names = ("get", "post", "patch", "delete", "options")
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet["ParticipationRequest"]:
         """Метод получения queryset-а для запросов на участие в проекте."""
 
         queryset = super().get_queryset()
@@ -242,14 +245,17 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 )
                 .prefetch_related(
                     "project__directions",
+                    "position__skills",
                 )
                 .only(
                     "user",
                     "project__name",
                     "project__creator",
                     "project__owner",
+                    "project__directions",
                     "position__is_required",
                     "position__profession",
+                    "position__skills",
                     "status",
                     "is_viewed",
                     "cover_letter",
@@ -265,11 +271,12 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             )
         )
 
-    def get_object(self):
+    def get_object(self) -> ParticipationRequest:
         """Метод получения объекта запроса на участие в проекте."""
+
         participation_request = super().get_object()
         if (
-            self.request.method == "GET"
+            self.request.method in ("GET", "PATCH")
             and not participation_request.is_viewed
             and self.request.user
             in (
@@ -281,14 +288,14 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             participation_request.save()
         return participation_request
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[BaseSerializer]:
         """Метод получения сериализатора для запросов на участие в проекте."""
 
         if self.request.method in SAFE_METHODS:
             return ReadParticipationRequestSerializer
         return WriteParticipationRequestSerializer
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         """
         Метод предварительного создания объекта запроса на участие в проекте.
         """
@@ -303,7 +310,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         permission_classes=(IsProjectCreatorOrOwnerForParticipationRequest,),
         serializer_class=WriteParticipationRequestAnswerSerializer,
     )
-    def answer(self, request, pk):
+    def answer(self, request, pk) -> Response:
         """Метод ответа на запрос на участие в проекте."""
 
         participation_request = self.get_object()
@@ -316,3 +323,39 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ParticipantsViewSet(
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet,
+):
+    """Представление для участников проекта."""
+
+    queryset = ProjectParticipant.objects.all()
+    serializer_class = ReadParticipantSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ("get", "delete", "options")
+
+    def get_queryset(self) -> QuerySet["ProjectParticipant"]:
+        """Метод получения queryset-а для участников проекта."""
+
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(
+                project=self.kwargs.get("project_pk"),
+            )
+        )
+        if self.request.method == "GET":
+            queryset = (
+                queryset.select_related("user__profile", "profession")
+                .prefetch_related("skills")
+                .only(
+                    "user__profile__user_id",
+                    "user__profile__avatar",
+                    "profession",
+                    "skills",
+                )
+            )
+        return queryset

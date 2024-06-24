@@ -1,5 +1,6 @@
 from typing import Any, ClassVar, Dict, Optional, Tuple
 
+from django.db import transaction
 from rest_framework import serializers
 
 from api.v1.general.mixins import ToRepresentationOnlyIdMixin
@@ -22,6 +23,7 @@ from apps.projects.models import (
     Direction,
     ParticipationRequest,
     Project,
+    ProjectParticipant,
     ProjectSpecialist,
 )
 
@@ -413,7 +415,7 @@ class WriteParticipationRequestAnswerSerializer(
             "status",
         )
 
-    def validate_status(self, value):
+    def validate_status(self, value) -> int:
         """Метод валидации статуса заявки на участие в проекте."""
 
         if value not in (RequestStatuses.ACCEPTED, RequestStatuses.REJECTED):
@@ -443,9 +445,35 @@ class WriteParticipationRequestAnswerSerializer(
             raise serializers.ValidationError(errors)
         return attrs
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data) -> ParticipationRequest:
         """Метод обновления заявки на участие в проекте."""
 
         if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
-            instance.project.participants.add(instance.user)
+            with transaction.atomic():
+                project_participant = ProjectParticipant.objects.create(
+                    project=instance.project,
+                    user=instance.user,
+                    profession=instance.position.profession,
+                )
+                project_participant.skills.set(instance.position.skills.all())
         return super().update(instance, validated_data)
+
+
+class ReadParticipantSerializer(CustomModelSerializer):
+    """Сериализатор на чтение участника проекта."""
+
+    user_id = serializers.IntegerField(source="user.profile.user_id")
+    avatar = serializers.ImageField(source="user.profile.avatar")
+    profession = ProfessionSerializer()
+    skills = SkillSerializer(many=True)
+
+    class Meta:
+        model = ProjectParticipant
+        fields = (
+            "id",
+            "user_id",
+            "avatar",
+            "profession",
+            "skills",
+        )
+        read_only_fields = fields

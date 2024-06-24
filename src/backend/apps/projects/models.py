@@ -153,6 +153,7 @@ class Project(CreatedModifiedFields, ContactsFields):
     )
     participants = models.ManyToManyField(
         User,
+        through="ProjectParticipant",
         verbose_name="Участники",
         related_name="projects_participated",
     )
@@ -270,5 +271,46 @@ class ParticipationRequest(CreatedModifiedFields):
 
     def __str__(self) -> str:
         """Метод строкового представления объекта запроса на участие."""
+
+        return f"{self.user} - {self.project}"
+
+
+class ProjectParticipant(CreatedModifiedFields):
+    """Модель участника проекта."""
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        verbose_name="Проект",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Участник",
+    )
+    profession = models.ForeignKey(
+        Profession,
+        on_delete=models.CASCADE,
+        verbose_name="Профессия",
+    )
+    skills = models.ManyToManyField(
+        Skill,
+        verbose_name="Навыки",
+    )
+
+    class Meta:
+        verbose_name = "Участник проекта"
+        verbose_name_plural = "Участники проекта"
+        default_related_name = "project_participants"
+        constraints = (
+            models.UniqueConstraint(
+                fields=("project", "user", "profession"),
+                name="%(app_label)s_%(class)s_unique_participant_role_per_"
+                "project",
+            ),
+        )
+
+    def __str__(self) -> str:
+        """Метод строкового представления объекта участника проекта."""
 
         return f"{self.user} - {self.project}"
