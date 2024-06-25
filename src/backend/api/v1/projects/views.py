@@ -28,9 +28,10 @@ from api.v1.projects.serializers import (
     DirectionSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
+    ReadListParticipationRequestSerializer,
     ReadParticipantSerializer,
-    ReadParticipationRequestSerializer,
     ReadProjectSerializer,
+    ReadRetrieveParticipationRequestSerializer,
     WriteDraftSerializer,
     WriteParticipationRequestAnswerSerializer,
     WriteParticipationRequestSerializer,
@@ -45,6 +46,8 @@ from apps.projects.models import (
     ProjectParticipant,
     ProjectSpecialist,
 )
+
+from .constants import PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS
 
 
 class DirectionViewSet(ReadOnlyModelViewSet):
@@ -225,7 +228,7 @@ class ProjectSpecialistsViewSet(
 class ProjectParticipationRequestsViewSet(ModelViewSet):
     """Представление для запросов на участие в проекте."""
 
-    queryset = ParticipationRequest.objects.all().select_related("user")
+    queryset = ParticipationRequest.objects.all()
     permission_classes = (
         IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     )
@@ -234,42 +237,32 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
     def get_queryset(self) -> QuerySet["ParticipationRequest"]:
         """Метод получения queryset-а для запросов на участие в проекте."""
 
-        queryset = super().get_queryset()
-        if self.request.method != "DELETE":
-            queryset = (
-                queryset.select_related(
-                    "project",
-                    "project__creator",
-                    "project__owner",
-                    "position__profession",
-                )
-                .prefetch_related(
-                    "project__directions",
-                    "position__skills",
-                )
-                .only(
-                    "user",
-                    "project__name",
-                    "project__creator",
-                    "project__owner",
-                    "project__directions",
-                    "position__is_required",
-                    "position__profession",
-                    "position__skills",
-                    "status",
-                    "is_viewed",
-                    "cover_letter",
-                    "answer",
-                    "created",
-                )
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related(
+                "user",
             )
+        )
+        if self.request.method in SAFE_METHODS:
+            queryset = queryset.select_related(
+                "project__creator",
+                "project__owner",
+                "position__profession",
+            ).prefetch_related(
+                "project__directions",
+            )
+            if self.action == "retrieve":
+                queryset = queryset.prefetch_related(
+                    "position__skills",
+                )
         return queryset.filter(
             Q(user=self.request.user)
             | (
                 Q(project__owner=self.request.user)
                 | Q(project__creator=self.request.user)
             )
-        )
+        ).only(*PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ()))
 
     def get_object(self) -> ParticipationRequest:
         """Метод получения объекта запроса на участие в проекте."""
@@ -292,7 +285,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         """Метод получения сериализатора для запросов на участие в проекте."""
 
         if self.request.method in SAFE_METHODS:
-            return ReadParticipationRequestSerializer
+            if self.action != "list":
+                return ReadRetrieveParticipationRequestSerializer
+            return ReadListParticipationRequestSerializer
         return WriteParticipationRequestSerializer
 
     def perform_create(self, serializer) -> None:
