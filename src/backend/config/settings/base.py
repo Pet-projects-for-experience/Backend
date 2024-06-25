@@ -207,6 +207,7 @@ SPECTACULAR_SETTINGS = {
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULE = {
     "auto_completion_projects_task": {
         "task": "apps.projects.tasks.auto_completion_projects_task",

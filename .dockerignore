@@ -1,9 +1,6 @@
-.git
-.venv
-.idea
-.mypy_cache
-.vscode
-.env.example
-db.sqlite3
-poetry.lock
-pyproject.toml
+*
+!src/
+!pyproject.toml
+!poetry.lock
+!requirements.txt
+**/__pycache__/
