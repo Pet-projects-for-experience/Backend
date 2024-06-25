@@ -264,7 +264,6 @@ class BaseParticipationRequestSerializer(CustomModelSerializer):
             "id",
             "project",
             "position",
-            "cover_letter",
         )
 
 
@@ -275,7 +274,11 @@ class WriteParticipationRequestSerializer(
     """Сериализатор для записи запроса на участие в проекте."""
 
     class Meta(BaseParticipationRequestSerializer.Meta):
-        pass
+        fields: ClassVar[Tuple[str, ...]] = (
+            *BaseParticipationRequestSerializer.Meta.fields,
+            "cover_letter",
+            "answer",
+        )
 
     def _get_existing_participation_request(
         self, attrs=None
@@ -375,11 +378,14 @@ class ShortProjectSerializer(CustomModelSerializer):
             "id",
             "name",
             "directions",
+            "status",
         )
 
 
-class ReadParticipationRequestSerializer(BaseParticipationRequestSerializer):
-    """Сериализатор на чтение запросов на участие в проекте."""
+class ReadListParticipationRequestSerializer(
+    BaseParticipationRequestSerializer
+):
+    """Сериализатор на чтение списка запросов на участие в проекте."""
 
     project = ShortProjectSerializer()
     position = ShortProjectSpecialistSerializer()
@@ -389,16 +395,30 @@ class ReadParticipationRequestSerializer(BaseParticipationRequestSerializer):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
             "user",
-            "answer",
-            "is_viewed",
             "status",
-            "created",
+            "is_viewed",
         )
 
     def get_status(self, obj) -> str:
         """Метод получения статуса запроса."""
 
         return obj.get_status_display()
+
+
+class ReadRetrieveParticipationRequestSerializer(
+    ReadListParticipationRequestSerializer
+):
+    """Сериализатор на чтение объекта запроса на участие в проекте."""
+
+    position = ReadProjectSpecialistSerializer()
+
+    class Meta(ReadListParticipationRequestSerializer.Meta):
+        fields: ClassVar[Tuple[str, ...]] = (
+            *ReadListParticipationRequestSerializer.Meta.fields,
+            "answer",
+            "cover_letter",
+            "created",
+        )
 
 
 class WriteParticipationRequestAnswerSerializer(

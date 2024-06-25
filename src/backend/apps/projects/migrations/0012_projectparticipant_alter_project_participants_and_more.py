@@ -78,16 +78,6 @@ class Migration(migrations.Migration):
                 "default_related_name": "project_participants",
             },
         ),
-        # migrations.AlterField(
-        #     model_name="project",
-        #     name="participants",
-        #     field=models.ManyToManyField(
-        #         related_name="projects_participated",
-        #         through="projects.ProjectParticipant",
-        #         to=settings.AUTH_USER_MODEL,
-        #         verbose_name="Участники",
-        #     ),
-        # ),
         migrations.AddConstraint(
             model_name="projectparticipant",
             constraint=models.UniqueConstraint(
