@@ -9,8 +9,8 @@ from django.core.validators import (
 from django.db import models
 
 from apps.general.constants import LEVEL_CHOICES
+from apps.general.fields import CustomURLField
 from apps.general.models import ContactsFields, Profession, Skill
-from apps.general.validators import CustomURLValidator
 from apps.profile.constants import (
     LENGTH_PORTFOLIO_URL_MESSAGE,
     MAX_BIRTHDAY_MESSAGE,
@@ -81,12 +81,11 @@ class Profile(ContactsFields, models.Model):
             MinLengthValidator(limit_value=MIN_LENGTH_ABOUT),
         ],
     )
-    portfolio_link = models.URLField(
+    portfolio_link = CustomURLField(
         verbose_name="Ссылка на портфолио",
         blank=True,
         max_length=MAX_LENGTH_PORTFOLIO_URL,
         validators=[
-            CustomURLValidator(),
             MinLengthValidator(
                 limit_value=MIN_LENGTH_PORTFOLIO_URL,
                 message=LENGTH_PORTFOLIO_URL_MESSAGE,
