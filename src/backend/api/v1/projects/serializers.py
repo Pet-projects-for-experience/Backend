@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
 from django.db import transaction
 from rest_framework import serializers
@@ -498,13 +498,15 @@ class ReadParticipantSerializer(CustomModelSerializer):
         read_only_fields = fields
 
 
-class ReadInvitationToProjectSerializer(ReadParticipationRequestSerializer):
+class ReadInvitationToProjectSerializer(
+    ReadRetrieveParticipationRequestSerializer
+):
     """Сериализатор на чтение приглашений в проект."""
 
-    class Meta(ReadParticipationRequestSerializer.Meta):
+    class Meta(ReadRetrieveParticipationRequestSerializer.Meta):
         model = InvitationToProject
         fields: ClassVar[Tuple[str, ...]] = (
-            *ReadParticipationRequestSerializer.Meta.fields,
+            *ReadRetrieveParticipationRequestSerializer.Meta.fields,
             "author",
         )
 
