@@ -475,6 +475,13 @@ class WriteParticipationRequestAnswerSerializer(
                     profession=instance.position.profession,
                 )
                 project_participant.skills.set(instance.position.skills.all())
+            with transaction.atomic():
+                project_participant = ProjectParticipant.objects.create(
+                    project=instance.project,
+                    user=instance.user,
+                    profession=instance.position.profession,
+                )
+                project_participant.skills.set(instance.position.skills.all())
         return super().update(instance, validated_data)
 
 

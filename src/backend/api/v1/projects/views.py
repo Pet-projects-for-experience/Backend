@@ -234,7 +234,7 @@ class ProjectSpecialistsViewSet(
 class ProjectParticipationRequestsViewSet(ModelViewSet):
     """Представление для запросов на участие в проекте."""
 
-    queryset = ParticipationRequest.objects.all().select_related("user")
+    queryset = ParticipationRequest.objects.all()
     permission_classes = (
         IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     )

@@ -4,8 +4,8 @@ from rest_framework.routers import SimpleRouter
 from api.v1.projects.views import (
     DirectionViewSet,
     DraftViewSet,
-    ParticipantsViewSet,
     InvitationToProjectViewSet,
+    ParticipantsViewSet,
     ProjectParticipationRequestsViewSet,
     ProjectPreviewMainViewSet,
     ProjectSpecialistsViewSet,
