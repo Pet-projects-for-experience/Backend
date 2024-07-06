@@ -6,6 +6,8 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 from faker.providers import T
 
+from apps.general.constants import LEVEL_CHOICES
+from apps.general.models import Profession, Skill
 from apps.projects.constants import (
     BUSYNESS_CHOICES,
     MAX_LENGTH_DESCRIPTION,
@@ -13,7 +15,7 @@ from apps.projects.constants import (
     MAX_LENGTH_PROJECT_NAME,
     PROJECT_STATUS_CHOICES,
 )
-from apps.projects.models import Direction, Project
+from apps.projects.models import Direction, Project, ProjectSpecialist
 
 from ._utils import create_fake_user
 
@@ -29,6 +31,13 @@ class Command(BaseCommand):
         super().__init__(stdout, stderr, no_color, force_color)
         self.fake = Faker()
         self.amount = None
+        self.directions = Direction.objects.all()
+        self.users = User.objects.all()
+        self.profession = Profession.objects.all()
+        self.skills = Skill.objects.all()
+        assert (
+            self.profession.count() > 2 or self.skills.count() > 2
+        ), "You need to add fixtures Profession and Skill"
 
     def handle(self, *args, **options):
         self.amount = options.get("amount")
@@ -76,6 +85,7 @@ class Command(BaseCommand):
             project.favorited_by.add(
                 *self._get_or_create_random_number_users()
             )
+            self.create_and_add_project_specialists(project)
 
     def _get_or_create_users_without_projects(self) -> TypeAlias:
         """
@@ -93,8 +103,8 @@ class Command(BaseCommand):
     def _get_random_number_directions(self) -> Sequence[T]:
         """Метод возвращает случайное количество направлений разработки"""
         random_number = random.randint(1, 5)
-        directions_len = Direction.objects.count()
-        if directions_len < random_number:
+        directions_count = self.directions.count()
+        if directions_count < random_number:
             Direction.objects.bulk_create(
                 [
                     Direction(
@@ -102,17 +112,32 @@ class Command(BaseCommand):
                             max_nb_chars=MAX_LENGTH_DIRECTION_NAME
                         )
                     )
-                    for _ in range(random_number - directions_len)
+                    for _ in range(random_number - directions_count)
                 ]
             )
-        directions = Direction.objects.all()
-        return self.fake.random_choices(directions, random_number)
+            self.directions = Direction.objects.all()
+        return self.fake.random_choices(self.directions, random_number)
 
     def _get_or_create_random_number_users(self) -> Sequence[T]:
         random_number = random.randint(1, 10)
-        users_len = User.objects.count()
-        if users_len < random_number:
-            for _ in range(random_number - users_len):
+        users_count = self.users.count()
+        if users_count < random_number:
+            for _ in range(random_number - users_count):
                 create_fake_user()
-        users = User.objects.all()
-        return self.fake.random_choices(users, random_number)
+            self.users = User.objects.all()
+        return self.fake.random_choices(self.users, random_number)
+
+    def create_and_add_project_specialists(self, project) -> None:
+        for _ in range(random.randint(2, 5)):
+            random_number = random.randint(1, 3)
+            project_specialist = ProjectSpecialist(
+                project=project,
+                profession=self.fake.random_element(self.profession),
+                count=random_number,
+                level=self.fake.random_element(LEVEL_CHOICES)[0],
+                is_required=self.fake.boolean(),
+            )
+            project_specialist.save()
+            project_specialist.skills.add(
+                *self.fake.random_choices(self.skills, random_number)
+            )
