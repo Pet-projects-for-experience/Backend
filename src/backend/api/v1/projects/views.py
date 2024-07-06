@@ -406,7 +406,10 @@ class InvitationToProjectViewSet(ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return ReadInvitationToProjectSerializer
         if self.request.method == "PATCH":
-            return PartialWriteInvitationToProjectSerializer
+            if self.request.user == self.get_object().user:
+                return PartialWriteInvitationToProjectSerializer
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         return WriteInvitationToProjectSerializer
 
     def perform_create(self, serializer):

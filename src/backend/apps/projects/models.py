@@ -153,7 +153,6 @@ class Project(CreatedModifiedFields, ContactsFields):
     )
     participants = models.ManyToManyField(
         User,
-        through="ProjectParticipant",
         verbose_name="Участники",
         related_name="projects_participated",
     )

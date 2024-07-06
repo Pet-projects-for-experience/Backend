@@ -577,10 +577,16 @@ class PartialWriteInvitationToProjectSerializer(
         )
 
     def validate(self, attrs) -> OrderedDict:
-        if len(attrs) > 1 or "status" not in attrs.keys():
-            raise serializers.ValidationError(
-                {"error": "Вы можете изменить только статус приглашения"}
-            )
+        user = self.contest["request"].user
+        if self.instance.user == user:
+            if (
+                len(attrs) > 2
+                or "status" not in attrs
+                or "answer" not in attrs
+            ):
+                raise serializers.ValidationError(
+                    {"error": "Вы можете изменить только статус приглашения"}
+                )
         return attrs
 
     def update(self, instance, validated_data):
