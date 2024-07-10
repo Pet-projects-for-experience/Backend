@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
@@ -20,19 +21,23 @@ from api.v1.projects.paginations import (
 from api.v1.projects.permissions import (
     IsCreatorOrOwner,
     IsCreatorOrOwnerOrReadOnly,
+    IsInvitationAuthorOrUser,
     IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     IsProjectCreatorOrOwner,
     IsProjectCreatorOrOwnerForParticipationRequest,
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
+    PartialWriteInvitationToProjectSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
+    ReadInvitationToProjectSerializer,
     ReadListParticipationRequestSerializer,
     ReadParticipantSerializer,
     ReadProjectSerializer,
     ReadRetrieveParticipationRequestSerializer,
     WriteDraftSerializer,
+    WriteInvitationToProjectSerializer,
     WriteParticipationRequestAnswerSerializer,
     WriteParticipationRequestSerializer,
     WriteProjectSerializer,
@@ -41,6 +46,7 @@ from api.v1.projects.serializers import (
 from apps.projects.constants import RequestStatuses
 from apps.projects.models import (
     Direction,
+    InvitationToProject,
     ParticipationRequest,
     Project,
     ProjectParticipant,
@@ -299,6 +305,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             user=self.request.user, status=RequestStatuses.IN_PROGRESS
         )
 
+    @extend_schema(
+        request=WriteParticipationRequestAnswerSerializer,
+    )
     @action(
         detail=True,
         methods=["patch"],
@@ -354,3 +363,84 @@ class ParticipantsViewSet(
                 )
             )
         return queryset
+
+
+class InvitationToProjectViewSet(ModelViewSet):
+    """Представление для создания и управления приглашениями в проект"""
+
+    http_method_names = ("get", "post", "patch", "delete", "options")
+    permission_classes = (IsInvitationAuthorOrUser,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return (
+            InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
+            .order_by("-created")
+            .select_related(
+                "project",
+                "position",
+                "user",
+                "author",
+            )
+            .prefetch_related(
+                "project__directions",
+                "position__profession",
+            )
+            .only(
+                "user",
+                "project__name",
+                "project__creator",
+                "project__owner",
+                "position__is_required",
+                "position__profession",
+                "cover_letter",
+                "answer",
+                "is_viewed",
+                "status",
+                "created",
+                "author",
+            )
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return ReadInvitationToProjectSerializer
+        return WriteInvitationToProjectSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, status=RequestStatuses.IN_PROGRESS
+        )
+
+    @extend_schema(
+        exclude=True,
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Вы не можете изменить приглашение"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @extend_schema(
+        request=PartialWriteInvitationToProjectSerializer,
+    )
+    @action(
+        detail=True,
+        methods=[
+            "patch",
+        ],
+        serializer_class=PartialWriteInvitationToProjectSerializer,
+    )
+    def answer(self, request, *args, **kwargs) -> Response:
+        """Метод ответа на запрос на участие в проекте."""
+
+        instance = self.get_object()
+        serializer = self.serializer_class(
+            instance=instance,
+            data=request.data,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

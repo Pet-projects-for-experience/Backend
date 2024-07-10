@@ -4,6 +4,7 @@ from rest_framework.routers import SimpleRouter
 from api.v1.projects.views import (
     DirectionViewSet,
     DraftViewSet,
+    InvitationToProjectViewSet,
     ParticipantsViewSet,
     ProjectParticipationRequestsViewSet,
     ProjectPreviewMainViewSet,
@@ -37,6 +38,11 @@ router.register(
     r"projects/(?P<project_pk>\d+)/participants",
     ParticipantsViewSet,
     basename="projects-participants",
+)
+router.register(
+    r"projects/invitations",
+    InvitationToProjectViewSet,
+    basename="projects-invitations",
 )
 router.register(r"projects/drafts", DraftViewSet, basename="projects-drafts")
 router.register(r"projects", ProjectViewSet, basename="projects")

@@ -157,6 +157,7 @@ class Project(CreatedModifiedFields, ContactsFields):
         verbose_name="Участники",
         related_name="projects_participated_new",
     )
+
     favorited_by = models.ManyToManyField(
         User,
         verbose_name="Добавили в избранное",
@@ -221,8 +222,8 @@ class ProjectSpecialist(models.Model):
         )
 
 
-class ParticipationRequest(CreatedModifiedFields):
-    """Модель запроса на участие в проекте."""
+class ParticipationRequestAndInvitationBasemodel(CreatedModifiedFields):
+    """Абстрактна модель для запросов на участие и приглашений в проект"""
 
     project = models.ForeignKey(
         Project,
@@ -258,6 +259,13 @@ class ParticipationRequest(CreatedModifiedFields):
     )
 
     class Meta:
+        abstract = True
+
+
+class ParticipationRequest(ParticipationRequestAndInvitationBasemodel):
+    """Модель запроса на участие в проекте."""
+
+    class Meta:
         verbose_name = "Запрос на участие"
         verbose_name_plural = "Запросы на участие"
         default_related_name = "participation_requests"
@@ -273,6 +281,29 @@ class ParticipationRequest(CreatedModifiedFields):
         """Метод строкового представления объекта запроса на участие."""
 
         return f"{self.user} - {self.project}"
+
+
+class InvitationToProject(ParticipationRequestAndInvitationBasemodel):
+    """Модель приглашения специалиста в проект"""
+
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Автор",
+        related_name="my_invitation_to_project",
+    )
+
+    class Meta:
+        verbose_name = "Приглашение для участия"
+        verbose_name_plural = "Приглашения для участия"
+        default_related_name = "invitation_to_project"
+        constraints = (
+            models.UniqueConstraint(
+                fields=("user", "position"),
+                name="%(app_label)s_%(class)s_unique_request_per_project",
+                condition=models.Q(status=RequestStatuses.IN_PROGRESS),
+            ),
+        )
 
 
 class ProjectParticipant(CreatedModifiedFields):

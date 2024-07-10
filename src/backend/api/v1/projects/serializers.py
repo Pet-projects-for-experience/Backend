@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
 from django.db import transaction
 from rest_framework import serializers
@@ -21,6 +21,7 @@ from apps.projects.constants import (
 )
 from apps.projects.models import (
     Direction,
+    InvitationToProject,
     ParticipationRequest,
     Project,
     ProjectParticipant,
@@ -495,3 +496,95 @@ class ReadParticipantSerializer(CustomModelSerializer):
             "skills",
         )
         read_only_fields = fields
+
+
+class ReadInvitationToProjectSerializer(
+    ReadRetrieveParticipationRequestSerializer
+):
+    """Сериализатор на чтение приглашений в проект."""
+
+    class Meta(ReadRetrieveParticipationRequestSerializer.Meta):
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = (
+            *ReadRetrieveParticipationRequestSerializer.Meta.fields,
+            "author",
+        )
+
+
+class WriteInvitationToProjectSerializer(
+    ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
+):
+    """Сериализатор на запись приглашения в проект."""
+
+    class Meta:
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = (
+            "position",
+            "project",
+            "cover_letter",
+            "user",
+        )
+
+    def validate(self, attrs) -> OrderedDict:
+        """Метод валидации атрибутов приглашения."""
+        errors: Dict = {}
+        project = attrs.get("project", None)
+        user = attrs.get("user", None)
+        position = attrs.get("position", None)
+        if not project.project_specialists.filter(
+            id=position.id,
+            is_required=True,
+        ).exists():
+            errors.setdefault("position", []).append(
+                "Этот специалист не требуется проекту"
+            )
+        if (
+            project.participants.filter(id=user.id).exists()
+            or project.invitation_to_project.filter(user=user).exists()
+        ):
+            errors.setdefault("user", []).append(
+                "Этот пользователь уже участвует в проекте или приглашен"
+            )
+        if not user.profile.professions.filter(
+            specialty=position.profession.specialty,
+            specialization=position.profession.specialization,
+        ).exists():
+            errors.setdefault("user", []).append(
+                "У пользователя нет подходящей специальности"
+            )
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
+
+class PartialWriteInvitationToProjectSerializer(
+    CustomModelSerializer, ToRepresentationOnlyIdMixin
+):
+    """Сериализатор на обновление приглашения в проект."""
+
+    class Meta:
+        model = InvitationToProject
+        fields: ClassVar[Tuple[str, ...]] = ("status", "answer")
+
+    def validate(self, attrs) -> OrderedDict:
+        user = self.context["request"].user
+        if self.instance.user != user:
+            raise serializers.ValidationError(
+                {"error": "Вы не можете изменить приглашение"}
+            )
+
+        return attrs
+
+    def update(self, instance, validated_data) -> ParticipationRequest:
+        """Метод обновления приглашения на участие в проекте.
+        Так же добавляет пользователя в участники проекта"""
+
+        if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
+            with transaction.atomic():
+                project_participant = ProjectParticipant.objects.create(
+                    project=instance.project,
+                    user=instance.user,
+                    profession=instance.position.profession,
+                )
+                project_participant.skills.set(instance.position.skills.all())
+        return super().update(instance, validated_data)
