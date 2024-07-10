@@ -154,7 +154,7 @@ class Project(CreatedModifiedFields, ContactsFields):
     participants = models.ManyToManyField(
         User,
         verbose_name="Участники",
-        related_name="projects_participated",
+        related_name="projects_participated_new",
     )
     favorited_by = models.ManyToManyField(
         User,
