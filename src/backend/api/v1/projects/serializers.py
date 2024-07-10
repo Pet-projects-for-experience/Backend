@@ -475,13 +475,6 @@ class WriteParticipationRequestAnswerSerializer(
                     profession=instance.position.profession,
                 )
                 project_participant.skills.set(instance.position.skills.all())
-            with transaction.atomic():
-                project_participant = ProjectParticipant.objects.create(
-                    project=instance.project,
-                    user=instance.user,
-                    profession=instance.position.profession,
-                )
-                project_participant.skills.set(instance.position.skills.all())
         return super().update(instance, validated_data)
 
 
@@ -565,32 +558,33 @@ class WriteInvitationToProjectSerializer(
 
 
 class PartialWriteInvitationToProjectSerializer(
-    ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
+    CustomModelSerializer, ToRepresentationOnlyIdMixin
 ):
     """Сериализатор на обновление приглашения в проект."""
 
     class Meta:
         model = InvitationToProject
-        fields: ClassVar[Tuple[str, ...]] = (
-            *WriteInvitationToProjectSerializer.Meta.fields,
-            "status",
-        )
+        fields: ClassVar[Tuple[str, ...]] = ("status", "answer")
 
     def validate(self, attrs) -> OrderedDict:
-        user = self.contest["request"].user
-        if self.instance.user == user:
-            if (
-                len(attrs) > 2
-                or "status" not in attrs
-                or "answer" not in attrs
-            ):
-                raise serializers.ValidationError(
-                    {"error": "Вы можете изменить только статус приглашения"}
-                )
+        user = self.context["request"].user
+        if self.instance.user != user:
+            raise serializers.ValidationError(
+                {"error": "Вы не можете изменить приглашение"}
+            )
+
         return attrs
 
-    def update(self, instance, validated_data):
-        status = validated_data.get("status", None)
-        if status == RequestStatuses.ACCEPTED:
-            instance.project.participants.add(instance.user)
+    def update(self, instance, validated_data) -> ParticipationRequest:
+        """Метод обновления приглашения на участие в проекте.
+        Так же добавляет пользователя в участники проекта"""
+
+        if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
+            with transaction.atomic():
+                project_participant = ProjectParticipant.objects.create(
+                    project=instance.project,
+                    user=instance.user,
+                    profession=instance.position.profession,
+                )
+                project_participant.skills.set(instance.position.skills.all())
         return super().update(instance, validated_data)
