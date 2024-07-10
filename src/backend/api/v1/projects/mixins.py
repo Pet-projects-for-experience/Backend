@@ -135,7 +135,7 @@ class ProjectOrDraftCreateUpdateMixin:
         project_specialists_to_update = []
         skills_data_to_process: Queue[List[Skill]] = Queue()
 
-        if project_specialists is not None:
+        if project_specialists:
             project_instance.project_specialists.all().delete()
 
             for project_specialist_data in project_specialists:
@@ -174,11 +174,15 @@ class ProjectOrDraftCreateUpdateMixin:
     def update(self, instance, validated_data) -> Project:
         """Метод обновления проекта или его черновика."""
 
-        _ = validated_data.pop("project_specialists", None)
+        project_specialists = validated_data.pop("project_specialists", None)
 
         with transaction.atomic():
             project_instance = super().update(  # type: ignore
                 instance, validated_data
             )
+            if project_specialists:
+                self.process_project_specialists(
+                    project_instance, project_specialists
+                )
 
         return project_instance
