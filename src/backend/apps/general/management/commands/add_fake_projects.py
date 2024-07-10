@@ -79,13 +79,11 @@ class Command(BaseCommand):
             )
             project.save()
             project.directions.add(*self._get_random_number_directions())
-            project.participants.add(
-                *self._get_or_create_random_number_users()
-            )
             project.favorited_by.add(
                 *self._get_or_create_random_number_users()
             )
-            self.create_and_add_project_specialists(project)
+            self.add_project_specialists(project)
+            self.add_project_participants(project)
 
     def _get_or_create_users_without_projects(self) -> TypeAlias:
         """
@@ -127,7 +125,7 @@ class Command(BaseCommand):
             self.users = User.objects.all()
         return self.fake.random_choices(self.users, random_number)
 
-    def create_and_add_project_specialists(self, project) -> None:
+    def add_project_specialists(self, project: Project) -> None:
         for _ in range(random.randint(2, 5)):
             random_number = random.randint(1, 3)
             project_specialist = ProjectSpecialist(
@@ -141,3 +139,8 @@ class Command(BaseCommand):
             project_specialist.skills.add(
                 *self.fake.random_choices(self.skills, random_number)
             )
+
+    def add_project_participants(self, project: Project) -> None:
+        amount = project.project_specialists.count()
+        print(amount)
+        print(project.project_specialists.all())
