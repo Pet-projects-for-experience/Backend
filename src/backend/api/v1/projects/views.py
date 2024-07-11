@@ -405,11 +405,42 @@ class InvitationToProjectViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return ReadInvitationToProjectSerializer
-        if self.request.method == "PATCH":
-            return PartialWriteInvitationToProjectSerializer
         return WriteInvitationToProjectSerializer
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user, status=RequestStatuses.IN_PROGRESS
         )
+
+    @extend_schema(
+        exclude=True,
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Вы не можете изменить приглашение"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @extend_schema(
+        request=PartialWriteInvitationToProjectSerializer,
+    )
+    @action(
+        detail=True,
+        methods=[
+            "patch",
+        ],
+        serializer_class=PartialWriteInvitationToProjectSerializer,
+    )
+    def answer(self, request, *args, **kwargs) -> Response:
+        """Метод ответа на запрос на участие в проекте."""
+
+        instance = self.get_object()
+        serializer = self.serializer_class(
+            instance=instance,
+            data=request.data,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
