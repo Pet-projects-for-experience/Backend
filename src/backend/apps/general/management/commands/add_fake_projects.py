@@ -3,11 +3,13 @@ from typing import Sequence, TypeAlias
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db.utils import IntegrityError
 from faker import Faker
 from faker.providers import T
 
 from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import Profession, Skill
+from apps.profile.models import Specialist
 from apps.projects.constants import (
     BUSYNESS_CHOICES,
     MAX_LENGTH_DESCRIPTION,
@@ -15,7 +17,12 @@ from apps.projects.constants import (
     MAX_LENGTH_PROJECT_NAME,
     PROJECT_STATUS_CHOICES,
 )
-from apps.projects.models import Direction, Project, ProjectSpecialist
+from apps.projects.models import (
+    Direction,
+    Project,
+    ProjectParticipant,
+    ProjectSpecialist,
+)
 
 from ._utils import create_fake_user
 
@@ -135,12 +142,25 @@ class Command(BaseCommand):
                 level=self.fake.random_element(LEVEL_CHOICES)[0],
                 is_required=self.fake.boolean(),
             )
-            project_specialist.save()
-            project_specialist.skills.add(
-                *self.fake.random_choices(self.skills, random_number)
-            )
+            try:
+                project_specialist.save()
+                project_specialist.skills.add(
+                    *self.fake.random_choices(self.skills, random_number)
+                )
+            except IntegrityError:
+                continue
 
     def add_project_participants(self, project: Project) -> None:
-        amount = project.project_specialists.count()
-        print(amount)
-        print(project.project_specialists.all())
+        project_specialists = project.project_specialists.all()
+        for project_specialists in project_specialists:
+            profession = project_specialists.profession
+            if project_specialists.id % 2:
+                user = create_fake_user()
+                Specialist.objects.create(
+                    profile=user.profile,
+                    level=self.fake.random_int(1, 4),
+                    profession=profession,
+                )
+                ProjectParticipant.objects.create(
+                    project=project, user=user, profession=profession
+                )
