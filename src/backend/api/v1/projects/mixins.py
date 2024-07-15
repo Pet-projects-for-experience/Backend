@@ -111,9 +111,11 @@ class ProjectOrDraftValidateMixin:
                     "Отметьте хотя бы одного специалиста для поиска в "
                     "проект."
                 )
-
-        started = attrs.get("started", None)
-        ended = attrs.get("ended", None)
+        instance = getattr(
+            self, "instance", None
+        )  # mypy по другому не пропускал
+        started = attrs.get("started", instance.started if instance else None)
+        ended = attrs.get("ended", instance.started if instance else None)
         if started + datetime.timedelta(days=2) > ended:
             errors.setdefault("invalid_dates", []).append(
                 "Дата завершения проекта не может быть "
