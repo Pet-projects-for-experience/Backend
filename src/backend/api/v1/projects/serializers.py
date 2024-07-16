@@ -484,7 +484,7 @@ class ReadParticipantSerializer(CustomModelSerializer):
     user_id = serializers.IntegerField(source="user.profile.user_id")
     avatar = serializers.ImageField(source="user.profile.avatar")
     profession = ProfessionSerializer()
-    skills = SkillSerializer(many=True)
+    unique_skills = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectParticipant
@@ -493,9 +493,16 @@ class ReadParticipantSerializer(CustomModelSerializer):
             "user_id",
             "avatar",
             "profession",
-            "skills",
+            "unique_skills",
         )
         read_only_fields = fields
+
+    def get_unique_skills(self, obj):
+        project = obj.project
+        skills = project.project_participants.prefetch_related(
+            "skills"
+        ).values_list("skills__name", flat=True)
+        return list(set(skills))
 
 
 class ReadInvitationToProjectSerializer(
