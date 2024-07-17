@@ -102,6 +102,12 @@ class ProjectViewSet(BaseProjectViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProjectFilter
 
+    def create(self, request, *args, **kwargs):
+        """Метод создания проекта, с проверкой на анонимного пользователя."""
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
     def _get_queryset_with_params(self, queryset, user, *args, **kwargs):
         """Метод получения queryset-а c параметрами для проекта."""
 
@@ -338,7 +344,8 @@ class ParticipantsViewSet(
 
     queryset = ProjectParticipant.objects.all()
     serializer_class = ReadParticipantSerializer
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
+    pagination_class = None
     http_method_names = ("get", "delete", "options")
 
     def get_queryset(self) -> QuerySet["ProjectParticipant"]:
@@ -351,6 +358,7 @@ class ParticipantsViewSet(
                 project=self.kwargs.get("project_pk"),
             )
         )
+
         if self.request.method == "GET":
             queryset = (
                 queryset.select_related("user__profile", "profession")
