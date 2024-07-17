@@ -9,7 +9,6 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
-from api.v1.profile.serializers import BaseProfileSerializer
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
@@ -96,6 +95,9 @@ class BaseProjectSerializer(CustomModelSerializer):
             "creator": serializers.SlugRelatedField(
                 slug_field="username", read_only=True
             ),
+            "owner": serializers.SlugRelatedField(
+                slug_field="username", read_only=True
+            ),
         }
 
     def get_fields(self):
@@ -119,7 +121,6 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     project_specialists = ReadProjectSpecialistSerializer(many=True)
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
-    owner = serializers.SerializerMethodField()
 
     class Meta(BaseProjectSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
@@ -138,10 +139,6 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         if user.is_authenticated:
             return project.favorited_by.filter(id=user.id).exists()
         return False
-
-    def get_owner(self, project):
-        owner_profile = project.owner.profile
-        return BaseProfileSerializer(owner_profile).data
 
 
 class WriteProjectSerializer(
