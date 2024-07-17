@@ -29,7 +29,7 @@ def migrate_participants(apps, scheme_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("projects", "0012_projectparticipant_project_participants_new_and_more"),
+        ("projects", "0012_projectparticipant_alter_project_participants_and_more"),
     ]
 
     operations = [
