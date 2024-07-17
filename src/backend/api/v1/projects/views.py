@@ -344,7 +344,8 @@ class ParticipantsViewSet(
 
     queryset = ProjectParticipant.objects.all()
     serializer_class = ReadParticipantSerializer
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
+    pagination_class = None
     http_method_names = ("get", "delete", "options")
 
     def get_queryset(self) -> QuerySet["ProjectParticipant"]:
@@ -357,6 +358,7 @@ class ParticipantsViewSet(
                 project=self.kwargs.get("project_pk"),
             )
         )
+
         if self.request.method == "GET":
             queryset = (
                 queryset.select_related("user__profile", "profession")
@@ -369,10 +371,6 @@ class ParticipantsViewSet(
                 )
             )
         return queryset
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        return context
 
 
 class InvitationToProjectViewSet(ModelViewSet):

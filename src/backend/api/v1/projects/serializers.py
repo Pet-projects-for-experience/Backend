@@ -9,7 +9,6 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
-from api.v1.profile.serializers import BaseProfileSerializer
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
@@ -140,8 +139,14 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         return False
 
     def get_owner(self, project):
-        owner_profile = project.owner.profile
-        return BaseProfileSerializer(owner_profile).data
+        """Метод возвращает требуемые поля для владельца."""
+        owner = project.owner
+        return {
+            "id": owner.id,
+            "username": owner.user.username,
+            "name": owner.name,
+            "avatar": owner.avatar.url if owner.avatar else None,
+        }
 
 
 class WriteProjectSerializer(
@@ -501,11 +506,7 @@ class ReadParticipantSerializer(CustomModelSerializer):
         read_only_fields = fields
 
     def get_unique_skills(self, obj):
-        project = obj.project
-        skills = project.project_participants.prefetch_related(
-            "skills"
-        ).values_list("skills__name", flat=True)
-        return list(set(skills))
+        return list(obj.skills.values_list("name", flat=True).distinct())
 
 
 class ReadInvitationToProjectSerializer(
