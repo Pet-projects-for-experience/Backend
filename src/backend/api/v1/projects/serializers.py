@@ -143,9 +143,11 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         owner = project.owner
         return {
             "id": owner.id,
-            "username": owner.user.username,
-            "name": owner.name,
-            "avatar": owner.avatar.url if owner.avatar else None,
+            "username": owner.username,
+            "name": owner.profile.name,
+            "avatar": (
+                owner.profile.avatar.url if owner.profile.avatar else None
+            ),
         }
 
 
