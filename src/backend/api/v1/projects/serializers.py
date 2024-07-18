@@ -508,7 +508,7 @@ class ReadParticipantSerializer(CustomModelSerializer):
         read_only_fields = fields
 
     def get_unique_skills(self, obj):
-        return list(obj.skills.values_list("name", flat=True).distinct())
+        return list(obj.unique_skill)
 
 
 class ReadInvitationToProjectSerializer(
