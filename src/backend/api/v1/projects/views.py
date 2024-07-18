@@ -362,7 +362,7 @@ class ParticipantsViewSet(
         if self.request.method == "GET":
             queryset = (
                 queryset.select_related("user__profile", "profession")
-                .prefetch_related("skills")
+                .prefetch_related("skills").annotate(unique_skill=F("skills__name").distinct())
                 .only(
                     "user__profile__user_id",
                     "user__profile__avatar",
