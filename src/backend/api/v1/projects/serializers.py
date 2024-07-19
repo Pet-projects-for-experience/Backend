@@ -1,3 +1,4 @@
+from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
 from django.db import transaction
@@ -119,12 +120,14 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField()
+    unique_skills = serializers.SerializerMethodField()
 
     class Meta(BaseProjectSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseProjectSerializer.Meta.fields,
             "recruitment_status",
             "is_favorite",
+            "unique_skills",
         )
 
     def get_is_favorite(self, project) -> bool:
@@ -149,6 +152,15 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
                 owner.profile.avatar.url if owner.profile.avatar else None
             ),
         }
+
+    def get_unique_skills(self, obj):
+        all_skills = chain.from_iterable(
+            [
+                participant.skills.values_list("name", flat=True)
+                for participant in ProjectParticipant.objects.all()
+            ]
+        )
+        return list(set(all_skills))
 
 
 class WriteProjectSerializer(
@@ -494,7 +506,6 @@ class ReadParticipantSerializer(CustomModelSerializer):
     user_id = serializers.IntegerField(source="user.profile.user_id")
     avatar = serializers.ImageField(source="user.profile.avatar")
     profession = ProfessionSerializer()
-    unique_skills = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectParticipant
@@ -503,12 +514,8 @@ class ReadParticipantSerializer(CustomModelSerializer):
             "user_id",
             "avatar",
             "profession",
-            "unique_skills",
         )
         read_only_fields = fields
-
-    def get_unique_skills(self, obj):
-        return list(obj.skills.values_list("name", flat=True).distinct())
 
 
 class ReadInvitationToProjectSerializer(

@@ -344,7 +344,6 @@ class ParticipantsViewSet(
 
     queryset = ProjectParticipant.objects.all()
     serializer_class = ReadParticipantSerializer
-    # permission_classes = (IsAuthenticated,)
     pagination_class = None
     http_method_names = ("get", "delete", "options")
 
@@ -360,15 +359,12 @@ class ParticipantsViewSet(
         )
 
         if self.request.method == "GET":
-            queryset = (
-                queryset.select_related("user__profile", "profession")
-                .prefetch_related("skills")
-                .only(
-                    "user__profile__user_id",
-                    "user__profile__avatar",
-                    "profession",
-                    "skills",
-                )
+            queryset = queryset.select_related(
+                "user__profile", "profession"
+            ).only(
+                "user__profile__user_id",
+                "user__profile__avatar",
+                "profession",
             )
         return queryset
 
