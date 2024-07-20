@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import F, Prefetch, Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status
@@ -344,7 +344,6 @@ class ParticipantsViewSet(
 
     queryset = ProjectParticipant.objects.all()
     serializer_class = ReadParticipantSerializer
-    # permission_classes = (IsAuthenticated,)
     pagination_class = None
     http_method_names = ("get", "delete", "options")
 
@@ -360,15 +359,12 @@ class ParticipantsViewSet(
         )
 
         if self.request.method == "GET":
-            queryset = (
-                queryset.select_related("user__profile", "profession")
-                .prefetch_related("skills").annotate(unique_skill=F("skills__name").distinct())
-                .only(
-                    "user__profile__user_id",
-                    "user__profile__avatar",
-                    "profession",
-                    "skills",
-                )
+            queryset = queryset.select_related(
+                "user__profile", "profession"
+            ).only(
+                "user__profile__user_id",
+                "user__profile__avatar",
+                "profession",
             )
         return queryset
 
