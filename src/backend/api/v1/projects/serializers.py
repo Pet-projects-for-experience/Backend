@@ -120,14 +120,14 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField()
-    unique_skills = serializers.SerializerMethodField()
+    unique_project_participants_skills = serializers.SerializerMethodField()
 
     class Meta(BaseProjectSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseProjectSerializer.Meta.fields,
             "recruitment_status",
             "is_favorite",
-            "unique_skills",
+            "unique_project_participants_skills",
         )
 
     def get_is_favorite(self, project) -> bool:
@@ -153,7 +153,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
             ),
         }
 
-    def get_unique_skills(self, obj):
+    def get_unique_project_participants_skills(self, obj):
         all_skills = chain.from_iterable(
             [
                 participant.skills.values_list("name", flat=True)
