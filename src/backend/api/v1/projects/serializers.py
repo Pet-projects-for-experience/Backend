@@ -106,6 +106,24 @@ class BaseProjectSerializer(CustomModelSerializer):
         return fields
 
 
+class ReadParticipantSerializer(CustomModelSerializer):
+    """Сериализатор на чтение участника проекта."""
+
+    user_id = serializers.IntegerField(source="user.profile.user_id")
+    avatar = serializers.ImageField(source="user.profile.avatar")
+    profession = ProfessionSerializer()
+
+    class Meta:
+        model = ProjectParticipant
+        fields = (
+            "id",
+            "user_id",
+            "avatar",
+            "profession",
+        )
+        read_only_fields = fields
+
+
 class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     """Сериализатор для чтения проекта."""
 
@@ -120,6 +138,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField()
+    project_participants = ReadParticipantSerializer(many=True)
     unique_project_participants_skills = serializers.SerializerMethodField()
 
     class Meta(BaseProjectSerializer.Meta):
@@ -127,6 +146,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
             *BaseProjectSerializer.Meta.fields,
             "recruitment_status",
             "is_favorite",
+            "project_participants",
             "unique_project_participants_skills",
         )
 
@@ -498,24 +518,6 @@ class WriteParticipationRequestAnswerSerializer(
                 )
                 project_participant.skills.set(instance.position.skills.all())
         return super().update(instance, validated_data)
-
-
-class ReadParticipantSerializer(CustomModelSerializer):
-    """Сериализатор на чтение участника проекта."""
-
-    user_id = serializers.IntegerField(source="user.profile.user_id")
-    avatar = serializers.ImageField(source="user.profile.avatar")
-    profession = ProfessionSerializer()
-
-    class Meta:
-        model = ProjectParticipant
-        fields = (
-            "id",
-            "user_id",
-            "avatar",
-            "profession",
-        )
-        read_only_fields = fields
 
 
 class ReadInvitationToProjectSerializer(

@@ -1,11 +1,10 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
-from api.v1.projects.views import (
+from api.v1.projects.views import (  # ParticipantsViewSet,
     DirectionViewSet,
     DraftViewSet,
     InvitationToProjectViewSet,
-    ParticipantsViewSet,
     ProjectParticipationRequestsViewSet,
     ProjectPreviewMainViewSet,
     ProjectSpecialistsViewSet,
@@ -34,11 +33,11 @@ router.register(
     ProjectSpecialistsViewSet,
     basename="projects-specialists",
 )
-router.register(
-    r"projects/(?P<project_pk>\d+)/participants",
-    ParticipantsViewSet,
-    basename="projects-participants",
-)
+# router.register(
+#     r"projects/(?P<project_pk>\d+)/participants",
+#     ParticipantsViewSet,
+#     basename="projects-participants",
+# )
 router.register(
     r"projects/invitations",
     InvitationToProjectViewSet,
