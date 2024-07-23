@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q, QuerySet
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status
@@ -33,7 +34,6 @@ from api.v1.projects.serializers import (
     ReadDraftSerializer,
     ReadInvitationToProjectSerializer,
     ReadListParticipationRequestSerializer,
-    ReadParticipantSerializer,
     ReadProjectSerializer,
     ReadRetrieveParticipationRequestSerializer,
     WriteDraftSerializer,
@@ -161,6 +161,27 @@ class ProjectViewSet(BaseProjectViewSet):
             project.is_favorite.add(user)
             return Response(status=status.HTTP_201_CREATED)
         project.is_favorite.remove(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        methods=["delete"],
+        permission_classes=(IsCreatorOrOwnerOrReadOnly,),
+        detail=True,
+        url_path="exclude_participant/(?P<participant_id>d+)",
+    )
+    def exclude_participant(self, request, participant_id, *args, **kwargs):
+        """
+        Метод для удаления участника проекта.
+
+        Пример использования:
+        DELETE /projects/<project_id>/exclude_participant/<participant_id>/
+        - удалить участника из проекта.
+        """
+        project = self.get_object()
+        participant = get_object_or_404(
+            ProjectParticipant, id=participant_id, project=project
+        )
+        participant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -335,38 +356,38 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ParticipantsViewSet(
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    GenericViewSet,
-):
-    """Представление для участников проекта."""
-
-    queryset = ProjectParticipant.objects.all()
-    serializer_class = ReadParticipantSerializer
-    pagination_class = None
-    http_method_names = ("get", "delete", "options")
-
-    def get_queryset(self) -> QuerySet["ProjectParticipant"]:
-        """Метод получения queryset-а для участников проекта."""
-
-        queryset = (
-            super()
-            .get_queryset()
-            .filter(
-                project=self.kwargs.get("project_pk"),
-            )
-        )
-
-        if self.request.method == "GET":
-            queryset = queryset.select_related(
-                "user__profile", "profession"
-            ).only(
-                "user__profile__user_id",
-                "user__profile__avatar",
-                "profession",
-            )
-        return queryset
+# class ParticipantsViewSet(
+#     mixins.ListModelMixin,
+#     mixins.DestroyModelMixin,
+#     GenericViewSet,
+# ):
+#     """Представление для участников проекта."""
+#
+#     queryset = ProjectParticipant.objects.all()
+#     serializer_class = ReadParticipantSerializer
+#     pagination_class = None
+#     http_method_names = ("get", "delete", "options")
+#
+#     def get_queryset(self) -> QuerySet["ProjectParticipant"]:
+#         """Метод получения queryset-а для участников проекта."""
+#
+#         queryset = (
+#             super()
+#             .get_queryset()
+#             .filter(
+#                 project=self.kwargs.get("project_pk"),
+#             )
+#         )
+#
+#         if self.request.method == "GET":
+#             queryset = queryset.select_related(
+#                 "user__profile", "profession"
+#             ).only(
+#                 "user__profile__user_id",
+#                 "user__profile__avatar",
+#                 "profession",
+#             )
+#         return queryset
 
 
 class InvitationToProjectViewSet(ModelViewSet):
