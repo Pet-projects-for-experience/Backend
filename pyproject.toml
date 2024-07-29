@@ -32,10 +32,11 @@ black = "^23.12.1"
 isort = "5.13.2"
 flake8 = "^7.0.0"
 
-
-
 [tool.poetry.group.prod.dependencies]
 gunicorn = "^22.0.0"
+
+[tool.poetry.group.test.dependencies]
+pytest-django = "^4.8.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -56,3 +57,9 @@ extend-exclude = """
   | migrations
 )/
 """
+
+[tool.pytest.ini_options]
+pythonpath = "scr/backend"
+DJANGO_SETTINGS_MODULE= "config.settings.base"
+testpaths = ["tests",]
+python_files = ['test_*.py', ]
