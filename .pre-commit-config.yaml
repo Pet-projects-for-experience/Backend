@@ -11,6 +11,9 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
+      - id: name-tests-test
+        args:
+          - --pytest-test-first
 
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 24.1.1
@@ -35,3 +38,15 @@ repos:
     hooks:
       - id: mypy
         exclude: migrations
+
+  - repo: local
+    hooks:
+        - id: pytest
+          name: pytest
+          description: 'Run tests with pytest'
+          entry: bash -c 'cd src/backend/; poetry run pytest -vv'
+          language: python
+          types: [ python ]
+          require_serial: true
+          pass_filenames: false
+          always_run: true
