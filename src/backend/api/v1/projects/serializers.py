@@ -1,6 +1,8 @@
+import html
 from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
+import bleach
 from django.db import transaction
 from rest_framework import serializers
 
@@ -381,7 +383,6 @@ class WriteParticipationRequestSerializer(
 
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации атрибутов запроса на участие в проекте."""
-
         errors: Dict = {}
         request = self.context.get("request")
 
@@ -407,6 +408,12 @@ class WriteParticipationRequestSerializer(
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
+
+    def validate_cover_letter(self, value):
+        escaped_html = bleach.clean(
+            value
+        )  # защита потенциально вредоносных HTML-тегов и атрибутов
+        return escaped_html
 
 
 class ShortProjectSerializer(CustomModelSerializer):
@@ -461,6 +468,11 @@ class ReadRetrieveParticipationRequestSerializer(
             "cover_letter",
             "created",
         )
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["cover_letter"] = html.unescape(rep["cover_letter"])
+        return rep
 
 
 class WriteParticipationRequestAnswerSerializer(

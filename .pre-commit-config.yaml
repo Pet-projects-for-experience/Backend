@@ -35,3 +35,4 @@ repos:
     hooks:
       - id: mypy
         exclude: migrations
+        additional_dependencies: [types-bleach==6.1.0.20240331]
