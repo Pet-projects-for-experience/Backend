@@ -25,6 +25,8 @@ celery = {extras = ["redis"], version = "^5.3.6"}
 django-celery-beat = "^2.6.0"
 langdetect = "^1.0.9"
 faker = "^25.0.1"
+bleach = "^6.1.0"
+types-bleach = "^6.1.0.20240331"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
