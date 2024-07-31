@@ -202,6 +202,7 @@ class WriteProjectSerializer(
             "ended": {"required": True},
             "busyness": {"required": True},
             "status": {"required": False},
+            "owner": {"required": False},
         }
 
     def validate_status(self, value) -> int:
