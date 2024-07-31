@@ -8,6 +8,8 @@ RUN python -m pip install --upgrade pip
 
 RUN apt-get update && apt-get install -y vim
 
+RUN pip install gunicorn==22.0.0
+
 RUN pip install -r requirements.txt --no-cache-dir
 
 COPY /src/backend/. .
