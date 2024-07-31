@@ -26,6 +26,8 @@ django-celery-beat = "^2.6.0"
 langdetect = "^1.0.9"
 faker = "^25.0.1"
 pytest-django = "^4.8.0"
+bleach = "^6.1.0"
+types-bleach = "^6.1.0.20240331"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
@@ -35,8 +37,6 @@ flake8 = "^7.0.0"
 
 [tool.poetry.group.prod.dependencies]
 gunicorn = "^22.0.0"
-
-[tool.poetry.group.test.dependencies]
 
 [build-system]
 requires = ["poetry-core"]
