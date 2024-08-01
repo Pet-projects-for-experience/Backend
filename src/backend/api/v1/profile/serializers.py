@@ -1,5 +1,7 @@
+import html
 from typing import ClassVar, Optional
 
+import bleach
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from rest_framework import serializers
@@ -224,6 +226,11 @@ class ProfileMeReadSerializer(BaseProfileSerializer):
         )
         read_only_fields = fields
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["about"] = html.unescape(rep["about"])
+        return rep
+
 
 class ProfileMeWriteSerializer(ProfileMeReadSerializer):
     """Сериализатор для обновления профиля его владельцем."""
@@ -244,3 +251,12 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
 
     class Meta(ProfileMeReadSerializer.Meta):
         read_only_fields = ("user_id", "specialists")
+
+    def validate_about(self, value):
+        """
+        Метод валидации и защиты от потенциально вредоносных
+        HTML-тегов и атрибутов.
+        """
+
+        safe_about = bleach.clean(value)
+        return safe_about
