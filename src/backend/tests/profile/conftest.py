@@ -4,7 +4,8 @@ from apps.profile.constants import MIN_LENGTH_ABOUT, MIN_LENGTH_NAME
 
 
 @pytest.fixture
-def profile(user):
+def profile_new(user):
+    """Профайл с незаполненной информацией"""
     return user.profile
 
 

@@ -45,7 +45,7 @@ repos:
         - id: pytest
           name: pytest
           description: 'Run tests with pytest'
-          entry: bash -c 'cd src/backend/; poetry run pytest -vv'
+          entry: 'poetry run pytest -vv'
           language: python
           types: [ python ]
           require_serial: true

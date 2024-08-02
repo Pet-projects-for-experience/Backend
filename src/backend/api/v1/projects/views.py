@@ -135,7 +135,6 @@ class ProjectViewSet(BaseProjectViewSet):
         """
         Метод подготовки данных для процесса предварительного создания проекта.
         """
-
         serializer.save(
             creator=self.request.user,
             owner=self.request.user,

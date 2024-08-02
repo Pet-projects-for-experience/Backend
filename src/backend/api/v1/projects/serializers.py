@@ -90,22 +90,10 @@ class BaseProjectSerializer(CustomModelSerializer):
             "project_specialists",
             "status",
         )
-
-    def _get_base_fields(self):
-        """Метод получения полей создателя и владельца."""
-
-        return {
-            "creator": serializers.SlugRelatedField(
-                slug_field="username", read_only=True
-            ),
-        }
-
-    def get_fields(self):
-        """метод получения полей сериализатора."""
-
-        fields = super().get_fields()
-        fields.update(self._get_base_fields())
-        return fields
+        read_only_fields: ClassVar[Tuple[str, ...]] = (
+            "creator",
+            "owner",
+        )
 
 
 class ReadParticipantSerializer(CustomModelSerializer):
@@ -140,6 +128,9 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField()
+    creator = serializers.SlugRelatedField(
+        slug_field="username", read_only=True
+    )
     project_participants = ReadParticipantSerializer(many=True)
     unique_project_participants_skills = serializers.SerializerMethodField()
 
@@ -158,9 +149,10 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         В противном случе возвращает False.
         Для неавторизованных пользователей всегда возвращает False.
         """
-        user = self.context["request"].user
-        if user.is_authenticated:
-            return project.favorited_by.filter(id=user.id).exists()
+        request = self.context.get("request", None)
+        if user := getattr(request, "user", None):
+            if user.is_authenticated:
+                return project.favorited_by.filter(id=user.id).exists()
         return False
 
     def get_owner(self, project):
@@ -184,6 +176,11 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         )
         return list(set(all_skills))
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["description"] = html.unescape(rep["description"])
+        return rep
+
 
 class WriteProjectSerializer(
     ToRepresentationOnlyIdMixin,
@@ -202,7 +199,6 @@ class WriteProjectSerializer(
             "ended": {"required": True},
             "busyness": {"required": True},
             "status": {"required": False},
-            "owner": {"required": False},
         }
 
     def validate_status(self, value) -> int:
@@ -213,6 +209,15 @@ class WriteProjectSerializer(
                 "У проекта не может быть статуса 'Черновик'."
             )
         return value
+
+    def validate_description(self, value):
+        """
+        Метод валидации и защиты от потенциально вредоносных
+        HTML-тегов и атрибутов.
+        """
+
+        safe_description = bleach.clean(value)
+        return safe_description
 
 
 class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
@@ -465,9 +470,9 @@ class ReadRetrieveParticipationRequestSerializer(
     class Meta(ReadListParticipationRequestSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *ReadListParticipationRequestSerializer.Meta.fields,
-            "answer",
-            "cover_letter",
-            "created",
+            "answer",  # какая-то дичь происходит, зачем нам тут видеть и ответ
+            "cover_letter",  # и сопроводительное письмо не понимаю,
+            "created",  # не хочу разбираться сейчас.
         )
 
     def to_representation(self, instance):
@@ -545,6 +550,11 @@ class ReadInvitationToProjectSerializer(
             "author",
         )
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["cover_letter"] = html.unescape(rep["cover_letter"])
+        return rep
+
 
 class WriteInvitationToProjectSerializer(
     ToRepresentationOnlyIdMixin, BaseParticipationRequestSerializer
@@ -590,6 +600,12 @@ class WriteInvitationToProjectSerializer(
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
+
+    def validate_cover_letter(self, value):
+        escaped_html = bleach.clean(
+            value
+        )  # защита потенциально вредоносных HTML-тегов и атрибутов
+        return escaped_html
 
 
 class PartialWriteInvitationToProjectSerializer(
