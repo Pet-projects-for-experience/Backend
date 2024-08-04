@@ -90,25 +90,10 @@ class BaseProjectSerializer(CustomModelSerializer):
             "project_specialists",
             "status",
         )
-
-    def _get_base_fields(self):
-        """Метод получения полей создателя и владельца."""
-
-        return {
-            "creator": serializers.SlugRelatedField(
-                slug_field="username", read_only=True
-            ),
-            "owner": serializers.SlugRelatedField(
-                slug_field="username", read_only=True
-            ),
-        }
-
-    def get_fields(self):
-        """метод получения полей сериализатора."""
-
-        fields = super().get_fields()
-        fields.update(self._get_base_fields())
-        return fields
+        read_only_fields: ClassVar[Tuple[str, ...]] = (
+            "creator",
+            "owner",
+        )
 
 
 class ReadParticipantSerializer(CustomModelSerializer):
@@ -143,6 +128,9 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     recruitment_status = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField(read_only=True)
     owner = serializers.SerializerMethodField()
+    creator = serializers.SlugRelatedField(
+        slug_field="username", read_only=True
+    )
     project_participants = ReadParticipantSerializer(many=True)
     unique_project_participants_skills = serializers.SerializerMethodField()
 
@@ -161,9 +149,10 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         В противном случе возвращает False.
         Для неавторизованных пользователей всегда возвращает False.
         """
-        user = self.context["request"].user
-        if user.is_authenticated:
-            return project.favorited_by.filter(id=user.id).exists()
+        request = self.context.get("request", None)
+        if user := getattr(request, "user", None):
+            if user.is_authenticated:
+                return project.favorited_by.filter(id=user.id).exists()
         return False
 
     def get_owner(self, project):

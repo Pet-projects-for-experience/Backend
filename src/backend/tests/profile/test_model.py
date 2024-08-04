@@ -19,10 +19,10 @@ def test_create_profile_with_user():
 
 
 @pytest.mark.django_db
-def test_update_profiles_data(profile, update_data):
+def test_update_profiles_data(profile_new, update_data):
     """Тест обновления информации в профиле"""
     assert Profile.objects.filter(**update_data).count() == 0
     for field, value in update_data.items():
-        setattr(profile, field, value)
-    profile.save()
+        setattr(profile_new, field, value)
+    profile_new.save()
     assert Profile.objects.filter(**update_data).count() == 1
