@@ -48,11 +48,9 @@ services:
     environment:
       - TZ=Europe/Moscow
     volumes:
-      - static_volume:/app/.next/static
+      - static_volume:/frontend_static
     depends_on:
       - backend
-      - db:
-        condition: service_healthy
 
   nginx:
     image: ${DOCKERHUB_USERNAME}/${PROJECT_NAME}_nginx_${BRANCH_TAG}:latest
