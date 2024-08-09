@@ -46,6 +46,7 @@ jobs:
             EMAIL_HOST=${{ secrets.EMAIL_HOST }}
             EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
             EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_CAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
             NEXT_SHARP_PATH=${{ secrets.NEXT_SHARP_PATH }}
             BACKEND_LOGS_DIR=${{ secrets.BACKEND_LOGS_DIR }}
