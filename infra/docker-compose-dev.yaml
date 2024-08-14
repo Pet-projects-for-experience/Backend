@@ -35,7 +35,7 @@ services:
     environment:
       - TZ=Europe/Moscow
     volumes:
-      - static_volume:/backend_static/
+      - static_volume:/backend_static/static
       - media_value:/backend/media/
       - ${BACKEND_LOGS_DIR}:/backend/data/logs
     depends_on:
