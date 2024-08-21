@@ -171,7 +171,9 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         all_skills = chain.from_iterable(
             [
                 participant.skills.values_list("name", flat=True)
-                for participant in ProjectParticipant.objects.all()
+                for participant in ProjectParticipant.objects.filter(
+                    project=obj
+                )
             ]
         )
         return list(set(all_skills))
