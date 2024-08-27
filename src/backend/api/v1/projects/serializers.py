@@ -102,6 +102,9 @@ class ReadParticipantSerializer(CustomModelSerializer):
     user_id = serializers.IntegerField(source="user.profile.user_id")
     avatar = serializers.ImageField(source="user.profile.avatar")
     profession = ProfessionSerializer()
+    visible_status = serializers.IntegerField(
+        source="user.profile.visible_status"
+    )
 
     class Meta:
         model = ProjectParticipant
@@ -110,6 +113,7 @@ class ReadParticipantSerializer(CustomModelSerializer):
             "user_id",
             "avatar",
             "profession",
+            "visible_status",
         )
         read_only_fields = fields
 
