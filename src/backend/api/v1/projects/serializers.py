@@ -169,6 +169,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
             "avatar": (
                 owner.profile.avatar.url if owner.profile.avatar else None
             ),
+            "visible_status": owner.profile.visible_status,
         }
 
     def get_unique_project_participants_skills(self, obj):

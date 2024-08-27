@@ -7,6 +7,7 @@ def test_owner_field(profile, project):
         "username": profile.user.username,
         "name": profile.name,
         "avatar": (profile.avatar.url if profile.avatar else None),
+        "visible_status": profile.visible_status,
     }
     serializer = ReadProjectSerializer(instance=project)
     assert serializer.data["owner"] == valid_data
