@@ -102,6 +102,9 @@ class ReadParticipantSerializer(CustomModelSerializer):
     user_id = serializers.IntegerField(source="user.profile.user_id")
     avatar = serializers.ImageField(source="user.profile.avatar")
     profession = ProfessionSerializer()
+    visible_status = serializers.IntegerField(
+        source="user.profile.visible_status"
+    )
 
     class Meta:
         model = ProjectParticipant
@@ -110,6 +113,7 @@ class ReadParticipantSerializer(CustomModelSerializer):
             "user_id",
             "avatar",
             "profession",
+            "visible_status",
         )
         read_only_fields = fields
 
@@ -165,6 +169,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
             "avatar": (
                 owner.profile.avatar.url if owner.profile.avatar else None
             ),
+            "visible_status": owner.profile.visible_status,
         }
 
     def get_unique_project_participants_skills(self, obj):
