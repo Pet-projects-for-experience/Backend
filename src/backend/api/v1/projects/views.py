@@ -157,9 +157,9 @@ class ProjectViewSet(BaseProjectViewSet):
         user = request.user
         project = self.get_object()
         if method == "POST":
-            project.favorite_by.add(user)
+            project.favorited_by.add(user)
             return Response(status=status.HTTP_201_CREATED)
-        project.favorite_by.remove(user)
+        project.favorited_by.remove(user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
