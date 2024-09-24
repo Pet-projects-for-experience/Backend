@@ -1,7 +1,7 @@
 from django.db import models
 
-MAX_LENGTH_DESCRIPTION = 750
-MIN_LENGTH_DESCRIPTION = 50
+MAX_LENGTH_DESCRIPTION = 1500
+MIN_LENGTH_DESCRIPTION = 20
 LENGTH_DESCRIPTION_ERROR_TEXT = (
     f"Длина поля от {MIN_LENGTH_DESCRIPTION} до {MAX_LENGTH_DESCRIPTION} "
     "символов."
@@ -18,10 +18,10 @@ LENGTH_PROJECT_NAME_ERROR_TEXT = (
     f"Длина поля от {MIN_LENGTH_PROJECT_NAME} до {MAX_LENGTH_PROJECT_NAME} "
     "символов."
 )
-REGEX_PROJECT_NAME = r"(^[+/:,.0-9A-Za-zА-Яа-яЁё\s\-–—]+)\Z"
+REGEX_PROJECT_NAME = r"(^[+/_:,.0-9A-Za-zА-Яа-яЁё\s\-–—]+)\Z"
 REGEX_PROJECT_NAME_ERROR_TEXT = (
     "Название проекта может содержать: кириллические и латинские символы, "
-    "цифры и символы .,-—+/:"
+    "цифры и символы .,-—+_/:"
 )
 
 MAX_LENGTH_DIRECTION_NAME = 20
