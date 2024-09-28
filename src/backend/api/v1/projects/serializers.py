@@ -389,6 +389,22 @@ class WriteParticipationRequestSerializer(
             )
         return value
 
+    def validate_position(self, value):
+        """
+        Метод, проверяет, является ли позиция валидной для данного проекта.
+        """
+
+        project = self.context.get("project")
+        project_specialists = project.project_specialists.all()
+        if not any(
+            specialist.profession.name == value and specialist.is_required
+            for specialist in project_specialists
+        ):
+            raise serializers.ValidationError(
+                f"Позиция '{value}' не требуется в проекте '{project.name}'."
+            )
+        return value
+
     def validate(self, attrs) -> Dict[str, Any]:
         """Метод валидации атрибутов запроса на участие в проекте."""
         errors: Dict = {}
@@ -412,6 +428,8 @@ class WriteParticipationRequestSerializer(
                     f"Вас уже существует и находится в статусе "
                     f"'{participation_request.get_status_display()}'."
                 )
+
+        self.validate_position(attrs["position"])
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -472,9 +490,8 @@ class ReadRetrieveParticipationRequestSerializer(
     class Meta(ReadListParticipationRequestSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *ReadListParticipationRequestSerializer.Meta.fields,
-            "answer",  # какая-то дичь происходит, зачем нам тут видеть и ответ
-            "cover_letter",  # и сопроводительное письмо не понимаю,
-            "created",  # не хочу разбираться сейчас.
+            "cover_letter",
+            "created",
         )
 
     def to_representation(self, instance):

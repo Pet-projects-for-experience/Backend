@@ -288,6 +288,21 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 queryset = queryset.prefetch_related(
                     "position__skills",
                 )
+            user = self.request.user
+            if (
+                user == queryset.project.owner
+                or user == queryset.project.creator
+            ):
+                queryset = queryset.exclude(
+                    status__in=[
+                        RequestStatuses.ACCEPTED,
+                        RequestStatuses.REJECTED,
+                    ]
+                )
+            else:
+                status_filter = self.request.query_params.get("status")
+                if status_filter:
+                    queryset = queryset.filter(status=status_filter)
         return queryset.filter(
             Q(user=self.request.user)
             | (
