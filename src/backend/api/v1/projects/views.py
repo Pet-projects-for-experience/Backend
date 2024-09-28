@@ -290,8 +290,8 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 )
             user = self.request.user
             if (
-                user == queryset.project.owner
-                or user == queryset.project.creator
+                queryset.filter(project__owner=user).exists()
+                or queryset.filter(project__creator=user).exists()
             ):
                 queryset = queryset.exclude(
                     status__in=[
