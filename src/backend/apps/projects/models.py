@@ -223,7 +223,7 @@ class ProjectSpecialist(models.Model):
 
 
 class ParticipationRequestAndInvitationBasemodel(CreatedModifiedFields):
-    """Абстрактна модель для запросов на участие и приглашений в проект"""
+    """Абстрактная модель для запросов на участие и приглашений в проект."""
 
     project = models.ForeignKey(
         Project,
