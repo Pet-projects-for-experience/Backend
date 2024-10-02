@@ -367,6 +367,7 @@ class WriteParticipationRequestSerializer(
         """
 
         user = self.context.get("request").user
+        print(f"Здесь мы посмотрим на значение {value}")
         project = (
             Project.objects.filter(id=value.id)
             .select_related(
@@ -394,14 +395,22 @@ class WriteParticipationRequestSerializer(
         Метод, проверяет, является ли позиция валидной для данного проекта.
         """
 
-        project = self.context.get("project")
+        project_id = self.initial_data.get("project")
+        if project_id is None:
+            raise serializers.ValidationError("Проект не найден.")
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            raise serializers.ValidationError("Проект не найден.")
+        print(f"Посмотреть {value.id}")
         project_specialists = project.project_specialists.all()
         if not any(
-            specialist.profession.name == value and specialist.is_required
+            specialist.profession.id == value.id and specialist.is_required
             for specialist in project_specialists
         ):
             raise serializers.ValidationError(
-                f"Позиция '{value}' не требуется в проекте '{project.name}'."
+                f"Специальность '{value.profession.specialization}' "
+                f"не требуется в проекте '{project.name}'."
             )
         return value
 
@@ -428,9 +437,6 @@ class WriteParticipationRequestSerializer(
                     f"Вас уже существует и находится в статусе "
                     f"'{participation_request.get_status_display()}'."
                 )
-
-        self.validate_position(attrs["position"])
-
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
