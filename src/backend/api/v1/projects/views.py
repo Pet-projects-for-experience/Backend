@@ -305,10 +305,6 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                     queryset = queryset.filter(status=status_filter)
         return queryset.filter(
             Q(user=self.request.user)
-            | (
-                Q(project__owner=self.request.user)
-                | Q(project__creator=self.request.user)
-            )
         ).only(*PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ()))
 
     def get_object(self) -> ParticipationRequest:
@@ -368,40 +364,6 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class ParticipantsViewSet(
-#     mixins.ListModelMixin,
-#     mixins.DestroyModelMixin,
-#     GenericViewSet,
-# ):
-#     """Представление для участников проекта."""
-#
-#     queryset = ProjectParticipant.objects.all()
-#     serializer_class = ReadParticipantSerializer
-#     pagination_class = None
-#     http_method_names = ("get", "delete", "options")
-#
-#     def get_queryset(self) -> QuerySet["ProjectParticipant"]:
-#         """Метод получения queryset-а для участников проекта."""
-#
-#         queryset = (
-#             super()
-#             .get_queryset()
-#             .filter(
-#                 project=self.kwargs.get("project_pk"),
-#             )
-#         )
-#
-#         if self.request.method == "GET":
-#             queryset = queryset.select_related(
-#                 "user__profile", "profession"
-#             ).only(
-#                 "user__profile__user_id",
-#                 "user__profile__avatar",
-#                 "profession",
-#             )
-#         return queryset
 
 
 class InvitationToProjectViewSet(ModelViewSet):
