@@ -5,6 +5,7 @@ from api.v1.projects.views import (  # ParticipantsViewSet,
     DirectionViewSet,
     DraftViewSet,
     InvitationToProjectViewSet,
+    MyRequestsViewSet,
     ProjectParticipationRequestsViewSet,
     ProjectPreviewMainViewSet,
     ProjectSpecialistsViewSet,
@@ -21,7 +22,12 @@ router.register(
 router.register(
     r"projects/requests",
     ProjectParticipationRequestsViewSet,
-    basename="projects-participation-requests",
+    basename="specialist-requests",
+)
+router.register(
+    r"projects/my-requests",
+    MyRequestsViewSet,
+    basename="my-requests",
 )
 router.register(
     r"projects/directions",

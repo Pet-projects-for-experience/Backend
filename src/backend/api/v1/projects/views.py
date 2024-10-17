@@ -14,7 +14,7 @@ from rest_framework.viewsets import (
     ReadOnlyModelViewSet,
 )
 
-from api.v1.projects.filters import ProjectFilter
+from api.v1.projects.filters import MyRequestsFilter, ProjectFilter
 from api.v1.projects.paginations import (
     ProjectPagination,
     ProjectPreviewMainPagination,
@@ -257,6 +257,24 @@ class ProjectSpecialistsViewSet(
     permission_classes = (IsProjectCreatorOrOwner,)
 
 
+class MyRequestsViewSet(ModelViewSet):
+    """Представление для отображения запросов на участие в проектах."""
+
+    queryset = ParticipationRequest.objects.all()
+    permission_classes = (IsAuthenticated,)
+    pagination_class = ProjectPagination
+    http_method_names = ("get", "options")
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = MyRequestsFilter
+    serializer_class = ReadRetrieveParticipationRequestSerializer
+
+    def get_queryset(self):
+        """Метод получения отфильтрованного queryset-a с фильтрами."""
+        user = self.request.user
+        queryset = super().get_queryset()
+        return queryset.filter(user=user)
+
+
 class ProjectParticipationRequestsViewSet(ModelViewSet):
     """Представление для запросов на участие в проекте."""
 
@@ -303,9 +321,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 status_filter = self.request.query_params.get("status")
                 if status_filter:
                     queryset = queryset.filter(status=status_filter)
-        return queryset.filter(
-            Q(user=self.request.user)
-        ).only(*PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ()))
+        return queryset.filter(Q(user=self.request.user)).only(
+            *PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ())
+        )
 
     def get_object(self) -> ParticipationRequest:
         """Метод получения объекта запроса на участие в проекте."""

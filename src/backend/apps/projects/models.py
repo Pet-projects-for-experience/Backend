@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
@@ -175,6 +176,13 @@ class Project(CreatedModifiedFields, ContactsFields):
                 name=("%(app_label)s_%(class)s_unique_name_per_creator"),
             ),
         )
+        indexes = [
+            GinIndex(
+                fields=["name", "description"],
+                name="project_search_idx",
+                opclasses=["gin_trgm_ops", "gin_trgm_ops"],
+            ),
+        ]
 
     def __str__(self) -> str:
         """Метод строкового представления объекта проекта."""

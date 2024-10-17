@@ -5,8 +5,12 @@ from langdetect import detect
 
 from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import Profession, Skill
-from apps.projects.constants import BUSYNESS_CHOICES, PROJECT_STATUS_CHOICES
-from apps.projects.models import Direction, Project
+from apps.projects.constants import (
+    BUSYNESS_CHOICES,
+    PROJECT_STATUS_CHOICES,
+    RequestStatuses,
+)
+from apps.projects.models import Direction, ParticipationRequest, Project
 
 
 class ProjectFilter(FilterSet):
@@ -75,7 +79,7 @@ class ProjectFilter(FilterSet):
         return queryset
 
     def project_search(self, queryset, name, value):
-        if value:
+        if len(value) >= 3:
             search_language = detect(value)
             if search_language == "ru":
                 search_query = SearchQuery(value, config="russian")
@@ -94,3 +98,13 @@ class ProjectFilter(FilterSet):
         if value == 1 and user.is_authenticated:
             return queryset.filter(favorited_by=user)
         return queryset
+
+
+class MyRequestsFilter(FilterSet):
+    """Класс фильтрации запросов на участие в проектах."""
+
+    status = filters.MultipleChoiceFilter(choices=RequestStatuses)
+
+    class Meta:
+        model = ParticipationRequest
+        fields = ("status",)
