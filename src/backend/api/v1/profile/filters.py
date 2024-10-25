@@ -1,4 +1,4 @@
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.contrib.postgres.search import TrigramSimilarity
 from django_filters.rest_framework import FilterSet, filters
 
 from apps.general.constants import LEVEL_CHOICES
@@ -20,7 +20,7 @@ class ProfileFilter(FilterSet):
         field_name="specialists__skills", queryset=Skill.objects.all()
     )
     is_favorite = filters.NumberFilter(method="filter_is_favorite_profile")
-    search = filters.CharFilter(method="filter_search")
+    user_search = filters.CharFilter(method="user_filter_search")
 
     class Meta:
         model = Profile
@@ -30,6 +30,7 @@ class ProfileFilter(FilterSet):
             "specialization",
             "skills",
             "is_favorite",
+            "user_search",
         )
 
     def filter_is_favorite_profile(self, queryset, name, value):
@@ -38,30 +39,21 @@ class ProfileFilter(FilterSet):
             return queryset.filter(favorited_by=user)
         return queryset
 
-    def filter_search(self, queryset, name, value):
-        value = value.strip()
-        if not value and len(value) < 3:
-            return queryset
+    def user_filter_search(self, queryset, name, value):
+        if value:
+            trigram_similarity = TrigramSimilarity(
+                "name", value
+            ) + TrigramSimilarity("user__username", value)
 
-        exact_match = Q(name__iexact=value) | Q(user__username__iexact=value)
-        partial_match = Q(name__icontains=value) | Q(
-            user__username__icontains=value
-        )
-
-        exact_match_case = When(exact_match, then=Value(0))
-        partial_match_case = When(partial_match, then=Value(1))
-
-        queryset = (
-            queryset.annotate(
-                match_priority=Case(
-                    exact_match_case,
-                    partial_match_case,
-                    default=Value(2),
-                    output_field=IntegerField(),
-                )
+            annotated_queryset = queryset.annotate(
+                similarity=trigram_similarity
             )
-            .filter(exact_match | partial_match)
-            .order_by("match_priority", "user_id")
-        )
+            # Нужно поиграться со значением similarity__gte,
+            # это совпадение в процентах, а не в символах
+            # GPT рекомендует 0.1.
+            # Тестово оставил 0.05 для удобства тестирования на небольшой базе
+            return annotated_queryset.filter(similarity__gte=0.05).order_by(
+                "-similarity"
+            )
 
         return queryset
