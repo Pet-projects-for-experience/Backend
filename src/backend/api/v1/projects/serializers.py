@@ -334,7 +334,6 @@ class WriteParticipationRequestSerializer(
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
             "cover_letter",
-            "answer",
         )
 
     def _get_existing_participation_request(
@@ -386,12 +385,37 @@ class WriteParticipationRequestSerializer(
         if (
             user == project.creator
             or user == project.owner
-            or user in project.participants.all()
         ):
             raise serializers.ValidationError(
                 "Вы не можете создать заявку на участие в проекте, в котором "
                 "уже участвуете."
             )
+        return value
+
+    def validate_position(self, value):
+        """
+        Метод, проверяет, является ли позиция валидной для данного проекта.
+        """
+
+        project_id = self.initial_data.get("project")
+        if project_id is None:
+            raise serializers.ValidationError("Проект не найден.")
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            raise serializers.ValidationError("Проект не найден.")
+        request = self.context.get("request")
+        if request.method in ("PATCH", "PUT"):
+            project_specialists = project.project_specialists.all()
+            if not any(
+                specialist.profession.id != value.id and specialist.is_required
+                for specialist in project_specialists
+            ):
+                raise serializers.ValidationError(
+                    f"Специальность '{value.profession.specialization}' "
+                    f"не требуется в проекте '{project.name}'."
+                )
+            return value
         return value
 
     def validate(self, attrs) -> Dict[str, Any]:
@@ -417,7 +441,6 @@ class WriteParticipationRequestSerializer(
                     f"Вас уже существует и находится в статусе "
                     f"'{participation_request.get_status_display()}'."
                 )
-
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
@@ -477,9 +500,8 @@ class ReadRetrieveParticipationRequestSerializer(
     class Meta(ReadListParticipationRequestSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *ReadListParticipationRequestSerializer.Meta.fields,
-            "answer",  # какая-то дичь происходит, зачем нам тут видеть и ответ
-            "cover_letter",  # и сопроводительное письмо не понимаю,
-            "created",  # не хочу разбираться сейчас.
+            "cover_letter",
+            "created",
         )
 
     def to_representation(self, instance):
