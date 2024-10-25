@@ -6,7 +6,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("profile", "0008_alter_profile_portfolio_link"),
+        ("profile", "0009_alter_profile_about"),
     ]
 
     operations = [

@@ -40,7 +40,7 @@ class ProfileFilter(FilterSet):
         return queryset
 
     def user_filter_search(self, queryset, name, value):
-        if value:
+        if value and len(value) > 2:
             trigram_similarity = TrigramSimilarity(
                 "name", value
             ) + TrigramSimilarity("user__username", value)
@@ -48,6 +48,7 @@ class ProfileFilter(FilterSet):
             annotated_queryset = queryset.annotate(
                 similarity=trigram_similarity
             )
+
             # Нужно поиграться со значением similarity__gte,
             # это совпадение в процентах, а не в символах
             # GPT рекомендует 0.1.
