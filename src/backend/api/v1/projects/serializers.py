@@ -382,10 +382,7 @@ class WriteParticipationRequestSerializer(
             )
             .first()
         )
-        if (
-            user == project.creator
-            or user == project.owner
-        ):
+        if user == project.creator or user == project.owner:
             raise serializers.ValidationError(
                 "Вы не можете создать заявку на участие в проекте, в котором "
                 "уже участвуете."
