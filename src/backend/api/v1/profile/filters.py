@@ -5,6 +5,8 @@ from apps.general.constants import LEVEL_CHOICES
 from apps.general.models import Profession, Skill
 from apps.profile.models import Profile
 
+SIMILARITY_CF: float = 0.05
+
 
 class ProfileFilter(FilterSet):
     """Класс фильтрации профилей специалистов."""
@@ -53,8 +55,8 @@ class ProfileFilter(FilterSet):
             # это совпадение в процентах, а не в символах
             # GPT рекомендует 0.1.
             # Тестово оставил 0.05 для удобства тестирования на небольшой базе
-            return annotated_queryset.filter(similarity__gte=0.05).order_by(
-                "-similarity"
-            )
+            return annotated_queryset.filter(
+                similarity__gte=SIMILARITY_CF
+            ).order_by("-similarity")
 
         return queryset
