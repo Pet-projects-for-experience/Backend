@@ -303,9 +303,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 status_filter = self.request.query_params.get("status")
                 if status_filter:
                     queryset = queryset.filter(status=status_filter)
-        return queryset.filter(
-            Q(user=self.request.user)
-        ).only(*PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ()))
+        return queryset.filter(Q(user=self.request.user)).only(
+            *PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ())
+        )
 
     def get_object(self) -> ParticipationRequest:
         """Метод получения объекта запроса на участие в проекте."""
