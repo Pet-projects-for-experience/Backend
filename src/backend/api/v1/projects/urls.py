@@ -39,11 +39,6 @@ router.register(
     ProjectSpecialistsViewSet,
     basename="projects-specialists",
 )
-# router.register(
-#     r"projects/(?P<project_pk>\d+)/participants",
-#     ParticipantsViewSet,
-#     basename="projects-participants",
-# )
 router.register(
     r"projects/invitations",
     InvitationToProjectViewSet,

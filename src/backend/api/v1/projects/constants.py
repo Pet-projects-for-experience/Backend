@@ -3,7 +3,7 @@ PROJECT_PAGE_SIZE = 7
 
 PROJECT_PARTICIPATION_REQUEST_DESTROY_ONLY_FIELDS = (
     "user__id",
-    "status",
+    "project_status",
 )
 PROJECT_PARTICIPATION_REQUEST_LIST_ONLY_FIELDS = (
     *PROJECT_PARTICIPATION_REQUEST_DESTROY_ONLY_FIELDS,
@@ -11,7 +11,7 @@ PROJECT_PARTICIPATION_REQUEST_LIST_ONLY_FIELDS = (
     "project__owner__id",
     "project__name",
     "project__directions",
-    "project__status",
+    "project__request_status",
     "position__is_required",
     "position__profession",
     "position__count",

@@ -19,9 +19,9 @@ class SkillAdmin(admin.ModelAdmin):
 
 @admin.register(Profession)
 class ProfessionAdmin(admin.ModelAdmin):
-    list_display = ("specialty", "specialization")
+    list_display = ("speciality", "specialization")
     list_filter = ("specialization",)
-    search_fields = ("specialty", "specialization")
+    search_fields = ("speciality", "specialization")
 
 
 @admin.register(Project)
@@ -43,7 +43,7 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
                 "telegram_nick",
                 "email",
                 "link",
-                "status",
+                "project_status",
             )
             .prefetch_related(
                 "project_specialists",
@@ -70,12 +70,12 @@ class ProjectAdmin(RecruitmentStatusMixin, admin.ModelAdmin):
         "telegram_nick",
         "email",
         "recruitment_status",
-        "status",
+        "project_status",
     )
     readonly_fields = ("recruitment_status",)
     list_filter = (
         "busyness",
-        "status",
+        "project_status",
     )
     search_fields = (
         "name",
@@ -110,7 +110,7 @@ class ParticipationRequestAdmin(admin.ModelAdmin):
             "project__name",
             "user__email",
             "is_viewed",
-            "status",
+            "request_status",
             "cover_letter",
             "answer",
         )
@@ -118,12 +118,12 @@ class ParticipationRequestAdmin(admin.ModelAdmin):
     list_display = (
         "project",
         "user",
-        "status",
+        "request_status",
         "is_viewed",
         "cover_letter",
         "answer",
     )
-    list_filter = ("status",)
+    list_filter = ("request_status",)
     search_fields = (
         "project__name",
         "user__email",

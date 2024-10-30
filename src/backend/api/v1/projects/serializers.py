@@ -37,11 +37,13 @@ class DirectionSerializer(CustomModelSerializer):
 
     class Meta:
         model = Direction
-        fields = "__all__"
+        fields = ("name",)
 
 
 class BaseProjectSpecialistSerializer(CustomModelSerializer):
     """Общий сериализатор для специалиста необходимого проекту."""
+
+    profession = ProfessionSerializer()
 
     class Meta:
         model = ProjectSpecialist
@@ -88,7 +90,7 @@ class BaseProjectSerializer(CustomModelSerializer):
             "telegram_nick",
             "email",
             "project_specialists",
-            "status",
+            "project_status",
         )
         read_only_fields: ClassVar[Tuple[str, ...]] = (
             "creator",
@@ -122,8 +124,8 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
     """Сериализатор для чтения проекта."""
 
     directions = DirectionSerializer(many=True)
-    status = serializers.ChoiceField(
-        choices=PROJECT_STATUS_CHOICES, source="get_status_display"
+    project_status = serializers.ChoiceField(
+        choices=PROJECT_STATUS_CHOICES, source="get_project_status_display"
     )
     busyness = serializers.ChoiceField(
         choices=BUSYNESS_CHOICES, source="get_busyness_display"
@@ -205,10 +207,10 @@ class WriteProjectSerializer(
             "started": {"required": True},
             "ended": {"required": True},
             "busyness": {"required": True},
-            "status": {"required": False},
+            "project_status": {"required": False},
         }
 
-    def validate_status(self, value) -> int:
+    def validate_project_status(self, value) -> int:
         """Метод валидации статуса проекта."""
 
         if value == Project.DRAFT:
@@ -279,7 +281,7 @@ class WriteDraftSerializer(
     class Meta(BaseProjectSerializer.Meta):
         extra_kwargs = {
             "directions": {"required": False},
-            "status": {"required": False},
+            "project_status": {"required": False},
         }
 
 
@@ -324,6 +326,58 @@ class BaseParticipationRequestSerializer(CustomModelSerializer):
         )
 
 
+class ShortProjectSerializer(CustomModelSerializer):
+    """Сериализатор краткой информации на чтение проектов."""
+
+    directions = DirectionSerializer(many=True)
+
+    class Meta:
+        model = Project
+        fields = (
+            "id",
+            "name",
+            "started",
+            "ended",
+            "directions",
+            "project_status",
+        )
+
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop("exclude", None)
+        super().__init__(*args, **kwargs)
+        if exclude:
+            for field in exclude:
+                self.fields.pop(field, None)
+
+
+class MyRequestsSerializer(CustomModelSerializer):
+    """."""
+
+    project = ShortProjectSerializer(exclude=("id", "project_status"))
+    request_status = serializers.SerializerMethodField()
+    position = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ParticipationRequest
+        fields = (
+            "id",
+            "request_status",
+            "position",
+            "cover_letter",
+            "project",
+        )
+
+    def get_position(self, obj):
+        """Метод получения specialization из ProfessionSerializer."""
+        return ProfessionSerializer(obj.position.profession).data[
+            "specialization"
+        ]
+
+    def get_request_status(self, obj) -> str:
+        """Метод получения статуса запроса."""
+        return obj.get_request_status_display()
+
+
 class WriteParticipationRequestSerializer(
     ToRepresentationOnlyIdMixin,
     BaseParticipationRequestSerializer,
@@ -345,7 +399,7 @@ class WriteParticipationRequestSerializer(
         if attrs:
             filters: Dict = {
                 "user": self.context.get("request").user,
-                "status": RequestStatuses.IN_PROGRESS,
+                "request_status": RequestStatuses.IN_PROGRESS,
             }
             filters_keys = ("project", "position")
             for filter_key in filters_keys:
@@ -431,12 +485,12 @@ class WriteParticipationRequestSerializer(
                     RequestStatuses.ACCEPTED: ("unique_accepted"),
                 }
                 error_type = status_errors_types.get(
-                    participation_request.status, "unknown"
+                    participation_request.request_status, "unknown"
                 )
                 errors.setdefault(error_type, []).append(
                     f"Заявка на участие в данном проекте на данную позицию у "
                     f"Вас уже существует и находится в статусе "
-                    f"'{participation_request.get_status_display()}'."
+                    f"'{participation_request.get_request_status_display()}'."
                 )
         if errors:
             raise serializers.ValidationError(errors)
@@ -449,22 +503,6 @@ class WriteParticipationRequestSerializer(
         return escaped_html
 
 
-class ShortProjectSerializer(CustomModelSerializer):
-    """Сериализатор краткой информации на чтение проектов."""
-
-    directions = DirectionSerializer(many=True)
-
-    class Meta:
-        model = Project
-        fields = (
-            "id",
-            "name",
-            "started",
-            "ended" "directions",
-            "status",
-        )
-
-
 class ReadListParticipationRequestSerializer(
     BaseParticipationRequestSerializer
 ):
@@ -472,20 +510,20 @@ class ReadListParticipationRequestSerializer(
 
     project = ShortProjectSerializer()
     position = ShortProjectSpecialistSerializer()
-    status = serializers.SerializerMethodField()
+    request_status = serializers.SerializerMethodField()
 
     class Meta(BaseParticipationRequestSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
             "user",
-            "status",
+            "request_status",
             "is_viewed",
         )
 
-    def get_status(self, obj) -> str:
+    def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
 
-        return obj.get_status_display()
+        return obj.get_request_status_display()
 
 
 class ReadRetrieveParticipationRequestSerializer(
@@ -518,10 +556,10 @@ class WriteParticipationRequestAnswerSerializer(
         fields: ClassVar[Tuple[str, ...]] = (
             "id",
             "answer",
-            "status",
+            "request_status",
         )
 
-    def validate_status(self, value) -> int:
+    def validate_request_status(self, value) -> int:
         """Метод валидации статуса заявки на участие в проекте."""
 
         if value not in (RequestStatuses.ACCEPTED, RequestStatuses.REJECTED):
@@ -535,7 +573,7 @@ class WriteParticipationRequestAnswerSerializer(
 
         errors: Dict = {}
 
-        if attrs.get("status", None) == RequestStatuses.ACCEPTED:
+        if attrs.get("request_status", None) == RequestStatuses.ACCEPTED:
             participants = getattr(self.instance.project, "participants", None)
             user = getattr(self.instance, "user", None)
             if (
@@ -554,7 +592,10 @@ class WriteParticipationRequestAnswerSerializer(
     def update(self, instance, validated_data) -> ParticipationRequest:
         """Метод обновления заявки на участие в проекте."""
 
-        if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
+        if (
+            validated_data.get("request_status", None)
+            == RequestStatuses.ACCEPTED
+        ):
             with transaction.atomic():
                 project_participant = ProjectParticipant.objects.create(
                     project=instance.project,
@@ -618,7 +659,7 @@ class WriteInvitationToProjectSerializer(
                 "Этот пользователь уже участвует в проекте или приглашен"
             )
         if not user.profile.professions.filter(
-            specialty=position.profession.specialty,
+            speciality=position.profession.speciality,
             specialization=position.profession.specialization,
         ).exists():
             errors.setdefault("user", []).append(
@@ -642,7 +683,7 @@ class PartialWriteInvitationToProjectSerializer(
 
     class Meta:
         model = InvitationToProject
-        fields: ClassVar[Tuple[str, ...]] = ("status", "answer")
+        fields: ClassVar[Tuple[str, ...]] = ("request_status", "answer")
 
     def validate(self, attrs) -> OrderedDict:
         user = self.context["request"].user
@@ -657,7 +698,10 @@ class PartialWriteInvitationToProjectSerializer(
         """Метод обновления приглашения на участие в проекте.
         Так же добавляет пользователя в участники проекта"""
 
-        if validated_data.get("status", None) == RequestStatuses.ACCEPTED:
+        if (
+            validated_data.get("request_status", None)
+            == RequestStatuses.ACCEPTED
+        ):
             with transaction.atomic():
                 project_participant = ProjectParticipant.objects.create(
                     project=instance.project,

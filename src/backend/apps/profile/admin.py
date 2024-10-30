@@ -7,7 +7,7 @@ from .models import Profile, Specialist
 @admin.register(Specialist)
 class SpecialistAdmin(admin.ModelAdmin):
     list_display = ("profile", "profession", "level", "skills_display")
-    list_filter = ("level", "profession__specialty")
+    list_filter = ("level", "profession__speciality")
 
     @admin.display(description="Навыки")
     @mark_safe

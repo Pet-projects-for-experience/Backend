@@ -29,6 +29,7 @@ from api.v1.projects.permissions import (
 )
 from api.v1.projects.serializers import (
     DirectionSerializer,
+    MyRequestsSerializer,
     PartialWriteInvitationToProjectSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
@@ -74,7 +75,7 @@ class BaseProjectViewSet(ModelViewSet):
             "owner",
         )
         .prefetch_related("favorited_by")
-        .order_by("status", "-created")
+        .order_by("project_status", "-created")
     )
 
     def get_queryset(self):
@@ -113,9 +114,10 @@ class ProjectViewSet(BaseProjectViewSet):
 
         if not isinstance(user, AnonymousUser):
             return queryset.exclude(
-                Q(status=Project.DRAFT) & (~(Q(creator=user) | Q(owner=user)))
+                Q(project_status=Project.DRAFT)
+                & (~(Q(creator=user) | Q(owner=user)))
             )
-        return queryset.exclude(status=Project.DRAFT)
+        return queryset.exclude(project_status=Project.DRAFT)
 
     def get_queryset(self):
         """Метод получения отфильтрованного queryset-a с фильтрами."""
@@ -138,7 +140,7 @@ class ProjectViewSet(BaseProjectViewSet):
         serializer.save(
             creator=self.request.user,
             owner=self.request.user,
-            status=Project.ACTIVE,
+            project_status=Project.ACTIVE,
         )
 
     @action(
@@ -188,7 +190,7 @@ class ProjectPreviewMainViewSet(mixins.ListModelMixin, GenericViewSet):
     """Представление превью проектов на главной странице."""
 
     queryset = (
-        Project.objects.filter(status=Project.ACTIVE)
+        Project.objects.filter(project_status=Project.ACTIVE)
         .only(
             "id",
             "name",
@@ -228,7 +230,8 @@ class DraftViewSet(BaseProjectViewSet):
 
         if not isinstance(user, AnonymousUser):
             return queryset.filter(
-                Q(status=Project.DRAFT) & (Q(creator=user) | Q(owner=user))
+                Q(project_status=Project.DRAFT)
+                & (Q(creator=user) | Q(owner=user))
             )
         return queryset.filter()
 
@@ -241,7 +244,7 @@ class DraftViewSet(BaseProjectViewSet):
         return serializer.save(
             creator=self.request.user,
             owner=self.request.user,
-            status=Project.DRAFT,
+            project_status=Project.DRAFT,
         )
 
 
@@ -258,7 +261,10 @@ class ProjectSpecialistsViewSet(
 
 
 class MyRequestsViewSet(ModelViewSet):
-    """Представление для отображения запросов на участие в проектах."""
+    """
+    Представление для отображения запросов на участие в проектах,
+    отправленные пользователем, как участником.
+    """
 
     queryset = ParticipationRequest.objects.all()
     permission_classes = (IsAuthenticated,)
@@ -266,7 +272,7 @@ class MyRequestsViewSet(ModelViewSet):
     http_method_names = ("get", "options")
     filter_backends = (DjangoFilterBackend,)
     filterset_class = MyRequestsFilter
-    serializer_class = ReadRetrieveParticipationRequestSerializer
+    serializer_class = MyRequestsSerializer
 
     def get_queryset(self):
         """Метод получения отфильтрованного queryset-a с фильтрами."""
@@ -312,15 +318,15 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 or queryset.filter(project__creator=user).exists()
             ):
                 queryset = queryset.exclude(
-                    status__in=[
+                    request_status__in=[
                         RequestStatuses.ACCEPTED,
                         RequestStatuses.REJECTED,
                     ]
                 )
             else:
-                status_filter = self.request.query_params.get("status")
+                status_filter = self.request.query_params.get("request_status")
                 if status_filter:
-                    queryset = queryset.filter(status=status_filter)
+                    queryset = queryset.filter(request_status=status_filter)
         return queryset.filter(Q(user=self.request.user)).only(
             *PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ())
         )
@@ -357,7 +363,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         """
 
         serializer.save(
-            user=self.request.user, status=RequestStatuses.IN_PROGRESS
+            user=self.request.user, request_status=RequestStatuses.IN_PROGRESS
         )
 
     @extend_schema(
@@ -415,7 +421,7 @@ class InvitationToProjectViewSet(ModelViewSet):
                 "cover_letter",
                 "answer",
                 "is_viewed",
-                "status",
+                "request_status",
                 "created",
                 "author",
             )
@@ -428,7 +434,8 @@ class InvitationToProjectViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user, status=RequestStatuses.IN_PROGRESS
+            author=self.request.user,
+            request_status=RequestStatuses.IN_PROGRESS,
         )
 
     @extend_schema(

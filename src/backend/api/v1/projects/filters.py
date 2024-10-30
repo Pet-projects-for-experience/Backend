@@ -16,7 +16,9 @@ from apps.projects.models import Direction, ParticipationRequest, Project
 class ProjectFilter(FilterSet):
     """Класс фильтрации проектов, по запросу на главной странице."""
 
-    status = filters.MultipleChoiceFilter(choices=PROJECT_STATUS_CHOICES)
+    project_status = filters.MultipleChoiceFilter(
+        choices=PROJECT_STATUS_CHOICES
+    )
     started = filters.DateFromToRangeFilter()
     ended = filters.DateFromToRangeFilter()
     recruitment_status = filters.NumberFilter(
@@ -43,7 +45,7 @@ class ProjectFilter(FilterSet):
     class Meta:
         model = Project
         fields = (
-            "status",
+            "project_status",
             "started",
             "ended",
             "recruitment_status",
@@ -103,8 +105,8 @@ class ProjectFilter(FilterSet):
 class MyRequestsFilter(FilterSet):
     """Класс фильтрации запросов на участие в проектах."""
 
-    status = filters.MultipleChoiceFilter(choices=RequestStatuses)
+    request_status = filters.MultipleChoiceFilter(choices=RequestStatuses)
 
     class Meta:
         model = ParticipationRequest
-        fields = ("status",)
+        fields = ("request_status",)

@@ -2,25 +2,25 @@ from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
 from apps.general.constants import (
+    LENGTH_SPECIALITY_NAME_ERROR_TEXT,
     LENGTH_SPECIALIZATION_NAME_ERROR_TEXT,
-    LENGTH_SPECIALTY_NAME_ERROR_TEXT,
     LENGTH_TELEGRAM_NICK_ERROR_TEXT,
     MAX_LENGTH_DESCRIPTION,
     MAX_LENGTH_PHONE_NUMBER,
     MAX_LENGTH_SKILL_NAME,
+    MAX_LENGTH_SPECIALITY_NAME,
     MAX_LENGTH_SPECIALIZATION_NAME,
-    MAX_LENGTH_SPECIALTY_NAME,
     MAX_LENGTH_TELEGRAM_NICK,
     MAX_LENGTH_TITLE,
+    MIN_LENGTH_SPECIALITY_NAME,
     MIN_LENGTH_SPECIALIZATION_NAME,
-    MIN_LENGTH_SPECIALTY_NAME,
     MIN_LENGTH_TELEGRAM_NICK,
     REGEX_PHONE_NUMBER,
     REGEX_PHONE_NUMBER_ERROR_TEXT,
+    REGEX_SPECIALITY_NAME,
+    REGEX_SPECIALITY_NAME_ERROR_TEXT,
     REGEX_SPECIALIZATION_NAME,
     REGEX_SPECIALIZATION_NAME_ERROR_TEXT,
-    REGEX_SPECIALTY_NAME,
-    REGEX_SPECIALTY_NAME_ERROR_TEXT,
     REGEX_TELEGRAM_NICK,
     REGEX_TELEGRAM_NICK_ERROR_TEXT,
 )
@@ -92,17 +92,17 @@ class Skill(models.Model):
 class Profession(models.Model):
     """Модель профессии."""
 
-    specialty = models.CharField(
+    speciality = models.CharField(
         verbose_name="Специализация",
-        max_length=MAX_LENGTH_SPECIALTY_NAME,
+        max_length=MAX_LENGTH_SPECIALITY_NAME,
         validators=(
             MinLengthValidator(
-                limit_value=MIN_LENGTH_SPECIALTY_NAME,
-                message=LENGTH_SPECIALTY_NAME_ERROR_TEXT,
+                limit_value=MIN_LENGTH_SPECIALITY_NAME,
+                message=LENGTH_SPECIALITY_NAME_ERROR_TEXT,
             ),
             RegexValidator(
-                regex=REGEX_SPECIALTY_NAME,
-                message=REGEX_SPECIALTY_NAME_ERROR_TEXT,
+                regex=REGEX_SPECIALITY_NAME,
+                message=REGEX_SPECIALITY_NAME_ERROR_TEXT,
             ),
         ),
     )
@@ -126,7 +126,7 @@ class Profession(models.Model):
         verbose_name_plural = "Профессии"
         constraints = (
             models.constraints.UniqueConstraint(
-                fields=("specialty", "specialization"),
+                fields=("speciality", "specialization"),
                 name=("%(app_label)s_%(class)s_unique_profession"),
             ),
         )
@@ -134,7 +134,7 @@ class Profession(models.Model):
     def __str__(self) -> str:
         """Метод строкового представления объекта профессии."""
 
-        return f"{self.specialty} - {self.specialization}"
+        return f"{self.speciality} - {self.specialization}"
 
 
 class ContactsFields(models.Model):
