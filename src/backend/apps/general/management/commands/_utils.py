@@ -6,8 +6,8 @@ from faker import Faker
 from faker.providers import T
 
 from apps.general.constants import (
+    MAX_LENGTH_SPECIALITY_NAME,
     MAX_LENGTH_SPECIALIZATION_NAME,
-    MAX_LENGTH_SPECIALTY_NAME,
 )
 from apps.general.models import Profession
 
@@ -36,8 +36,8 @@ def get_random_professions() -> Sequence[T]:
         Profession.objects.bulk_create(
             [
                 Profession(
-                    specialty=fake.text(
-                        max_nb_chars=MAX_LENGTH_SPECIALTY_NAME
+                    speciality=fake.text(
+                        max_nb_chars=MAX_LENGTH_SPECIALITY_NAME
                     ),
                     specialization=fake.text(
                         max_nb_chars=MAX_LENGTH_SPECIALIZATION_NAME

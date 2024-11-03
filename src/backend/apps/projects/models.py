@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 
@@ -130,8 +131,8 @@ class Project(CreatedModifiedFields, ContactsFields):
         choices=BUSYNESS_CHOICES,
         null=True,
     )
-    status = models.PositiveSmallIntegerField(
-        verbose_name="Статус",
+    project_status = models.PositiveSmallIntegerField(
+        verbose_name="Статус проекта",
         choices=PROJECT_STATUS_CHOICES,
     )
     directions = models.ManyToManyField(
@@ -175,6 +176,13 @@ class Project(CreatedModifiedFields, ContactsFields):
                 name=("%(app_label)s_%(class)s_unique_name_per_creator"),
             ),
         )
+        indexes = [
+            GinIndex(
+                fields=["name", "description"],
+                name="project_search_idx",
+                opclasses=["gin_trgm_ops", "gin_trgm_ops"],
+            ),
+        ]
 
     def __str__(self) -> str:
         """Метод строкового представления объекта проекта."""
@@ -240,8 +248,8 @@ class ParticipationRequestAndInvitationBasemodel(CreatedModifiedFields):
         on_delete=models.CASCADE,
         verbose_name="Должность",
     )
-    status = models.PositiveSmallIntegerField(
-        verbose_name="Статус",
+    request_status = models.PositiveSmallIntegerField(
+        verbose_name="Статус запроса на участие или приглашения",
         choices=RequestStatuses.choices,
         default=RequestStatuses.IN_PROGRESS,
     )
@@ -273,7 +281,7 @@ class ParticipationRequest(ParticipationRequestAndInvitationBasemodel):
             models.UniqueConstraint(
                 fields=("project", "user", "position"),
                 name="%(app_label)s_%(class)s_unique_request_per_project",
-                condition=models.Q(status=RequestStatuses.IN_PROGRESS),
+                condition=models.Q(request_status=RequestStatuses.IN_PROGRESS),
             ),
         )
 
@@ -301,7 +309,7 @@ class InvitationToProject(ParticipationRequestAndInvitationBasemodel):
             models.UniqueConstraint(
                 fields=("user", "position"),
                 name="%(app_label)s_%(class)s_unique_request_per_project",
-                condition=models.Q(status=RequestStatuses.IN_PROGRESS),
+                condition=models.Q(request_status=RequestStatuses.IN_PROGRESS),
             ),
         )
 

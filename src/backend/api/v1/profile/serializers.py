@@ -130,6 +130,13 @@ class BaseProfileSerializer(CustomModelSerializer):
             "specialists",
         )
 
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop("exclude", None)
+        super().__init__(*args, **kwargs)
+        if exclude:
+            for field in exclude:
+                self.fields.pop(field, None)
+
 
 class ProfilePreviewReadSerializer(BaseProfileSerializer):
     """Сериализатор для чтения превью профилей специалистов."""
@@ -182,7 +189,7 @@ class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
             Project.objects.filter(
                 Q(creator=user) | Q(participants=user) | Q(owner=user)
             )
-            .exclude(status=Project.DRAFT)
+            .exclude(project_status=Project.DRAFT)
             .only("id", "name")
         )
 

@@ -38,7 +38,7 @@ class IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly(
         return bool(
             request.user == obj.user
             and (
-                obj.status == RequestStatuses.IN_PROGRESS
+                obj.request_status == RequestStatuses.IN_PROGRESS
                 or request.method == "DELETE"
             )
             or (
@@ -66,7 +66,7 @@ class IsProjectCreatorOrOwnerForParticipationRequest(IsProjectCreatorOrOwner):
 
     def has_object_permission(self, request, view, obj) -> bool:
         return bool(
-            obj.status
+            obj.request_status
             not in (
                 RequestStatuses.ACCEPTED,
                 RequestStatuses.REJECTED,

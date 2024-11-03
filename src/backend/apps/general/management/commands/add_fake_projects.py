@@ -78,7 +78,9 @@ class Command(BaseCommand):
                 started=self.fake.date_this_year(),
                 ended=self.fake.date_this_year(after_today=True),
                 busyness=self.fake.random_element(BUSYNESS_CHOICES)[0],
-                status=self.fake.random_element(PROJECT_STATUS_CHOICES)[0],
+                project_status=self.fake.random_element(
+                    PROJECT_STATUS_CHOICES
+                )[0],
                 link=self.fake.url(),
                 phone_number=self.fake.phone_number(),
                 telegram_nick=self.fake.name(),

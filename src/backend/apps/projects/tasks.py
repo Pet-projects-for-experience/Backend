@@ -10,8 +10,8 @@ from config.celery import app
 def auto_completion_projects_task():
     Project.objects.filter(
         ended__lt=timezone.localdate(),
-        status=Project.ACTIVE,
-    ).update(status=Project.ENDED)
+        project_status=Project.ACTIVE,
+    ).update(project_status=Project.ENDED)
 
 
 @app.task

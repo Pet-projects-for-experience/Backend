@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
-from api.v1.projects.views import (  # ParticipantsViewSet,
+from api.v1.projects.views import (  # ParticipantsViewSet,; MyRequestsViewSet,
     DirectionViewSet,
     DraftViewSet,
     InvitationToProjectViewSet,
@@ -21,8 +21,13 @@ router.register(
 router.register(
     r"projects/requests",
     ProjectParticipationRequestsViewSet,
-    basename="projects-participation-requests",
+    basename="specialist-requests",
 )
+# router.register(
+#     r"projects/my-requests",
+#     MyRequestsViewSet,
+#     basename="my-requests",
+# )
 router.register(
     r"projects/directions",
     DirectionViewSet,
@@ -33,11 +38,6 @@ router.register(
     ProjectSpecialistsViewSet,
     basename="projects-specialists",
 )
-# router.register(
-#     r"projects/(?P<project_pk>\d+)/participants",
-#     ParticipantsViewSet,
-#     basename="projects-participants",
-# )
 router.register(
     r"projects/invitations",
     InvitationToProjectViewSet,

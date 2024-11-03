@@ -21,7 +21,7 @@ def valid_data_project(user):
         "started": datetime.date.today(),
         "ended": datetime.date.today() + datetime.timedelta(days=2),
         "busyness": BUSYNESS_CHOICES[0][0],
-        "status": PROJECT_STATUS_CHOICES[0][0],
+        "project_status": PROJECT_STATUS_CHOICES[0][0],
     }
 
 

@@ -29,7 +29,10 @@ class ProfessionSerializer(CustomModelSerializer):
 
     class Meta:
         model = Profession
-        fields = "__all__"
+        fields = (
+            "speciality",
+            "specialization",
+        )
 
 
 class SkillSerializer(CustomModelSerializer):
