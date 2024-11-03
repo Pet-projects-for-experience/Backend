@@ -290,6 +290,9 @@ class ProjectSpecialistsViewSet(
 @extend_schema_view(
     retrieve=extend_schema(exclude=True),
     list=extend_schema(
+        description="Получение списка запросов на участие \
+                    в проекте, для владельца. Или получение всех отправленных \
+                    запросов на участие от пользователя-участника.",
         parameters=[
             OpenApiParameter(
                 "role",
@@ -301,11 +304,31 @@ class ProjectSpecialistsViewSet(
                     "participant",
                 ],  # Ограничение на допустимые значения
             )
-        ]
+        ],
+    ),
+    create=extend_schema(
+        description="Создание нового запроса на участие в проекте.",
+    ),
+    update=extend_schema(
+        request=UpdateParticipationRequestSerializer,
+        description="Обновляет только сопроводительное письмо \
+                    запроса на участие в проекте.",
+    ),
+    destroy=extend_schema(
+        description="Удаление запроса участником на участие в проекте.",
     ),
 )
 class ProjectParticipationRequestsViewSet(ModelViewSet):
-    """Представление для запросов на участие в проекте."""
+    """
+    Представление для обработки запросов на участие в проекте.
+
+    Методы:
+    - list: Возвращает список всех запросов на участие.
+    - retrieve: Исключён.
+    - create: Создает новый запрос на участие.
+    - update: Обновляет существующий запрос, включая сопроводительное письмо.
+    - destroy: Удаляет запрос на участие.
+    """
 
     queryset = ParticipationRequest.objects.all()
     permission_classes = (
@@ -379,7 +402,6 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             return MyRequestsSerializer
         if self.request.method in [
             "PATCH",
-            "PUT",
         ]:
             return UpdateParticipationRequestSerializer
         return WriteParticipationRequestSerializer
