@@ -41,6 +41,7 @@ from api.v1.projects.serializers import (
     ReadDraftSerializer,
     ReadListParticipationRequestSerializer,
     ReadProjectSerializer,
+    UpdateParticipationRequestSerializer,
     WriteDraftSerializer,
     WriteInvitationToProjectSerializer,
     WriteParticipationRequestAnswerSerializer,
@@ -376,6 +377,11 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             if role == "owner":
                 return ReadListParticipationRequestSerializer
             return MyRequestsSerializer
+        if self.request.method in [
+            "PATCH",
+            "PUT",
+        ]:
+            return UpdateParticipationRequestSerializer
         return WriteParticipationRequestSerializer
 
     def perform_create(self, serializer) -> None:

@@ -379,6 +379,17 @@ class MyRequestsSerializer(CustomModelSerializer):
         return obj.get_request_status_display()
 
 
+class UpdateParticipationRequestSerializer(
+    ToRepresentationOnlyIdMixin,
+    CustomModelSerializer,
+):
+    """Сериализатор для обновления сопроводительного письма."""
+
+    class Meta:
+        model = ParticipationRequest
+        fields: ClassVar[Tuple[str, ...]] = ("cover_letter",)
+
+
 class WriteParticipationRequestSerializer(
     ToRepresentationOnlyIdMixin,
     BaseParticipationRequestSerializer,
