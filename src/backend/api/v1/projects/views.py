@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
@@ -33,10 +33,8 @@ from api.v1.projects.serializers import (
     PartialWriteInvitationToProjectSerializer,
     ProjectPreviewMainSerializer,
     ReadDraftSerializer,
-    ReadInvitationToProjectSerializer,
     ReadListParticipationRequestSerializer,
     ReadProjectSerializer,
-    ReadRetrieveParticipationRequestSerializer,
     WriteDraftSerializer,
     WriteInvitationToProjectSerializer,
     WriteParticipationRequestAnswerSerializer,
@@ -260,27 +258,31 @@ class ProjectSpecialistsViewSet(
     permission_classes = (IsProjectCreatorOrOwner,)
 
 
-class MyRequestsViewSet(ModelViewSet):
-    """
-    Представление для отображения запросов на участие в проектах,
-    отправленные пользователем, как участником.
-    """
+# @extend_schema_view(retrieve=extend_schema(exclude=True),)
+# class MyRequestsViewSet(ModelViewSet):
+#     """
+#     Представление для отображения запросов на участие в проектах,
+#     отправленные пользователем, как участником.
+#     """
 
-    queryset = ParticipationRequest.objects.all()
-    permission_classes = (IsAuthenticated,)
-    pagination_class = ProjectPagination
-    http_method_names = ("get", "options")
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = MyRequestsFilter
-    serializer_class = MyRequestsSerializer
+#     queryset = ParticipationRequest.objects.all()
+#     permission_classes = (IsAuthenticated,)
+#     pagination_class = ProjectPagination
+#     http_method_names = ("get", "options")
+#     filter_backends = (DjangoFilterBackend,)
+#     filterset_class = MyRequestsFilter
+#     serializer_class = MyRequestsSerializer
 
-    def get_queryset(self):
-        """Метод получения отфильтрованного queryset-a с фильтрами."""
-        user = self.request.user
-        queryset = super().get_queryset()
-        return queryset.filter(user=user)
+#     def get_queryset(self):
+#         """Метод получения отфильтрованного queryset-a с фильтрами."""
+#         user = self.request.user
+#         queryset = super().get_queryset()
+#         return queryset.filter(user=user)
 
 
+@extend_schema_view(
+    retrieve=extend_schema(exclude=True),
+)
 class ProjectParticipationRequestsViewSet(ModelViewSet):
     """Представление для запросов на участие в проекте."""
 
@@ -289,6 +291,8 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         IsParticipationRequestCreatorOrProjectCreatorOrOwnerReadOnly,
     )
     http_method_names = ("get", "post", "patch", "delete", "options")
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = MyRequestsFilter
 
     def get_queryset(self) -> QuerySet["ParticipationRequest"]:
         """Метод получения queryset-а для запросов на участие в проекте."""
@@ -308,10 +312,6 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             ).prefetch_related(
                 "project__directions",
             )
-            if self.action == "retrieve":
-                queryset = queryset.prefetch_related(
-                    "position__skills",
-                )
             user = self.request.user
             if (
                 queryset.filter(project__owner=user).exists()
@@ -323,38 +323,43 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                         RequestStatuses.REJECTED,
                     ]
                 )
-            else:
-                status_filter = self.request.query_params.get("request_status")
-                if status_filter:
-                    queryset = queryset.filter(request_status=status_filter)
+                queryset.filter(is_viewed=False).update(is_viewed=True)
+                return queryset
         return queryset.filter(Q(user=self.request.user)).only(
             *PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ())
         )
 
-    def get_object(self) -> ParticipationRequest:
-        """Метод получения объекта запроса на участие в проекте."""
+    # Не нужен, так как меняться просмотренное должно в методе ответа,
+    # после ответа меняется просмортено или нет
+    #
+    # def get_object(self) -> ParticipationRequest:
+    #     """Метод получения объекта запроса на участие в проекте."""
 
-        participation_request = super().get_object()
-        if (
-            self.request.method in ("GET", "PATCH")
-            and not participation_request.is_viewed
-            and self.request.user
-            in (
-                participation_request.project.creator,
-                participation_request.project.owner,
-            )
-        ):
-            participation_request.is_viewed = True
-            participation_request.save()
-        return participation_request
+    #     participation_request = super().get_object()
+    #     if (
+    #         self.request.method in ("GET")
+    #         and not participation_request.is_viewed
+    #         and self.request.user
+    #         in (
+    #             participation_request.project.creator,
+    #             participation_request.project.owner,
+    #         )
+    #     ):
+    #         participation_request.is_viewed = True
+    #         participation_request.save()
+    #     return participation_request
 
     def get_serializer_class(self) -> type[BaseSerializer]:
         """Метод получения сериализатора для запросов на участие в проекте."""
 
+        is_owner = any(
+            self.request.user in (pr.project.owner, pr.project.creator)
+            for pr in self.get_queryset()
+        )
         if self.request.method in SAFE_METHODS:
-            if self.action != "list":
-                return ReadRetrieveParticipationRequestSerializer
-            return ReadListParticipationRequestSerializer
+            if is_owner:
+                return ReadListParticipationRequestSerializer
+            return MyRequestsSerializer
         return WriteParticipationRequestSerializer
 
     def perform_create(self, serializer) -> None:
@@ -428,8 +433,8 @@ class InvitationToProjectViewSet(ModelViewSet):
         )
 
     def get_serializer_class(self):
-        if self.request.method in SAFE_METHODS:
-            return ReadInvitationToProjectSerializer
+        self.request.method in SAFE_METHODS
+        # return ReadInvitationToProjectSerializer
         return WriteInvitationToProjectSerializer
 
     def perform_create(self, serializer):

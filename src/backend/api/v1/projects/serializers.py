@@ -12,6 +12,7 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
+from api.v1.profile.serializers import BaseProfileSerializer
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
@@ -111,7 +112,6 @@ class ReadParticipantSerializer(CustomModelSerializer):
     class Meta:
         model = ProjectParticipant
         fields = (
-            "id",
             "user_id",
             "avatar",
             "profession",
@@ -165,7 +165,6 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         """Метод возвращает требуемые поля для владельца."""
         owner = project.owner
         return {
-            "id": owner.id,
             "username": owner.username,
             "name": owner.profile.name,
             "avatar": (
@@ -236,7 +235,6 @@ class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
 
     class Meta(BaseProjectSpecialistSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
-            "id",
             "profession",
             "is_required",
         )
@@ -320,7 +318,6 @@ class BaseParticipationRequestSerializer(CustomModelSerializer):
     class Meta:
         model = ParticipationRequest
         fields: ClassVar[Tuple[str, ...]] = (
-            "id",
             "project",
             "position",
         )
@@ -330,11 +327,11 @@ class ShortProjectSerializer(CustomModelSerializer):
     """Сериализатор краткой информации на чтение проектов."""
 
     directions = DirectionSerializer(many=True)
+    project_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = (
-            "id",
             "name",
             "started",
             "ended",
@@ -349,11 +346,15 @@ class ShortProjectSerializer(CustomModelSerializer):
             for field in exclude:
                 self.fields.pop(field, None)
 
+    def get_project_status(self, obj) -> str:
+        """Метод получения статуса запроса."""
+        return obj.get_project_status_display()
+
 
 class MyRequestsSerializer(CustomModelSerializer):
     """."""
 
-    project = ShortProjectSerializer(exclude=("id", "project_status"))
+    project = ShortProjectSerializer(exclude=("project_status"))
     request_status = serializers.SerializerMethodField()
     position = serializers.SerializerMethodField()
 
@@ -436,7 +437,11 @@ class WriteParticipationRequestSerializer(
             )
             .first()
         )
-        if user == project.creator or user == project.owner:
+        if (
+            user == project.creator
+            or user == project.owner
+            or user == project.participants
+        ):
             raise serializers.ValidationError(
                 "Вы не можете создать заявку на участие в проекте, в котором "
                 "уже участвуете."
@@ -453,19 +458,25 @@ class WriteParticipationRequestSerializer(
             raise serializers.ValidationError("Проект не найден.")
         try:
             project = Project.objects.get(pk=project_id)
+            print(f"Смотрим заходим ли смы сюда и что тут будет {project}")
         except Project.DoesNotExist:
             raise serializers.ValidationError("Проект не найден.")
         request = self.context.get("request")
-        if request.method in ("PATCH", "PUT"):
-            project_specialists = project.project_specialists.all()
-            if not any(
-                specialist.profession.id != value.id and specialist.is_required
-                for specialist in project_specialists
-            ):
+        if request.method in ("PATCH", "PUT", "POST"):
+            project_specialists = project.project_specialists.filter(
+                is_required=True
+            )
+            required_specializations = {
+                specialist for specialist in project_specialists
+            }
+
+            print(f"Требуемые специальности: {required_specializations}")
+            if value not in required_specializations:
                 raise serializers.ValidationError(
                     f"Специальность '{value.profession.specialization}' "
                     f"не требуется в проекте '{project.name}'."
                 )
+            print(f"Переданное значение: {value}")
             return value
         return value
 
@@ -508,17 +519,33 @@ class ReadListParticipationRequestSerializer(
 ):
     """Сериализатор на чтение списка запросов на участие в проекте."""
 
-    project = ShortProjectSerializer()
+    project = ShortProjectSerializer(
+        exclude=["started", "ended", "direction", "project_status"]
+    )
     position = ShortProjectSpecialistSerializer()
     request_status = serializers.SerializerMethodField()
+    request_participants = BaseProfileSerializer(
+        exclude=[
+            "user_id",
+            "specialists",
+        ],
+        source="user.profile",
+    )
 
     class Meta(BaseParticipationRequestSerializer.Meta):
         fields: ClassVar[Tuple[str, ...]] = (
             *BaseParticipationRequestSerializer.Meta.fields,
-            "user",
+            "request_participants",
             "request_status",
             "is_viewed",
+            "cover_letter",
         )
+        read_only_field = ("request_participants",)
+
+        def to_representation(self, instance):
+            rep = super().to_representation(instance)
+            rep["cover_letter"] = html.unescape(rep["cover_letter"])
+            return rep
 
     def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
@@ -526,24 +553,25 @@ class ReadListParticipationRequestSerializer(
         return obj.get_request_status_display()
 
 
-class ReadRetrieveParticipationRequestSerializer(
-    ReadListParticipationRequestSerializer
-):
-    """Сериализатор на чтение объекта запроса на участие в проекте."""
+# Вообще не нужно нам просматривать детальную заявку, такой страницы нет даже!
+# class ReadRetrieveParticipationRequestSerializer(
+#     ReadListParticipationRequestSerializer
+# ):
+#     """Сериализатор на чтение объекта запроса на участие в проекте."""
 
-    position = ReadProjectSpecialistSerializer()
+#     position = ReadProjectSpecialistSerializer()
 
-    class Meta(ReadListParticipationRequestSerializer.Meta):
-        fields: ClassVar[Tuple[str, ...]] = (
-            *ReadListParticipationRequestSerializer.Meta.fields,
-            "cover_letter",
-            "created",
-        )
+#     class Meta(ReadListParticipationRequestSerializer.Meta):
+#         fields: ClassVar[Tuple[str, ...]] = (
+#             *ReadListParticipationRequestSerializer.Meta.fields,
+#             "cover_letter",
+#             "created",
+#         )
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep["cover_letter"] = html.unescape(rep["cover_letter"])
-        return rep
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         rep["cover_letter"] = html.unescape(rep["cover_letter"])
+#         return rep
 
 
 class WriteParticipationRequestAnswerSerializer(
@@ -606,22 +634,22 @@ class WriteParticipationRequestAnswerSerializer(
         return super().update(instance, validated_data)
 
 
-class ReadInvitationToProjectSerializer(
-    ReadRetrieveParticipationRequestSerializer
-):
-    """Сериализатор на чтение приглашений в проект."""
+# class ReadInvitationToProjectSerializer(
+#     ReadRetrieveParticipationRequestSerializer
+# ):
+#     """Сериализатор на чтение приглашений в проект."""
 
-    class Meta(ReadRetrieveParticipationRequestSerializer.Meta):
-        model = InvitationToProject
-        fields: ClassVar[Tuple[str, ...]] = (
-            *ReadRetrieveParticipationRequestSerializer.Meta.fields,
-            "author",
-        )
+#     class Meta(ReadRetrieveParticipationRequestSerializer.Meta):
+#         model = InvitationToProject
+#         fields: ClassVar[Tuple[str, ...]] = (
+#             *ReadRetrieveParticipationRequestSerializer.Meta.fields,
+#             "author",
+#         )
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep["cover_letter"] = html.unescape(rep["cover_letter"])
-        return rep
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         rep["cover_letter"] = html.unescape(rep["cover_letter"])
+#         return rep
 
 
 class WriteInvitationToProjectSerializer(
