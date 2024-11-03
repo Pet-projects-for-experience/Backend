@@ -150,7 +150,7 @@ class ProfilePreviewReadSerializer(BaseProfileSerializer):
         )
         read_only_fields = fields
 
-    def get_is_favorite(self, profile):
+    def get_is_favorite(self, profile) -> bool:
         user = self.context["request"].user
         return (
             user.is_authenticated

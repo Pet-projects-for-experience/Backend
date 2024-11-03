@@ -29,7 +29,7 @@ class CounterApiView(generics.RetrieveAPIView):
     """Представление счетчика проектов и пользователей."""
 
     @method_decorator(cache_page(600))
-    def get(self, request):
+    def get(self, request) -> Response:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
