@@ -161,7 +161,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
                 return project.favorited_by.filter(id=user.id).exists()
         return False
 
-    def get_owner(self, project):
+    def get_owner(self, project) -> dict[str, Any]:
         """Метод возвращает требуемые поля для владельца."""
         owner = project.owner
         return {
@@ -173,7 +173,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
             "visible_status": owner.profile.visible_status,
         }
 
-    def get_unique_project_participants_skills(self, obj):
+    def get_unique_project_participants_skills(self, obj) -> list[Any]:
         all_skills = chain.from_iterable(
             [
                 participant.skills.values_list("name", flat=True)
@@ -368,7 +368,7 @@ class MyRequestsSerializer(CustomModelSerializer):
             "project",
         )
 
-    def get_position(self, obj):
+    def get_position(self, obj) -> str:
         """Метод получения specialization из ProfessionSerializer."""
         return ProfessionSerializer(obj.position.profession).data[
             "specialization"

@@ -1,8 +1,14 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Prefetch, Q, QuerySet
+from django.db.models.manager import BaseManager
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
@@ -282,6 +288,20 @@ class ProjectSpecialistsViewSet(
 
 @extend_schema_view(
     retrieve=extend_schema(exclude=True),
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "role",
+                type=str,
+                description="Роль пользователя: owner или participant",
+                required=True,
+                enum=[
+                    "owner",
+                    "participant",
+                ],  # Ограничение на допустимые значения
+            )
+        ]
+    ),
 )
 class ProjectParticipationRequestsViewSet(ModelViewSet):
     """Представление для запросов на участие в проекте."""
@@ -297,6 +317,8 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
     def get_queryset(self) -> QuerySet["ParticipationRequest"]:
         """Метод получения queryset-а для запросов на участие в проекте."""
 
+        user = self.request.user
+        role = self.request.query_params.get("role")
         queryset = (
             super()
             .get_queryset()
@@ -312,12 +334,10 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
             ).prefetch_related(
                 "project__directions",
             )
-            user = self.request.user
-            if (
-                queryset.filter(project__owner=user).exists()
-                or queryset.filter(project__creator=user).exists()
-            ):
-                queryset = queryset.exclude(
+            if role == "owner":
+                queryset = queryset.filter(
+                    Q(project__owner=user) | Q(project__creator=user)
+                ).exclude(
                     request_status__in=[
                         RequestStatuses.ACCEPTED,
                         RequestStatuses.REJECTED,
@@ -325,7 +345,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
                 )
                 queryset.filter(is_viewed=False).update(is_viewed=True)
                 return queryset
-        return queryset.filter(Q(user=self.request.user)).only(
+        return queryset.filter(Q(user=user)).only(
             *PROJECT_PARTICIPATION_REQUEST_ONLY_FIELDS.get(self.action, ())
         )
 
@@ -351,13 +371,9 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
 
     def get_serializer_class(self) -> type[BaseSerializer]:
         """Метод получения сериализатора для запросов на участие в проекте."""
-
-        is_owner = any(
-            self.request.user in (pr.project.owner, pr.project.creator)
-            for pr in self.get_queryset()
-        )
+        role = self.request.query_params.get("role")
         if self.request.method in SAFE_METHODS:
-            if is_owner:
+            if role == "owner":
                 return ReadListParticipationRequestSerializer
             return MyRequestsSerializer
         return WriteParticipationRequestSerializer
@@ -384,7 +400,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
         """Метод ответа на запрос на участие в проекте."""
 
         participation_request = self.get_object()
-        serializer = self.serializer_class(
+        serializer = self.get_serializer(
             instance=participation_request,
             data=request.data,
             context=self.get_serializer_context(),
@@ -401,8 +417,8 @@ class InvitationToProjectViewSet(ModelViewSet):
     http_method_names = ("get", "post", "patch", "delete", "options")
     permission_classes = (IsInvitationAuthorOrUser,)
 
-    def get_queryset(self):
-        user = self.request.user
+    def get_queryset(self) -> BaseManager[InvitationToProject]:
+        user: AbstractBaseUser | AnonymousUser = self.request.user
         return (
             InvitationToProject.objects.filter(Q(user=user) | Q(author=user))
             .order_by("-created")
