@@ -38,13 +38,11 @@ class DirectionSerializer(CustomModelSerializer):
 
     class Meta:
         model = Direction
-        fields = ("name",)
+        fields = "__all__"
 
 
 class BaseProjectSpecialistSerializer(CustomModelSerializer):
     """Общий сериализатор для специалиста необходимого проекту."""
-
-    profession = ProfessionSerializer()
 
     class Meta:
         model = ProjectSpecialist
@@ -165,6 +163,7 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         """Метод возвращает требуемые поля для владельца."""
         owner = project.owner
         return {
+            "id": owner.id,
             "username": owner.username,
             "name": owner.profile.name,
             "avatar": (
