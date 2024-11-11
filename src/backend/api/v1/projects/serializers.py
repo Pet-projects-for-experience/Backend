@@ -365,6 +365,7 @@ class MyRequestsSerializer(CustomModelSerializer):
             "position",
             "cover_letter",
             "project",
+            "answer",
         )
 
     def get_position(self, obj) -> str:
