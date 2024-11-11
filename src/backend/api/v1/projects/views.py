@@ -337,6 +337,7 @@ class ProjectParticipationRequestsViewSet(ModelViewSet):
     http_method_names = ("get", "post", "patch", "delete", "options")
     filter_backends = (DjangoFilterBackend,)
     filterset_class = MyRequestsFilter
+    pagination_class = ProjectPagination
 
     def get_queryset(self) -> QuerySet["ParticipationRequest"]:
         """Метод получения queryset-а для запросов на участие в проекте."""
