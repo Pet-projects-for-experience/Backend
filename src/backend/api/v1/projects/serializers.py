@@ -242,7 +242,7 @@ class ShortProjectSpecialistSerializer(BaseProjectSpecialistSerializer):
 class ProjectPreviewMainSerializer(CustomModelSerializer):
     """Сериализатор для чтения превью проекта на главной странице."""
 
-    project_specialists = ShortProjectSpecialistSerializer(many=True)
+    project_specialists = ReadProjectSpecialistSerializer(many=True)
     directions = DirectionSerializer(many=True)
 
     class Meta:
