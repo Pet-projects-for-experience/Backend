@@ -1,4 +1,4 @@
-import html
+# import html
 from typing import ClassVar, Optional
 
 import bleach
@@ -233,10 +233,10 @@ class ProfileMeReadSerializer(BaseProfileSerializer):
         )
         read_only_fields = fields
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep["about"] = html.unescape(rep["about"])
-        return rep
+    # def to_representation(self, instance):
+    #     rep = super().to_representation(instance)
+    #     rep["about"] = html.unescape(rep["about"])
+    #     return rep
 
 
 class ProfileMeWriteSerializer(ProfileMeReadSerializer):
