@@ -213,6 +213,7 @@ class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
         ):
             for contact_field in ["phone_number", "telegram_nick", "email"]:
                 data[contact_field] = None
+        data["about"] = html.unescape(data["about"])
         return data
 
 
