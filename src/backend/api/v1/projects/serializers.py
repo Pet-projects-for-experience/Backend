@@ -1,3 +1,4 @@
+import html
 from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
@@ -186,10 +187,10 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         )
         return list(set(all_skills))
 
-    # def to_representation(self, instance):
-    #     rep = super().to_representation(instance)
-    #     rep["description"] = html.unescape(rep["description"])
-    #     return rep
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["description"] = html.unescape(rep["description"])
+        return rep
 
 
 class WriteProjectSerializer(
