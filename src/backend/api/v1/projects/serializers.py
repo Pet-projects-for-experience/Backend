@@ -1,4 +1,3 @@
-import html
 from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
@@ -13,6 +12,10 @@ from api.v1.general.serializers import (
     SkillSerializer,
 )
 from api.v1.profile.serializers import BaseProfileSerializer
+from api.v1.projects.constants import (
+    ALLOWED_ATTRIBUTES_BY_FRONT,
+    ALLOWED_TAGS_BY_FRONT,
+)
 from api.v1.projects.mixins import (
     ProjectOrDraftCreateUpdateMixin,
     ProjectOrDraftValidateMixin,
@@ -183,10 +186,10 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
         )
         return list(set(all_skills))
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep["description"] = html.unescape(rep["description"])
-        return rep
+    # def to_representation(self, instance):
+    #     rep = super().to_representation(instance)
+    #     rep["description"] = html.unescape(rep["description"])
+    #     return rep
 
 
 class WriteProjectSerializer(
@@ -223,7 +226,11 @@ class WriteProjectSerializer(
         HTML-тегов и атрибутов.
         """
 
-        safe_description = bleach.clean(value)
+        safe_description = bleach.clean(
+            value,
+            tags=ALLOWED_TAGS_BY_FRONT,
+            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
+        )
         return safe_description
 
 
@@ -520,7 +527,9 @@ class WriteParticipationRequestSerializer(
 
     def validate_cover_letter(self, value):
         escaped_html = bleach.clean(
-            value
+            value,
+            tags=ALLOWED_TAGS_BY_FRONT,
+            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return escaped_html
 
@@ -553,10 +562,10 @@ class ReadListParticipationRequestSerializer(
         )
         read_only_field = ("request_participants",)
 
-        def to_representation(self, instance):
-            rep = super().to_representation(instance)
-            rep["cover_letter"] = html.unescape(rep["cover_letter"])
-            return rep
+        # def to_representation(self, instance):
+        #     rep = super().to_representation(instance)
+        #     rep["cover_letter"] = instance.cover_letter
+        #     return rep
 
     def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
@@ -710,7 +719,9 @@ class WriteInvitationToProjectSerializer(
 
     def validate_cover_letter(self, value):
         escaped_html = bleach.clean(
-            value
+            value,
+            tags=ALLOWED_TAGS_BY_FRONT,
+            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return escaped_html
 
