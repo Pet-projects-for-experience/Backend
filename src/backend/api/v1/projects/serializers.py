@@ -563,10 +563,10 @@ class ReadListParticipationRequestSerializer(
         )
         read_only_field = ("request_participants",)
 
-        # def to_representation(self, instance):
-        #     rep = super().to_representation(instance)
-        #     rep["cover_letter"] = instance.cover_letter
-        #     return rep
+        def to_representation(self, instance):
+            rep = super().to_representation(instance)
+            rep["cover_letter"] = instance.cover_letter
+            return rep
 
     def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
