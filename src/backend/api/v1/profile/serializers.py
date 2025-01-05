@@ -1,4 +1,4 @@
-# import html
+import html
 from typing import ClassVar, Optional
 
 import bleach
@@ -13,6 +13,10 @@ from api.v1.general.serializers import (
     CustomModelSerializer,
     ProfessionSerializer,
     SkillSerializer,
+)
+from api.v1.profile.constants import (
+    ALLOWED_ATTRIBUTES_BY_FRONT,
+    ALLOWED_TAGS_BY_FRONT,
 )
 from apps.general.constants import MAX_SKILLS, MAX_SKILLS_MESSAGE
 from apps.general.models import Profession
@@ -233,10 +237,10 @@ class ProfileMeReadSerializer(BaseProfileSerializer):
         )
         read_only_fields = fields
 
-    # def to_representation(self, instance):
-    #     rep = super().to_representation(instance)
-    #     rep["about"] = html.unescape(rep["about"])
-    #     return rep
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["about"] = html.unescape(rep["about"])
+        return rep
 
 
 class ProfileMeWriteSerializer(ProfileMeReadSerializer):
@@ -265,5 +269,9 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
         HTML-тегов и атрибутов.
         """
 
-        safe_about = bleach.clean(value)
+        safe_about = bleach.clean(
+            value,
+            tags=ALLOWED_TAGS_BY_FRONT,
+            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
+        )
         return safe_about
