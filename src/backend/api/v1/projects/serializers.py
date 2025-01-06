@@ -578,7 +578,7 @@ class ReadListParticipationRequestSerializer(
             "cover_letter",
             "is_favorite_profile",
         )
-        read_only_field = ("request_participants",)
+        read_only_fields = ("request_participants",)
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -587,16 +587,17 @@ class ReadListParticipationRequestSerializer(
         )
         return rep
 
-    def get_is_favorite_profile(self, profile) -> bool:
+    def get_is_favorite_profile(self, obj) -> bool:
         """
         Метод возвращает True если Владелец добавил участника в избранное.
         В противном случе возвращает False.
         """
-        user = self.context.get("request", None).user
-        return (
-            user.is_authenticated
-            and profile.favorited_by.filter(id=user.pk).exists()
-        )
+        user = self.context.get("request").user
+        if user.is_authenticated:
+            return obj.request_participants.favorited_by.filter(
+                id=user.pk
+            ).exists()
+        return False
 
     def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
