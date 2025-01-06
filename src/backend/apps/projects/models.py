@@ -264,6 +264,7 @@ class ParticipationRequestAndInvitationBasemodel(CreatedModifiedFields):
     answer = BaseTextField(
         verbose_name="Ответ",
         null=True,
+        blank=True,
     )
 
     class Meta:
