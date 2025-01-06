@@ -214,7 +214,7 @@ class ProfileDetailReadSerializer(ProfilePreviewReadSerializer):
         ):
             for contact_field in ["phone_number", "telegram_nick", "email"]:
                 data[contact_field] = None
-        data["about"] = html.unescape(data["about"])
+        data["about"] = html.unescape(data["about"]) if data["about"] else ""
         return data
 
 
@@ -241,7 +241,7 @@ class ProfileMeReadSerializer(BaseProfileSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["about"] = html.unescape(rep["about"])
+        rep["about"] = html.unescape(rep["about"]) if rep["about"] else ""
         return rep
 
 

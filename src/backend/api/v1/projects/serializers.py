@@ -189,7 +189,9 @@ class ReadProjectSerializer(RecruitmentStatusMixin, BaseProjectSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["description"] = html.unescape(rep["description"])
+        rep["description"] = (
+            html.unescape(rep["description"]) if rep["description"] else ""
+        )
         return rep
 
 
@@ -378,7 +380,9 @@ class MyRequestsSerializer(CustomModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["cover_letter"] = html.unescape(rep["cover_letter"])
+        rep["cover_letter"] = (
+            html.unescape(rep["cover_letter"]) if rep["cover_letter"] else ""
+        )
         return rep
 
     def get_position(self, obj) -> str:
@@ -578,7 +582,9 @@ class ReadListParticipationRequestSerializer(
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["cover_letter"] = html.unescape(rep["cover_letter"])
+        rep["cover_letter"] = (
+            html.unescape(rep["cover_letter"]) if rep["cover_letter"] else ""
+        )
         return rep
 
     def get_request_status(self, obj) -> str:
@@ -602,10 +608,12 @@ class ReadListParticipationRequestSerializer(
 #             "created",
 #         )
 
-#     def to_representation(self, instance):
-#         rep = super().to_representation(instance)
-#         rep["cover_letter"] = html.unescape(rep["cover_letter"])
-#         return rep
+# def to_representation(self, instance):
+#     rep = super().to_representation(instance)
+#     rep["cover_letter"] = (
+# html.unescape(rep["cover_letter"]) if rep["cover_letter"] else ""
+# )
+#     return rep
 
 
 class WriteParticipationRequestAnswerSerializer(
@@ -680,10 +688,12 @@ class WriteParticipationRequestAnswerSerializer(
 #             "author",
 #         )
 
-#     def to_representation(self, instance):
-#         rep = super().to_representation(instance)
-#         rep["cover_letter"] = html.unescape(rep["cover_letter"])
-#         return rep
+# def to_representation(self, instance):
+#     rep = super().to_representation(instance)
+#     rep["cover_letter"] = (
+# html.unescape(rep["cover_letter"]) if rep["cover_letter"] else ""
+# )
+#     return rep
 
 
 class WriteInvitationToProjectSerializer(
