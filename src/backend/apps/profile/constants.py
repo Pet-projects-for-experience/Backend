@@ -13,9 +13,11 @@ LENGTH_PORTFOLIO_URL_MESSAGE = (
 MIN_LENGTH_NAME = 2
 MIN_LENGTH_NAME_MESSAGE = "Должно быть минимум символов"
 MIN_LENGTH_ABOUT = 20
-REGEX_PROFILE_NAME = r"^[a-zA-Zа-яА-Я -]+$"
+REGEX_PROFILE_NAME = r"^[a-zA-Zа-яА-ЯёЁ-]+$"
 REGEX_PROFILE_NAME_MESSAGE = "Введите кириллицу или латиницу"
-REGEX_PROFILE_ABOUT = r"(^[\Wa-zа-яё0-9\s]+)\Z"
+REGEX_PROFILE_ABOUT = (
+    r"^[\wа-яА-ЯёЁ0-9\s<>,.?!'\"/\-+:;@#\$%\^&\*\(\)\[\]\{\}]*$"
+)
 REGEX_PROFILE_ABOUT_MESSAGE = "Введите кириллицу или латиницу"
 MAX_SPECIALISTS = 2
 MAX_BIRTHDAY_MESSAGE = "Дата не может быть в будущем."
