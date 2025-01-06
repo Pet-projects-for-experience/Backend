@@ -28,6 +28,7 @@ faker = "^25.0.1"
 pytest-django = "^4.8.0"
 bleach = "^6.1.0"
 types-bleach = "^6.1.0.20240331"
+tinycss2 = "^1.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
