@@ -11,7 +11,5 @@ ALLOWED_TAGS_BY_FRONT = [
     "span",
     # разрешенные теги котоыре не нужно очищать
 ]
-ALLOWED_ATTRIBUTES_BY_FRONT = {
-    "span": ["class", "style", "contenteditable"],
-    # разрещенные атрибуты.
-}
+ALLOWED_ATTRIBUTES_BY_FRONT = ["class", "style", "contenteditable"]
+# разрещенные атрибуты.

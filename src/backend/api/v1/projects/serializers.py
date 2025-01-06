@@ -2,7 +2,8 @@ import html
 from itertools import chain
 from typing import Any, ClassVar, Dict, Optional, OrderedDict, Tuple
 
-import bleach
+from bleach.css_sanitizer import CSSSanitizer
+from bleach.sanitizer import Cleaner
 from django.db import transaction
 from rest_framework import serializers
 
@@ -34,6 +35,12 @@ from apps.projects.models import (
     Project,
     ProjectParticipant,
     ProjectSpecialist,
+)
+
+cleaner = Cleaner(
+    tags=ALLOWED_TAGS_BY_FRONT,
+    attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
+    css_sanitizer=CSSSanitizer(),
 )
 
 
@@ -229,10 +236,8 @@ class WriteProjectSerializer(
         HTML-тегов и атрибутов.
         """
 
-        safe_description = bleach.clean(
+        safe_description = cleaner.clean(
             value,
-            tags=ALLOWED_TAGS_BY_FRONT,
-            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )
         return safe_description
 
@@ -406,10 +411,8 @@ class UpdateParticipationRequestSerializer(
         fields: ClassVar[Tuple[str, ...]] = ("cover_letter",)
 
     def validate_cover_letter(self, value):
-        escaped_html = bleach.clean(
+        escaped_html = cleaner.clean(
             value,
-            tags=ALLOWED_TAGS_BY_FRONT,
-            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return escaped_html
 
@@ -543,10 +546,8 @@ class WriteParticipationRequestSerializer(
         return attrs
 
     def validate_cover_letter(self, value):
-        escaped_html = bleach.clean(
+        escaped_html = cleaner.clean(
             value,
-            tags=ALLOWED_TAGS_BY_FRONT,
-            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return escaped_html
 
@@ -589,14 +590,12 @@ class ReadListParticipationRequestSerializer(
 
     def get_is_favorite_profile(self, obj) -> bool:
         """
-        Метод возвращает True если Владелец добавил участника в избранное.
-        В противном случе возвращает False.
+        Метод возвращает True если владелец добавил участника в избранное.
+        Иначе False.
         """
         user = self.context.get("request").user
         if user.is_authenticated:
-            return obj.request_participants.favorited_by.filter(
-                id=user.pk
-            ).exists()
+            return obj.user.profile.favorited_by.filter(id=user.pk).exists()
         return False
 
     def get_request_status(self, obj) -> str:
@@ -754,10 +753,8 @@ class WriteInvitationToProjectSerializer(
         return attrs
 
     def validate_cover_letter(self, value):
-        escaped_html = bleach.clean(
+        escaped_html = cleaner.clean(
             value,
-            tags=ALLOWED_TAGS_BY_FRONT,
-            attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
         )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return escaped_html
 

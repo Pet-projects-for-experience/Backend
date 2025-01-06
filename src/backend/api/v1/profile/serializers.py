@@ -1,7 +1,8 @@
 import html
 from typing import ClassVar, Optional
 
-import bleach
+from bleach.css_sanitizer import CSSSanitizer
+from bleach.sanitizer import Cleaner
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from rest_framework import serializers
@@ -14,11 +15,10 @@ from api.v1.general.serializers import (
     ProfessionSerializer,
     SkillSerializer,
 )
-
-# from api.v1.profile.constants import (
-#     ALLOWED_ATTRIBUTES_BY_FRONT,
-#     ALLOWED_TAGS_BY_FRONT,
-# )
+from api.v1.profile.constants import (
+    ALLOWED_ATTRIBUTES_BY_FRONT,
+    ALLOWED_TAGS_BY_FRONT,
+)
 from apps.general.constants import MAX_SKILLS, MAX_SKILLS_MESSAGE
 from apps.general.models import Profession
 from apps.profile.constants import MAX_SPECIALISTS, MAX_SPECIALISTS_MESSAGE
@@ -29,6 +29,12 @@ from apps.users.constants import (
     MIN_LENGTH_USERNAME,
     USERNAME_ERROR_REGEX_TEXT,
     USERNAME_REGEX,
+)
+
+cleaner = Cleaner(
+    tags=ALLOWED_TAGS_BY_FRONT,
+    attributes=ALLOWED_ATTRIBUTES_BY_FRONT,
+    css_sanitizer=CSSSanitizer(),
 )
 
 
@@ -270,6 +276,7 @@ class ProfileMeWriteSerializer(ProfileMeReadSerializer):
         Метод валидации и защиты от потенциально вредоносных
         HTML-тегов и атрибутов.
         """
-
-        safe_about = bleach.clean(value)
+        safe_about = cleaner.clean(
+            value,
+        )  # защита потенциально вредоносных HTML-тегов и атрибутов
         return safe_about

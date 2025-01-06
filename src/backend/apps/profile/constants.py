@@ -16,7 +16,7 @@ MIN_LENGTH_ABOUT = 20
 REGEX_PROFILE_NAME = r"^[a-zA-Zа-яА-ЯёЁ-]+$"
 REGEX_PROFILE_NAME_MESSAGE = "Введите кириллицу или латиницу"
 REGEX_PROFILE_ABOUT = (
-    r"^[\wа-яА-ЯёЁ0-9\s<>,.?!'\"/\-+:;@#\$%\^&\*\(\)\[\]\{\}]*$"
+    r"^[\wа-яА-ЯёЁ0-9\s<>,.?!'\"/\-+:;@#\$%\^&\*\(\)\[\]\{\}]*$|^<.*>$"
 )
 REGEX_PROFILE_ABOUT_MESSAGE = "Введите кириллицу или латиницу"
 MAX_SPECIALISTS = 2
