@@ -559,11 +559,11 @@ class ReadListParticipationRequestSerializer(
     project = ShortProjectSerializer(
         exclude=["started", "ended", "direction", "project_status"]
     )
+    is_favorite_profile = serializers.SerializerMethodField(read_only=True)
     position = ShortProjectSpecialistSerializer()
     request_status = serializers.SerializerMethodField()
     request_participants = BaseProfileSerializer(
         exclude=[
-            "user_id",
             "specialists",
         ],
         source="user.profile",
@@ -576,6 +576,7 @@ class ReadListParticipationRequestSerializer(
             "request_status",
             "is_viewed",
             "cover_letter",
+            "is_favorite_profile",
         )
         read_only_field = ("request_participants",)
 
@@ -585,6 +586,17 @@ class ReadListParticipationRequestSerializer(
             html.unescape(rep["cover_letter"]) if rep["cover_letter"] else ""
         )
         return rep
+
+    def get_is_favorite_profile(self, profile) -> bool:
+        """
+        Метод возвращает True если Владелец добавил участника в избранное.
+        В противном случе возвращает False.
+        """
+        user = self.context.get("request", None).user
+        return (
+            user.is_authenticated
+            and profile.favorited_by.filter(id=user.pk).exists()
+        )
 
     def get_request_status(self, obj) -> str:
         """Метод получения статуса запроса."""
